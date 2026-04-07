@@ -2,6 +2,7 @@
 
 module Inamen
   # One emitted item per non-empty line from KjvLineParser — normalized "event" plus aggregates for totals/book stats.
+  # New kinds: add a KIND_* constant, append it to KINDS, and use it from KjvLineParser only.
   class KjvParseEvent < Struct.new(
     :kind,
     :lineno,
@@ -34,5 +35,25 @@ module Inamen
       KIND_SPLIT_VERSE_NUMBER,
       KIND_NUMBERED_LINE
     ].freeze
+
+    def self.strict_kind_validation?
+      return false if ENV["INAMEN_STRICT_PARSE_EVENT_KINDS"] == "0"
+      return true if ENV["INAMEN_STRICT_PARSE_EVENT_KINDS"] == "1"
+
+      ENV["CI"] == "true" || File.basename($PROGRAM_NAME).include?("rspec")
+    end
+
+    def self.validate_kind!(kind)
+      return unless strict_kind_validation?
+      return if KINDS.include?(kind)
+
+      raise ArgumentError,
+            "Unknown KjvParseEvent kind: #{kind.inspect} (expected one of: #{KINDS.map(&:inspect).join(", ")})"
+    end
+
+    def self.new(**kwargs)
+      validate_kind!(kwargs[:kind])
+      super
+    end
   end
 end
