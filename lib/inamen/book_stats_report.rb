@@ -153,11 +153,11 @@ module Inamen
       stats = Hash.new { |h, k| h[k] = { chapters: 0, verses: 0 } }
       labels = book_label_at_each_index(lines)
 
-      KjvLineParser.each_step(lines) do |step|
-        i = step.lineno - 1
+      KjvLineParser.each_event(lines) do |event|
+        i = event.lineno - 1
         b = labels[i]
-        stats[b][:chapters] += step.book_chapters
-        stats[b][:verses] += step.book_verses
+        stats[b][:chapters] += event.book_chapters
+        stats[b][:verses] += event.book_verses
       end
 
       stats

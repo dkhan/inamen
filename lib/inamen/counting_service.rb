@@ -36,8 +36,8 @@ module Inamen
 
     def self.total_for_lines(lines)
       totals = Totals.empty
-      KjvLineParser.each_step(lines) do |step|
-        totals.add_partial!(step.totals_delta)
+      KjvLineParser.each_event(lines) do |event|
+        totals.add_partial!(event.totals_delta)
       end
       totals.to_h
     end
@@ -75,10 +75,10 @@ module Inamen
 
     def self.numeric_chapter_debug_entries(lines)
       entries = []
-      KjvLineParser.each_step(lines) do |step|
-        next unless step.numeric_chapter_debug
+      KjvLineParser.each_event(lines) do |event|
+        next unless event.numeric_chapter_debug
 
-        d = step.numeric_chapter_debug
+        d = event.numeric_chapter_debug
         entries << {
           lineno: d[:lineno],
           raw: d[:raw],

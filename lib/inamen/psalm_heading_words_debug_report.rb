@@ -7,10 +7,10 @@ module Inamen
       entries = []
       total = 0
 
-      KjvLineParser.each_step(lines) do |step|
-        next unless step.psalm_heading_debug
+      KjvLineParser.each_event(lines) do |event|
+        next unless event.psalm_heading_debug
 
-        d = step.psalm_heading_debug
+        d = event.psalm_heading_debug
         tok = d[:tokens]
         total += tok
         entries << { lineno: d[:lineno], raw: d[:raw], tokens: tok }

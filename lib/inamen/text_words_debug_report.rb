@@ -23,10 +23,10 @@ module Inamen
       buckets = Hash.new(0)
       total = 0
 
-      KjvLineParser.each_step(lines) do |step|
-        next unless step.text_words_debug
+      KjvLineParser.each_event(lines) do |event|
+        next unless event.text_words_debug
 
-        d = step.text_words_debug
+        d = event.text_words_debug
         classification = d[:classification]
         tok = d[:tokens]
         total += tok

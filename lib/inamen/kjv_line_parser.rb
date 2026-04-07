@@ -1,26 +1,13 @@
 # frozen_string_literal: true
 
 module Inamen
-  # Canonical line-by-line traversal of KJV-shaped text. Yields a ParseStep per non-empty line.
+  # Canonical line-by-line traversal of KJV-shaped text. Yields one KjvParseEvent per non-empty line.
   class KjvLineParser
     CHAPTER_LINE = CountingService::CHAPTER_LINE
     VERSE_LINE = CountingService::VERSE_LINE
     PSALM_TITLE = CountingService::PSALM_TITLE
 
-    ParseStep = Struct.new(
-      :lineno,
-      :raw,
-      :stripped,
-      :totals_delta,
-      :book_chapters,
-      :book_verses,
-      :numeric_chapter_debug,
-      :text_words_debug,
-      :psalm_heading_debug,
-      keyword_init: true
-    )
-
-    def self.each_step(lines)
+    def self.each_event(lines)
       state = ParserState.new
       lines.each_with_index do |line, i|
         s = line.to_s.strip
@@ -30,18 +17,19 @@ module Inamen
       end
     end
 
+    def self.each_step(lines, &block)
+      each_event(lines, &block)
+    end
+
     def self.advance!(lines, i, line, s, state)
       if state.expecting_split_verse_body
         tok = Tokenizer.tokenize(s).size
         state.expecting_split_verse_body = false
         state.prev_nonempty_stripped = s
-        return ParseStep.new(
-          lineno: i + 1,
-          raw: line.to_s,
-          stripped: s,
-          totals_delta: { verse_text_words: tok },
-          book_chapters: 0,
-          book_verses: 0
+        return build_event(
+          KjvParseEvent::KIND_SPLIT_VERSE_BODY,
+          lines, i, line, s,
+          totals_delta: { verse_text_words: tok }
         )
       end
 
@@ -49,29 +37,24 @@ module Inamen
         tok = Tokenizer.tokenize(s).size
         state.expecting_implicit_psalm_verse_1 = true
         state.prev_nonempty_stripped = s
-        return ParseStep.new(
-          lineno: i + 1,
-          raw: line.to_s,
-          stripped: s,
-          totals_delta: { psalm_119_division_words: tok },
-          book_chapters: 0,
-          book_verses: 0
+        return build_event(
+          KjvParseEvent::KIND_PSALM_119_DIVISION,
+          lines, i, line, s,
+          totals_delta: { psalm_119_division_words: tok }
         )
       end
 
       if s.match?(PSALM_TITLE)
         state.expecting_implicit_psalm_verse_1 = true
         state.prev_nonempty_stripped = s
-        return ParseStep.new(
-          lineno: i + 1,
-          raw: line.to_s,
-          stripped: s,
+        return build_event(
+          KjvParseEvent::KIND_PSALM_TITLE,
+          lines, i, line, s,
           totals_delta: {
             chapter_numbers: 1,
             psalm_chapter_titles: 1
           },
-          book_chapters: 1,
-          book_verses: 0
+          book_chapters: 1
         )
       end
 
@@ -79,13 +62,10 @@ module Inamen
         if PsalmHeading.match?(s)
           tok = Tokenizer.tokenize(s).size
           state.prev_nonempty_stripped = s
-          return ParseStep.new(
-            lineno: i + 1,
-            raw: line.to_s,
-            stripped: s,
+          return build_event(
+            KjvParseEvent::KIND_PSALM_HEADING,
+            lines, i, line, s,
             totals_delta: { psalm_heading_words: tok },
-            book_chapters: 0,
-            book_verses: 0,
             psalm_heading_debug: { lineno: i + 1, raw: line.to_s.chomp, tokens: tok }
           )
         end
@@ -94,7 +74,10 @@ module Inamen
           state.expecting_implicit_psalm_verse_1 = false
           partial = CountingService.counts_for_line(s)
           state.prev_nonempty_stripped = s
-          return numbered_line_step(lines, i, line, s, partial)
+          return numbered_line_step(
+            lines, i, line, s, partial,
+            kind: KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING
+          )
         end
 
         r = implicit_psalm_unnumbered_resolution(lines, i, s)
@@ -102,17 +85,15 @@ module Inamen
         state.prev_nonempty_stripped = s
         dbg = nil
         dbg = { lineno: i + 1, raw: line.to_s.chomp, tokens: r.psalm_heading_words } if r.psalm_heading_words.positive?
-        return ParseStep.new(
-          lineno: i + 1,
-          raw: line.to_s,
-          stripped: s,
+        return build_event(
+          KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING,
+          lines, i, line, s,
           totals_delta: {
             verse_numbers: r.verse_numbers,
             implicit_psalm_verse_1: r.implicit_psalm_verse_1,
             verse_text_words: r.verse_text_words,
             psalm_heading_words: r.psalm_heading_words
           },
-          book_chapters: 0,
           book_verses: r.verse_numbers,
           psalm_heading_debug: dbg
         )
@@ -121,15 +102,13 @@ module Inamen
       if split_verse_number_after_chapter?(state.prev_nonempty_stripped, s)
         state.expecting_split_verse_body = true
         state.prev_nonempty_stripped = s
-        return ParseStep.new(
-          lineno: i + 1,
-          raw: line.to_s,
-          stripped: s,
+        return build_event(
+          KjvParseEvent::KIND_SPLIT_VERSE_NUMBER,
+          lines, i, line, s,
           totals_delta: {
             verse_numbers: 1,
             numbered_verse_lines: 1
           },
-          book_chapters: 0,
           book_verses: 1
         )
       end
@@ -139,11 +118,10 @@ module Inamen
       numbered_line_step(lines, i, line, s, partial)
     end
 
-    def self.numbered_line_step(lines, i, line, s, partial)
-      step = ParseStep.new(
-        lineno: i + 1,
-        raw: line.to_s,
-        stripped: s,
+    def self.numbered_line_step(lines, i, line, s, partial, kind: KjvParseEvent::KIND_NUMBERED_LINE)
+      ev = build_event(
+        kind,
+        lines, i, line, s,
         totals_delta: {
           text_words: partial[:text_words],
           verse_text_words: partial[:verse_text_words],
@@ -157,7 +135,7 @@ module Inamen
       )
 
       if partial[:chapter_numbers].positive?
-        step.numeric_chapter_debug = {
+        ev.numeric_chapter_debug = {
           lineno: i + 1,
           raw: line.to_s,
           prev_raw: prior_non_empty_line(lines, i),
@@ -166,7 +144,7 @@ module Inamen
       end
 
       if partial[:text_words].positive?
-        step.text_words_debug = {
+        ev.text_words_debug = {
           lineno: i + 1,
           raw: line.to_s.chomp,
           tokens: partial[:text_words],
@@ -174,8 +152,25 @@ module Inamen
         }
       end
 
-      step
+      ev
     end
+
+    def self.build_event(kind, lines, i, line, s, totals_delta:, book_chapters: 0, book_verses: 0,
+                         numeric_chapter_debug: nil, text_words_debug: nil, psalm_heading_debug: nil)
+      KjvParseEvent.new(
+        kind: kind,
+        lineno: i + 1,
+        raw: line.to_s,
+        stripped: s,
+        totals_delta: totals_delta,
+        book_chapters: book_chapters,
+        book_verses: book_verses,
+        numeric_chapter_debug: numeric_chapter_debug,
+        text_words_debug: text_words_debug,
+        psalm_heading_debug: psalm_heading_debug
+      )
+    end
+    private_class_method :build_event
 
     def self.next_non_empty_stripped(lines, line_index)
       j = line_index + 1
