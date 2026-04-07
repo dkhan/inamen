@@ -23,68 +23,18 @@ module Inamen
       buckets = Hash.new(0)
       total = 0
 
-      expecting_implicit_psalm_verse_1 = false
-      expecting_split_verse_body = false
-      prev_nonempty_stripped = nil
+      KjvLineParser.each_step(lines) do |step|
+        next unless step.text_words_debug
 
-      lines.each_with_index do |line, i|
-        s = line.to_s.strip
-        next if s.empty?
-
-        if expecting_split_verse_body
-          expecting_split_verse_body = false
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if PsalmHeading.stanza_label?(s)
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if s.match?(CountingService::PSALM_TITLE)
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if expecting_implicit_psalm_verse_1
-          if PsalmHeading.match?(s)
-            prev_nonempty_stripped = s
-            next
-          end
-          if s.match?(CountingService::VERSE_LINE)
-            expecting_implicit_psalm_verse_1 = false
-            prev_nonempty_stripped = s
-            next
-          end
-          r = CountingService.implicit_psalm_unnumbered_resolution(lines, i, s)
-          expecting_implicit_psalm_verse_1 = false if r[:clear_waiting]
-          prev_nonempty_stripped = s
-          next
-        end
-
-        ch = CountingService::CHAPTER_LINE
-        if prev_nonempty_stripped&.match?(ch) && s.match?(ch)
-          expecting_split_verse_body = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        partial = CountingService.counts_for_line(s)
-        prev_nonempty_stripped = s
-
-        next if partial[:text_words].zero?
-
-        classification = LineClassifier.classify(line)
-        tok = partial[:text_words]
+        d = step.text_words_debug
+        classification = d[:classification]
+        tok = d[:tokens]
         total += tok
         buckets[bucket_for(classification)] += tok
 
         entries << {
-          lineno: i + 1,
-          raw: line.to_s.chomp,
+          lineno: d[:lineno],
+          raw: d[:raw],
           tokens: tok,
           classification: classification
         }

@@ -140,71 +140,24 @@ module Inamen
       end
     end
 
-    def self.per_book_counts(lines)
-      stats = Hash.new { |h, k| h[k] = { chapters: 0, verses: 0 } }
+    def self.book_label_at_each_index(lines)
       book = "Front matter"
-      expecting_implicit_psalm_verse_1 = false
-      expecting_split_verse_body = false
-      prev_nonempty_stripped = nil
-
-      lines.each_with_index do |line, i|
+      Array.new(lines.length) do |i|
         nb = book_at(lines, i)
         book = nb if nb
+        book
+      end
+    end
 
-        s = line.to_s.strip
-        next if s.empty?
+    def self.per_book_counts(lines)
+      stats = Hash.new { |h, k| h[k] = { chapters: 0, verses: 0 } }
+      labels = book_label_at_each_index(lines)
 
-        if expecting_split_verse_body
-          expecting_split_verse_body = false
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if PsalmHeading.stanza_label?(s)
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if s.match?(CountingService::PSALM_TITLE)
-          stats[book][:chapters] += 1
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if expecting_implicit_psalm_verse_1
-          if PsalmHeading.match?(s)
-            prev_nonempty_stripped = s
-            next
-          end
-          if s.match?(CountingService::VERSE_LINE)
-            expecting_implicit_psalm_verse_1 = false
-            partial = CountingService.counts_for_line(s)
-            stats[book][:chapters] += partial[:chapter_numbers]
-            stats[book][:verses] += partial[:verse_numbers]
-            prev_nonempty_stripped = s
-            next
-          end
-          r = CountingService.implicit_psalm_unnumbered_resolution(lines, i, s)
-          stats[book][:verses] += r[:verse_numbers]
-          expecting_implicit_psalm_verse_1 = false if r[:clear_waiting]
-          prev_nonempty_stripped = s
-          next
-        end
-
-        ch = CountingService::CHAPTER_LINE
-        if prev_nonempty_stripped&.match?(ch) && s.match?(ch)
-          stats[book][:verses] += 1
-          expecting_split_verse_body = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        partial = CountingService.counts_for_line(s)
-        stats[book][:chapters] += partial[:chapter_numbers]
-        stats[book][:verses] += partial[:verse_numbers]
-        prev_nonempty_stripped = s
+      KjvLineParser.each_step(lines) do |step|
+        i = step.lineno - 1
+        b = labels[i]
+        stats[b][:chapters] += step.book_chapters
+        stats[b][:verses] += step.book_verses
       end
 
       stats

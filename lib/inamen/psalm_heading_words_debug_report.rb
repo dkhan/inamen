@@ -7,63 +7,13 @@ module Inamen
       entries = []
       total = 0
 
-      expecting_implicit_psalm_verse_1 = false
-      expecting_split_verse_body = false
-      prev_nonempty_stripped = nil
+      KjvLineParser.each_step(lines) do |step|
+        next unless step.psalm_heading_debug
 
-      lines.each_with_index do |line, i|
-        s = line.to_s.strip
-        next if s.empty?
-
-        if expecting_split_verse_body
-          expecting_split_verse_body = false
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if PsalmHeading.stanza_label?(s)
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if s.match?(CountingService::PSALM_TITLE)
-          expecting_implicit_psalm_verse_1 = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        if expecting_implicit_psalm_verse_1
-          if PsalmHeading.match?(s)
-            tok = Tokenizer.tokenize(s).size
-            total += tok
-            entries << { lineno: i + 1, raw: line.to_s.chomp, tokens: tok }
-            prev_nonempty_stripped = s
-            next
-          end
-          if s.match?(CountingService::VERSE_LINE)
-            expecting_implicit_psalm_verse_1 = false
-            prev_nonempty_stripped = s
-            next
-          end
-          r = CountingService.implicit_psalm_unnumbered_resolution(lines, i, s)
-          if (h = r[:psalm_heading_words]).positive?
-            total += h
-            entries << { lineno: i + 1, raw: line.to_s.chomp, tokens: h }
-          end
-          expecting_implicit_psalm_verse_1 = false if r[:clear_waiting]
-          prev_nonempty_stripped = s
-          next
-        end
-
-        ch = CountingService::CHAPTER_LINE
-        if prev_nonempty_stripped&.match?(ch) && s.match?(ch)
-          expecting_split_verse_body = true
-          prev_nonempty_stripped = s
-          next
-        end
-
-        prev_nonempty_stripped = s
+        d = step.psalm_heading_debug
+        tok = d[:tokens]
+        total += tok
+        entries << { lineno: d[:lineno], raw: d[:raw], tokens: tok }
       end
 
       [entries, total]

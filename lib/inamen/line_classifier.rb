@@ -11,15 +11,17 @@ module Inamen
     CHAPTER_LINE = /\A[0-9]+\z/
     VERSE_LINE = /\A[0-9]+\s+\S/
 
-    COLOPHON_LINE = /
-      \A\[(The\ end|This\ ends).*\]\z
-      | \AOr\ the\ (foregoing|preceding).*\z
-      | \AWritten\ from\ 
-      | \AThe\ .+\ written\ from\ .+\.\z
-      | \AWritten\ to\ the\ .+
-      | \AUnto\ the\ .+\ written\ from\b
-      | \AIt\ was\ written\ to\ .+\bfrom\b
-    /ix
+    # One alternation per line; combined behavior matches the historical single-regex colophon rule.
+    COLOPHON_SUBPATTERNS = [
+      '\A\[(The\ end|This\ ends).*\]\z',
+      '\AOr\ the\ (foregoing|preceding).*\z',
+      '\AWritten\ from\ ',
+      '\AThe\ .+\ written\ from\ .+\.\z',
+      '\AWritten\ to\ the\ .+',
+      '\AUnto\ the\ .+\ written\ from\b',
+      '\AIt\ was\ written\ to\ .+\bfrom\b'
+    ].freeze
+    COLOPHON_LINE = Regexp.new(COLOPHON_SUBPATTERNS.join("|"), Regexp::IGNORECASE | Regexp::EXTENDED)
 
     def self.classify(line)
       s = line.to_s.strip
@@ -49,30 +51,43 @@ module Inamen
       "SECOND EPISTLE OF PAUL THE APOSTLE"
     ].freeze
 
+    COVER_AND_CONNECTOR_EXACT = %w[
+      HOLY\ BIBLE KING\ JAMES\ VERSION THE CALLED THE\ GOSPEL\ ACCORDING\ TO OTHERWISE\ CALLED,
+      COMMONLY\ CALLED, THE\ FIRST THE\ SECOND TO\ THE
+    ].freeze
+
+    # [regexp, optional guard(line)] — order matches the original +book_title?+ chain.
+    BOOK_TITLE_LINE_RULES = [
+      [/\ATHE (FIRST|SECOND|THIRD|FOURTH|FIFTH) BOOK OF MOSES,?\z/, nil],
+      [/\A(FIRST|SECOND) BOOK OF [A-Z ]+,?\z/, nil],
+      [/\ATHE (FIRST|SECOND) BOOK OF THE\z/, nil],
+      [/\ATHE (FIRST|SECOND) BOOK OF THE [A-Z]+\.\z/, nil],
+      [/\ABOOK OF THE KINGS[,.]\z/, nil],
+      [/\ATHE (THIRD|FOURTH) BOOK OF THE KINGS\.\z/, nil],
+      [/\ATHE EPISTLE OF PAUL THE APOSTLE\z/, nil],
+      [/\ATHE EPISTLE OF PAUL TO\z/, nil],
+      [/\AEPISTLE OF PAUL THE APOSTLE TO\z/, nil],
+      [/\ATHE (FIRST|SECOND) EPISTLE GENERAL OF\z/, nil],
+      [/\ATHE SECOND EPISTLE OF\z/, nil],
+      [/\ATHE BOOK OF .+\.\z/, nil],
+      [/\APSALM [0-9]+\z/, nil],
+      [/\AST\. [A-Z.]+\z/, nil],
+      [/\AOR, .+\.\z/, nil],
+      [/\A[A-Z][A-Z\s,'-]+\.\z/, ->(line) { !line.match?(/[a-z]/) }],
+      [/\A[A-Z][A-Z\s,]+;\z/, nil],
+      [/\A[A-Z]{3,}\.\z/, ->(line) { !PsalmHeading.stanza_label?(line) }]
+    ].freeze
+
     def self.book_title?(s)
       return true if TITLE_FRAGMENTS.include?(s)
-      return true if %w[
-        HOLY\ BIBLE KING\ JAMES\ VERSION THE CALLED THE\ GOSPEL\ ACCORDING\ TO OTHERWISE\ CALLED,
-        COMMONLY\ CALLED, THE\ FIRST THE\ SECOND TO\ THE
-      ].include?(s)
-      return true if s.match?(/\ATHE (FIRST|SECOND|THIRD|FOURTH|FIFTH) BOOK OF MOSES,?\z/)
-      return true if s.match?(/\A(FIRST|SECOND) BOOK OF [A-Z ]+,?\z/)
-      return true if s.match?(/\ATHE (FIRST|SECOND) BOOK OF THE\z/)
-      return true if s.match?(/\ATHE (FIRST|SECOND) BOOK OF THE [A-Z]+\.\z/)
-      return true if s.match?(/\ABOOK OF THE KINGS[,.]\z/)
-      return true if s.match?(/\ATHE (THIRD|FOURTH) BOOK OF THE KINGS\.\z/)
-      return true if s.match?(/\ATHE EPISTLE OF PAUL THE APOSTLE\z/)
-      return true if s.match?(/\ATHE EPISTLE OF PAUL TO\z/)
-      return true if s.match?(/\AEPISTLE OF PAUL THE APOSTLE TO\z/)
-      return true if s.match?(/\ATHE (FIRST|SECOND) EPISTLE GENERAL OF\z/)
-      return true if s.match?(/\ATHE SECOND EPISTLE OF\z/)
-      return true if s.match?(/\ATHE BOOK OF .+\.\z/)
-      return true if s.match?(/\APSALM [0-9]+\z/)
-      return true if s.match?(/\AST\. [A-Z.]+\z/)
-      return true if s.match?(/\AOR, .+\.\z/)
-      return true if s.match?(/\A[A-Z][A-Z\s,'-]+\.\z/) && !s.match?(/[a-z]/)
-      return true if s.match?(/\A[A-Z][A-Z\s,]+;\z/)
-      return true if s.match?(/\A[A-Z]{3,}\.\z/) && !PsalmHeading.stanza_label?(s)
+      return true if COVER_AND_CONNECTOR_EXACT.include?(s)
+
+      BOOK_TITLE_LINE_RULES.each do |pat, guard|
+        next unless s.match?(pat)
+        next if guard && !guard.call(s)
+
+        return true
+      end
 
       false
     end
