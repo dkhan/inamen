@@ -76,17 +76,24 @@ module Inamen
     def self.numeric_chapter_debug_entries(lines)
       entries = []
       KjvLineParser.each_event(lines) do |event|
-        next unless event.numeric_chapter_debug
+        next unless numeric_chapter_line_event?(event)
 
         d = event.numeric_chapter_debug
         entries << {
-          lineno: d[:lineno],
-          raw: d[:raw],
+          lineno: event.lineno,
+          raw: event.raw,
           prev_raw: d[:prev_raw],
           next_raw: d[:next_raw]
         }
       end
       entries
     end
+
+    def self.numeric_chapter_line_event?(event)
+      (event.kind == KjvParseEvent::KIND_NUMBERED_LINE ||
+        event.kind == KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING) &&
+        event.numeric_chapter_debug
+    end
+    private_class_method :numeric_chapter_line_event?
   end
 end

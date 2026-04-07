@@ -3,17 +3,28 @@
 module Inamen
   # Lines that add to +psalm_heading_words+ in CountingService.total_for_lines (same state machine).
   module PsalmHeadingWordsDebugReport
+    def self.psalm_heading_word_line?(event)
+      case event.kind
+      when KjvParseEvent::KIND_PSALM_HEADING
+        true
+      when KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING
+        (event.totals_delta[:psalm_heading_words] || 0).positive?
+      else
+        false
+      end
+    end
+    private_class_method :psalm_heading_word_line?
+
     def self.collect(lines)
       entries = []
       total = 0
 
       KjvLineParser.each_event(lines) do |event|
-        next unless event.psalm_heading_debug
+        next unless psalm_heading_word_line?(event)
 
-        d = event.psalm_heading_debug
-        tok = d[:tokens]
+        tok = event.totals_delta[:psalm_heading_words] || 0
         total += tok
-        entries << { lineno: d[:lineno], raw: d[:raw], tokens: tok }
+        entries << { lineno: event.lineno, raw: event.raw.chomp, tokens: tok }
       end
 
       [entries, total]

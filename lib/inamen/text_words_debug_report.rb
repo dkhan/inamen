@@ -17,6 +17,13 @@ module Inamen
       end
     end
 
+    def self.text_word_line_event?(event)
+      (event.kind == KjvParseEvent::KIND_NUMBERED_LINE ||
+        event.kind == KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING) &&
+        (event.totals_delta[:text_words] || 0).positive?
+    end
+    private_class_method :text_word_line_event?
+
     # Builds entries and per-bucket token sums (+total+).
     def self.collect(lines)
       entries = []
@@ -24,17 +31,16 @@ module Inamen
       total = 0
 
       KjvLineParser.each_event(lines) do |event|
-        next unless event.text_words_debug
+        next unless text_word_line_event?(event)
 
-        d = event.text_words_debug
-        classification = d[:classification]
-        tok = d[:tokens]
+        classification = LineClassifier.classify(event.raw)
+        tok = event.totals_delta[:text_words]
         total += tok
         buckets[bucket_for(classification)] += tok
 
         entries << {
-          lineno: d[:lineno],
-          raw: d[:raw],
+          lineno: event.lineno,
+          raw: event.raw.chomp,
           tokens: tok,
           classification: classification
         }

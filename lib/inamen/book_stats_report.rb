@@ -149,6 +149,23 @@ module Inamen
       end
     end
 
+    def self.book_delta_for(event)
+      d = event.totals_delta
+      case event.kind
+      when KjvParseEvent::KIND_PSALM_TITLE
+        [1, 0]
+      when KjvParseEvent::KIND_SPLIT_VERSE_NUMBER
+        [0, 1]
+      when KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING
+        [0, d[:verse_numbers].to_i]
+      when KjvParseEvent::KIND_NUMBERED_LINE, KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING
+        [d[:chapter_numbers].to_i, d[:verse_numbers].to_i]
+      else
+        [0, 0]
+      end
+    end
+    private_class_method :book_delta_for
+
     def self.per_book_counts(lines)
       stats = Hash.new { |h, k| h[k] = { chapters: 0, verses: 0 } }
       labels = book_label_at_each_index(lines)
@@ -156,8 +173,9 @@ module Inamen
       KjvLineParser.each_event(lines) do |event|
         i = event.lineno - 1
         b = labels[i]
-        stats[b][:chapters] += event.book_chapters
-        stats[b][:verses] += event.book_verses
+        ch, vs = book_delta_for(event)
+        stats[b][:chapters] += ch
+        stats[b][:verses] += vs
       end
 
       stats
