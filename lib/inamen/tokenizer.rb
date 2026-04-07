@@ -4,10 +4,10 @@ module Inamen
   # Splits text into tokens: Unicode letter-words (with internal apostrophe/hyphen),
   # or runs of ASCII digits. Other characters act as separators and are dropped.
   class Tokenizer
-    # Letter-words: at least one letter; apostrophe or hyphen only between letter runs.
+    # Letter-words: at least one letter; hyphen or apostrophe (ASCII ' or curly ’ U+2019) between letter runs.
     # Numbers: digit runs as their own tokens.
     TOKEN_PATTERN = /
-      (?:\p{L}\p{M}*)+(?:[-'](?:\p{L}\p{M}*)+)*
+      (?:\p{L}\p{M}*)+(?:[-'\u{2019}](?:\p{L}\p{M}*)+)*
       |
       [0-9]+
     /x

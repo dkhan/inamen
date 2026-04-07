@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+require "inamen"
+require "inamen/counting_service"
+
+file = File.expand_path("../data/KJV.txt", __dir__)
+lines = File.readlines(file, chomp: true)
+
+PSALM_HEADER = /\APSALM [0-9]+\z/
+
+if ARGV[0] == "line-samples"
+  limit = (n = ARGV[1].to_i).positive? ? n : 3
+  Inamen::LineClassifier.print_sample_report(lines, limit: limit)
+  exit 0
+end
+
+if ARGV[0] == "text-words-debug"
+  Inamen::TextWordsDebugReport.print_report(lines)
+  exit 0
+end
+
+if ARGV[0] == "psalm-heading-words-debug"
+  Inamen::PsalmHeadingWordsDebugReport.print_report(lines)
+  exit 0
+end
+
+if ARGV[0] == "psalms-unclassified-debug"
+  Inamen::LineClassifier.print_psalms_unclassified_report(lines)
+  exit 0
+end
+
+if ARGV[0] == "book-stats-debug"
+  all = ARGV.include?("--all")
+  Inamen::BookStatsReport.print_comparison(lines, all: all)
+  exit 0
+end
+
+if ARGV[0] == "numeric-chapters-debug"
+  entries = Inamen::CountingService.numeric_chapter_debug_entries(lines)
+  entries.each do |e|
+    puts "---"
+    puts "line #{e[:lineno]}: #{e[:raw]}"
+    puts "  previous non-empty: #{e[:prev_raw] || '(none)'}"
+    puts "  next non-empty: #{e[:next_raw] || '(none)'}"
+  end
+  puts "---"
+  puts "Total numeric chapter lines: #{entries.size}"
+  exit 0
+end
+
+if ARGV[0] == "psalm-debug"
+  lines.each_with_index do |line, i|
+    next unless line.to_s.strip.match?(PSALM_HEADER)
+
+    lineno = i + 1
+    puts "line #{lineno}: #{line}"
+    puts "  classification: #{Inamen::LineClassifier.classify(line)}"
+
+    shown = 0
+    j = i + 1
+    while j < lines.length && shown < 2
+      nxt = lines[j]
+      j += 1
+      next if nxt.to_s.strip.empty?
+
+      shown += 1
+      puts "  next non-empty (line #{j}): #{nxt}"
+      puts "    classification: #{Inamen::LineClassifier.classify(nxt)}"
+    end
+    puts
+  end
+  exit 0
+end
+
+counts = Inamen::CountingService.total_for_lines(lines)
+
+puts "Text words: #{counts[:text_words]}"
+puts "Verse text words: #{counts[:verse_text_words]}"
+puts "Psalm heading words: #{counts[:psalm_heading_words]}"
+puts "Psalm 119 division words: #{counts[:psalm_119_division_words]}"
+puts "Chapter numbers: #{counts[:chapter_numbers]}"
+puts "Verse numbers: #{counts[:verse_numbers]}"
+puts
+puts "Debug:"
+puts "  PSALM chapter titles: #{counts[:psalm_chapter_titles]}"
+puts "  Numeric chapter lines: #{counts[:numeric_chapter_lines]}"
+puts "  Implicit Psalm verse 1: #{counts[:implicit_psalm_verse_1]}"
+puts "  Numbered verse lines: #{counts[:numbered_verse_lines]}"
+
+combined = Inamen::CountingService.combined_total(counts)
+
+puts
+puts "Combined total: #{combined}"
+puts "Divisible by 7: #{combined % 7 == 0}"

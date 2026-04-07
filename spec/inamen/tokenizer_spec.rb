@@ -16,6 +16,13 @@ RSpec.describe Inamen::Tokenizer do
       )
     end
 
+    it "treats curly apostrophe (U+2019) as in-word like ASCII" do
+      input = "David\u{2019}s Psalm of praise."
+      expect(described_class.tokenize(input)).to eq(
+        ["David\u{2019}s", "Psalm", "of", "praise"]
+      )
+    end
+
     it "returns empty array for nil or blank" do
       expect(described_class.tokenize(nil)).to eq([])
       expect(described_class.tokenize("")).to eq([])
