@@ -9,6 +9,28 @@ lines = File.readlines(file, chomp: true)
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
 
+if ARGV[0] == "chapter"
+  if ARGV.length < 3
+    warn "Usage: #{$PROGRAM_NAME} chapter <Book Name> <Chapter Number>"
+    exit 1
+  end
+
+  ch_arg = ARGV[-1]
+  unless ch_arg.match?(/\A\d+\z/)
+    warn "Chapter number must be a positive integer."
+    exit 1
+  end
+
+  book_name = ARGV[1..-2].join(" ")
+  begin
+    Inamen::ChapterReport.print_chapter(lines, book: book_name, chapter: ch_arg.to_i)
+  rescue ArgumentError => e
+    warn e.message
+    exit 1
+  end
+  exit 0
+end
+
 if ARGV[0] == "line-samples"
   limit = (n = ARGV[1].to_i).positive? ? n : 3
   Inamen::LineClassifier.print_sample_report(lines, limit: limit)
