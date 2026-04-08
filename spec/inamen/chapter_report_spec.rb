@@ -36,4 +36,13 @@ RSpec.describe Inamen::ChapterReport do
       expect(s[:combined]).to eq(159)
     end
   end
+
+  describe ".chapters_divisible_by_7" do
+    it "lists canon chapters whose combined total is divisible by 7 (includes Genesis 2)" do
+      rows = described_class.chapters_divisible_by_7(lines)
+      gen2 = rows.find { |r| r[:book] == "Genesis" && r[:chapter] == 2 }
+      expect(gen2).not_to be_nil
+      expect(gen2[:combined]).to eq(658)
+    end
+  end
 end

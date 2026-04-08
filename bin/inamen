@@ -31,6 +31,11 @@ if ARGV[0] == "chapter"
   exit 0
 end
 
+if ARGV[0] == "chapters-divisible-by-7"
+  Inamen::ChapterReport.print_chapters_divisible_by_7(lines)
+  exit 0
+end
+
 if ARGV[0] == "line-samples"
   limit = (n = ARGV[1].to_i).positive? ? n : 3
   Inamen::LineClassifier.print_sample_report(lines, limit: limit)
