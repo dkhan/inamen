@@ -100,23 +100,4 @@ if ARGV[0] == "psalm-debug"
   exit 0
 end
 
-counts = Inamen::CountingService.total_for_lines(lines)
-
-puts "Text words: #{counts[:text_words]}"
-puts "Verse text words: #{counts[:verse_text_words]}"
-puts "Psalm heading words: #{counts[:psalm_heading_words]}"
-puts "Psalm 119 division words: #{counts[:psalm_119_division_words]}"
-puts "Chapter numbers: #{counts[:chapter_numbers]}"
-puts "Verse numbers: #{counts[:verse_numbers]}"
-puts
-puts "Debug:"
-puts "  PSALM chapter titles: #{counts[:psalm_chapter_titles]}"
-puts "  Numeric chapter lines: #{counts[:numeric_chapter_lines]}"
-puts "  Implicit Psalm verse 1: #{counts[:implicit_psalm_verse_1]}"
-puts "  Numbered verse lines: #{counts[:numbered_verse_lines]}"
-
-combined = Inamen::CountingService.combined_total(counts)
-
-puts
-puts "Combined total: #{combined}"
-puts "Divisible by 7: #{combined % 7 == 0}"
+Inamen::SummaryReport.print_summary(lines)
