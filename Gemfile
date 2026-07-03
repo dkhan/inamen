@@ -5,3 +5,4 @@ source "https://rubygems.org"
 # gem "rails"
 
 gem "rspec", "~> 3.13"
+gem "sqlite3", "~> 2.9"

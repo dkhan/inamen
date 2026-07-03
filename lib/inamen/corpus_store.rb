@@ -1,0 +1,154 @@
+# frozen_string_literal: true
+
+require "sqlite3"
+require "fileutils"
+
+require_relative "corpus_indexer"
+
+module Inamen
+  # SQLite corpus: one row per token occurrence with book/chapter/verse location.
+  module CorpusStore
+    DEFAULT_PATH = File.expand_path("../../data/kjv_corpus.sqlite", __dir__)
+    SCHEMA_VERSION = 2
+
+    BUCKET_VERSE_TEXT = "verse_text"
+    BUCKET_PSALM_HEADING = "psalm_heading"
+    BUCKET_COLOPHON = "colophon"
+    SCAN_BUCKETS = [BUCKET_VERSE_TEXT, BUCKET_PSALM_HEADING, BUCKET_COLOPHON].freeze
+
+    OT_BOOKS = BookStatsReport::CANON.first(39).map(&:first).freeze
+    NT_BOOKS = BookStatsReport::CANON.drop(39).map(&:first).freeze
+    TESTAMENT_BY_BOOK = (
+      OT_BOOKS.to_h { |b| [b, "OT"] }.merge(NT_BOOKS.to_h { |b| [b, "NT"] })
+    ).freeze
+
+    class << self
+      def build!(lines, path: DEFAULT_PATH)
+        FileUtils.mkdir_p(File.dirname(path))
+        File.delete(path) if File.exist?(path)
+
+        db = open_db(path)
+        create_schema!(db)
+        insert_tokens!(db, lines)
+        record_build_metadata!(db, lines)
+        db.close
+        path
+      end
+
+      def open(path = DEFAULT_PATH)
+        raise ArgumentError, "Corpus not found at #{path.inspect} (run: bin/inamen index)" unless File.file?(path)
+
+        db = open_db(path)
+        create_schema!(db) unless schema_present?(db)
+        db
+      end
+
+      def token_count(db, buckets: SCAN_BUCKETS)
+        list = Array(buckets)
+        placeholders = (["?"] * list.length).join(", ")
+        db.get_first_value(
+          "SELECT COUNT(*) FROM tokens WHERE bucket IN (#{placeholders})",
+          list
+        ).to_i
+      end
+
+      def bucket_counts(db)
+        SCAN_BUCKETS.to_h do |bucket|
+          [bucket, token_count(db, buckets: [bucket])]
+        end
+      end
+
+      def normalize_token(token)
+        token.to_s.downcase
+      end
+
+      def testament_for(book)
+        TESTAMENT_BY_BOOK[book] or raise ArgumentError, "Unknown book: #{book.inspect}"
+      end
+
+      def resolve_buckets(bucket)
+        return SCAN_BUCKETS if bucket.nil? || bucket == :default || bucket == "default" || bucket == "scannable"
+
+        Array(bucket)
+      end
+
+      private
+
+      def open_db(path)
+        SQLite3::Database.new(path).tap do |db|
+          db.busy_timeout = 5_000
+          db.execute("PRAGMA journal_mode = WAL")
+          db.execute("PRAGMA synchronous = NORMAL")
+        end
+      end
+
+      def schema_present?(db)
+        db.get_first_value("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'tokens'")
+      end
+
+      def create_schema!(db)
+        db.execute_batch(<<~SQL)
+          CREATE TABLE IF NOT EXISTS meta (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+          );
+
+          CREATE TABLE IF NOT EXISTS tokens (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            book TEXT NOT NULL,
+            chapter INTEGER NOT NULL,
+            verse INTEGER NOT NULL,
+            word_index INTEGER NOT NULL,
+            token_raw TEXT NOT NULL,
+            token_norm TEXT NOT NULL,
+            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
+            bucket TEXT NOT NULL,
+            lineno INTEGER NOT NULL DEFAULT 0,
+            UNIQUE (book, chapter, verse, bucket, lineno, word_index)
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_tokens_norm_bucket ON tokens (token_norm, bucket);
+          CREATE INDEX IF NOT EXISTS idx_tokens_testament ON tokens (testament, bucket);
+          CREATE INDEX IF NOT EXISTS idx_tokens_book ON tokens (book, bucket);
+        SQL
+      end
+
+      def insert_tokens!(db, lines)
+        insert = db.prepare(<<~SQL)
+          INSERT INTO tokens (book, chapter, verse, word_index, token_raw, token_norm, testament, bucket, lineno)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SQL
+
+        db.transaction do
+          CorpusIndexer.each_token_record(lines) do |rec|
+            insert.execute(
+              rec[:book], rec[:chapter], rec[:verse], rec[:word_index],
+              rec[:token_raw], normalize_token(rec[:token_raw]), rec[:testament],
+              rec[:bucket], rec[:lineno]
+            )
+          end
+        end
+      ensure
+        insert&.close
+      end
+
+      def record_build_metadata!(db, lines)
+        db.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", ["schema_version", SCHEMA_VERSION.to_s])
+        bucket_counts(db).each do |bucket, count|
+          db.execute(
+            "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+            ["token_rows_#{bucket}", count.to_s]
+          )
+        end
+        db.execute(
+          "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+          ["token_rows_scannable", token_count(db).to_s]
+        )
+        db.execute(
+          "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+          ["source_lines", lines.length.to_s]
+        )
+      end
+    end
+  end
+end

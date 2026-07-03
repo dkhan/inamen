@@ -8,6 +8,7 @@ module Inamen
 
       labels = BookStatsReport.book_label_at_each_index(lines)
       state = { book: nil, chapter: nil, verse: nil }
+      buffers = {}
 
       KjvLineParser.each_event(lines) do |event|
         b = labels[event.lineno - 1]
@@ -35,8 +36,15 @@ module Inamen
         next unless d[:verse_text_words].to_i.positive?
         next unless state[:book] && state[:chapter] && state[:verse]
 
+        key = [state[:book], state[:chapter], state[:verse]]
         text = verse_body_from_stripped(s)
-        yield state[:book], state[:chapter], state[:verse], text
+        buf = (buffers[key] ||= +"")
+        buf << " " unless buf.empty?
+        buf << text
+      end
+
+      buffers.each do |(book, chapter, verse), text|
+        yield book, chapter, verse, text
       end
     end
 

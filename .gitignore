@@ -2,3 +2,5 @@
 .bundle/
 .vendor/
 .DS_Store
+data/*.sqlite
+data/*.sqlite-*

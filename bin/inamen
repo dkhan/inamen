@@ -1,13 +1,179 @@
 #!/usr/bin/env ruby
 
+begin
+  require "bundler/setup"
+rescue LoadError
+  nil
+end
+
 $LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
 require "inamen"
 require "inamen/counting_service"
+
+def parse_scan_scope(raw)
+  case raw.to_s.downcase.tr("-", "_")
+  when "whole", "whole_bible" then :whole_bible
+  when "ot" then :ot
+  when "nt" then :nt
+  else raw.to_s
+  end
+end
 
 file = File.expand_path("../data/KJV.txt", __dir__)
 lines = File.readlines(file, chomp: true)
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
+
+if ARGV[0] == "index"
+  require "inamen/corpus_indexer"
+  require "inamen/corpus_store"
+
+  output = File.expand_path("../data/kjv_corpus.sqlite", __dir__)
+  force = false
+  args = ARGV[1..] || []
+  i = 0
+  while i < args.length
+    case args[i]
+    when "--output", "-o"
+      i += 1
+      output = File.expand_path(args[i])
+    when "--force", "-f"
+      force = true
+    else
+      warn "Unknown option: #{args[i]}"
+      warn "Usage: #{$PROGRAM_NAME} index [--output PATH] [--force]"
+      exit 1
+    end
+    i += 1
+  end
+
+  if File.exist?(output) && !force
+    warn "Corpus already exists at #{output} (use --force to rebuild)"
+    exit 1
+  end
+
+  path = Inamen::CorpusStore.build!(lines, path: output)
+  db = Inamen::CorpusStore.open(path)
+  counts = Inamen::CorpusStore.bucket_counts(db)
+  db.close
+  puts "Corpus: #{path}"
+  counts.each { |bucket, n| puts "#{bucket}: #{n}" }
+  puts "scannable total: #{counts.values.sum}"
+  exit 0
+end
+
+if ARGV[0] == "scan"
+  require "inamen/corpus_store"
+  require "inamen/divisible_by_seven_scan"
+
+  divisible_by = 7
+  scope = :whole_bible
+  min_count = 1
+  bucket = :default
+  corpus_path = File.expand_path("../data/kjv_corpus.sqlite", __dir__)
+  args = ARGV[1..] || []
+  i = 0
+  while i < args.length
+    case args[i]
+    when "--divisible-by", "-d"
+      i += 1
+      divisible_by = Integer(args[i])
+    when "--scope", "-s"
+      i += 1
+      scope = parse_scan_scope(args[i])
+    when "--bucket", "-b"
+      i += 1
+      bucket = args[i]
+    when "--min-count", "-m"
+      i += 1
+      min_count = Integer(args[i])
+    when "--corpus", "-c"
+      i += 1
+      corpus_path = File.expand_path(args[i])
+    else
+      warn "Unknown option: #{args[i]}"
+      warn "Usage: #{$PROGRAM_NAME} scan [--divisible-by N] [--scope whole|ot|nt|Book] [--bucket verse_text|psalm_heading|colophon|default] [--min-count N] [--corpus PATH]"
+      exit 1
+    end
+    i += 1
+  end
+
+  begin
+    db = Inamen::CorpusStore.open(corpus_path)
+    Inamen::DivisibleBySevenScan.print_scan(
+      db,
+      divisible_by: divisible_by,
+      scope: scope,
+      bucket: bucket,
+      min_count: min_count
+    )
+    db.close
+  rescue ArgumentError, SQLite3::Exception => e
+    warn e.message
+    exit 1
+  end
+  exit 0
+end
+
+if ARGV[0] == "feature" || ARGV[0] == "features"
+  require "inamen/features"
+
+  corpus_path = File.expand_path("../data/kjv_corpus.sqlite", __dir__)
+  use_corpus = false
+  args = (ARGV[0] == "features" ? ARGV[1..] : ARGV[1..]) || []
+  args = args.dup
+  i = 0
+  while i < args.length
+    case args[i]
+    when "--corpus", "-c"
+      i += 1
+      corpus_path = File.expand_path(args[i])
+      use_corpus = true
+    when "--use-corpus"
+      use_corpus = true
+    else
+      break
+    end
+    i += 1
+  end
+  args = args[i..] || []
+
+  db = nil
+  if use_corpus || File.file?(corpus_path)
+    begin
+      require "inamen/corpus_store"
+      db = Inamen::CorpusStore.open(corpus_path)
+    rescue ArgumentError
+      db = nil
+    end
+  end
+
+  if ARGV[0] == "features" || args.empty? || args.include?("--list")
+    Inamen::Features.print_catalog
+    db&.close
+    exit 0
+  end
+
+  if args.first == "--all"
+    Inamen::Features.run_all(lines: lines, db: db).each do |result|
+      Inamen::Features.print_result(result)
+      puts
+    end
+  else
+    id = args.first
+    begin
+      result = Inamen::Features.run(id, lines: lines, db: db)
+      Inamen::Features.print_result(result)
+    rescue ArgumentError => e
+      warn e.message
+      db&.close
+      exit 1
+    end
+  end
+
+  db&.close
+  exit 0
+end
 
 if ARGV[0] == "chapter"
   if ARGV.length < 3

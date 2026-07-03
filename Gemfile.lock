@@ -2,6 +2,7 @@ GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.6.2)
+    mini_portile2 (2.8.9)
     rspec (3.13.2)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -15,6 +16,9 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.7)
+    sqlite3 (2.9.5)
+      mini_portile2 (~> 2.8.0)
+    sqlite3 (2.9.5-x86_64-darwin)
 
 PLATFORMS
   ruby
@@ -22,6 +26,7 @@ PLATFORMS
 
 DEPENDENCIES
   rspec (~> 3.13)
+  sqlite3 (~> 2.9)
 
 BUNDLED WITH
    2.6.5
