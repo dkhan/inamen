@@ -9,7 +9,10 @@ RSpec.describe Inamen::Features do
   describe ".catalog" do
     it "lists known pattern features" do
       ids = described_class.catalog.map(&:id)
-      expect(ids).to include("combined_total", "peter_verses", "paul_verses", "fishermen_gospels", "jesus_mentions")
+      expect(ids).to include(
+        "combined_total", "peter_verses", "paul_verses", "fishermen_gospels",
+        "jesus_mentions", "bible_boundary_words"
+      )
     end
   end
 
@@ -36,6 +39,15 @@ RSpec.describe Inamen::Features do
       result = described_class.run("jesus_mentions", lines: lines)
       expect(result.count).to eq(980)
       expect(result.details).to include("raw_scannable=983", "excluded=3")
+    end
+
+    it "counts Bible boundary words as 77,777" do
+      result = described_class.run("bible_boundary_words", lines: lines)
+      expect(result.count).to eq(77_777)
+      expect(result.details).to include("in=12674 (Genesis 1:1 first word)")
+      expect(result.details).to include("earth=985 (Genesis 1:1 last word)")
+      expect(result.details).to include("the=64041 (Revelation 22:21 first word)")
+      expect(result.details).to include("amen=77 (Revelation 22:21 last word)")
     end
 
     context "with corpus db" do

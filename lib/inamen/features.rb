@@ -58,6 +58,15 @@ module Inamen
         unit: "occurrences",
         scope: "scannable",
         notes: "980 = 7×70 + 7×70. Raw scannable Jesus+JESUS count is 983; three non-Christ verses excluded."
+      ),
+      FeatureEntry.new(
+        id: "bible_boundary_words",
+        name: "Bible boundary words (Alpha & Omega)",
+        description: "Sum of scannable occurrences: In (ci), earth (cs), The (ci), Amen (cs)—anchored on first/last tokens of Genesis 1:1 and Revelation 22:21.",
+        expected_count: 77_777,
+        unit: "occurrences",
+        scope: "scannable",
+        notes: "Genesis 1:1: IN…earth. Revelation 22:21: The…Amen. Counts: in=12,674 + earth=985 + the=64,041 + amen=77 = 77,777."
       )
     ].freeze
 
@@ -124,6 +133,8 @@ module Inamen
           fishermen_gospels(lines)
         when "jesus_mentions"
           jesus_mentions(lines, db: db)
+        when "bible_boundary_words"
+          bible_boundary_words(lines, db: db)
         else
           raise ArgumentError, "Unknown feature: #{id.inspect}"
         end
@@ -176,6 +187,14 @@ module Inamen
 
         excluded_n = raw - count
         [count, ["raw_scannable=#{raw}", "excluded=#{excluded_n}", "verses_excluded=#{JESUS_NON_CHRIST_VERSES.length}"]]
+      end
+
+      def bible_boundary_words(lines, db:)
+        counts = BibleBoundaryWords.counts(lines, db: db)
+        details = BibleBoundaryWords::RULES.map do |rule|
+          "#{rule[:key]}=#{counts[rule[:key]]} (#{rule[:anchor]})"
+        end
+        [counts[:sum], details]
       end
     end
   end
