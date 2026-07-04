@@ -24,6 +24,12 @@ lines = File.readlines(file, chomp: true)
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
 
+if ARGV[0] == "kjvcode-align"
+  require "inamen/kjvcode_alignment"
+  Inamen::KjvcodeAlignment.report(lines)
+  exit 0
+end
+
 if ARGV[0] == "index"
   require "inamen/corpus_indexer"
   require "inamen/corpus_store"

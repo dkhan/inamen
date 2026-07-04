@@ -23,6 +23,7 @@ module Inamen
     :unit,
     :scope,
     :notes,
+    :kjvcode_expected_count,
     keyword_init: true
   )
 end

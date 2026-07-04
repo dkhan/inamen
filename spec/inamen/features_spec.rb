@@ -11,7 +11,11 @@ RSpec.describe Inamen::Features do
       ids = described_class.catalog.map(&:id)
       expect(ids).to include(
         "combined_total", "peter_verses", "paul_verses", "fishermen_gospels",
-        "jesus_mentions", "bible_boundary_words"
+        "jesus_mentions", "bible_boundary_words", "amen_77", "boundary_anchor_verses",
+        "boundary_seven_forms", "in_amen_genesis_revelation", "the_amen_nt_concealed",
+        "god_jesus_genesis_revelation", "first_last_chapter_words",
+        "ot_first_last_chapter_words", "god_pure_nt", "beginning_end_amen",
+        "jesus_boundary_same_verse", "jesus_boundary_first7_nt"
       )
     end
   end
