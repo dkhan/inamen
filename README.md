@@ -1,43 +1,55 @@
-# Inamen — Biblical text feature verification
+# Inamen — Text pattern verification
 
 ## Purpose
 
-**Inamen** verifies a plain-text Bible file against a catalog of **documented numeric and structural features** — patterns whose definitions are explicit, reproducible, and testable. The reference corpus today is the bundled King James Version (`data/KJV.txt`), aligned where possible with [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
+**Inamen** analyzes plain-text documents for **documented numeric and structural patterns** — features whose definitions are explicit, reproducible, and testable. It reports which patterns match, which miss, and (eventually) what else in the text might be worth studying.
 
-The **ultimate goal** is a general verification engine: point it at *any* Bible text file and report which known features match, which miss, and what else might be worth studying. That includes other English editions (NKJV, WEB, etc.) and, eventually, foreign-language texts — multilingual support is **not implemented yet**, but the architecture should stay parser- and feature-driven so new languages can plug in behind the same verification API.
+**Today** the engine is built around the Christian Bible: the bundled King James Version (`data/KJV.txt`) is the reference corpus, with eighteen catalogued features aligned where possible to [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
 
-A second long-term goal is **discovery**: surfacing candidate patterns the catalog does not yet describe (for example token counts divisible by seven, boundary-word co-occurrences, or verse-level symmetries). Today the CLI includes a divisibility scan as an early step toward that; a full discovery pipeline is planned.
+**Long term**, the same engine should work on **any text, in any tradition** — not only Bibles. Examples:
+
+- Other English or foreign-language scripture (Quran, Bhagavad Gita, Torah editions, etc.)
+- Ancient Greek poetry, classical corpora, or other literary works
+- Any UTF-8 plain text a user uploads, with patterns defined for that corpus
+
+That requires **pluggable parsers** (how lines, stanzas, surahs, or chapters are recognized), **pluggable tokenizers** (script and language rules), and **corpus-specific feature catalogs** (what “correct” looks like for a given work). None of that generalization is implemented yet; the current code is Bible/KJV-specific. The architecture should stay feature-driven so new corpora can plug in behind the same verify-and-discover API.
+
+A parallel goal is **discovery**: surfacing candidate patterns the catalog does not yet describe — divisibility, boundary-word co-occurrence, positional symmetries, repeated n-grams, and so on. The CLI’s divisibility scan is an early step; a fuller discovery pipeline is planned.
 
 ## Roadmap: web application
 
 The plan is a **Rails** application that wraps this library:
 
-- **Registered users** (and **super users** for advanced tooling) upload a Bible text file.
-- The site runs the full **feature verification** suite and presents pass/fail results with diffs against expected counts.
-- Users can run **discovery scans** on their upload to hunt for new numeric or structural patterns.
+- **Registered users** (and **super users** for advanced tooling) upload a plain-text file.
+- The user selects a **corpus profile** (e.g. KJV Bible, another Bible edition, or — later — Quran, Bhagavad Gita, Greek poetry, custom).
+- The site runs **verification** against that profile’s feature catalog and shows pass/fail results with diffs.
+- Users can run **discovery scans** on any upload to hunt for new numeric or structural patterns, regardless of domain.
 - Results are stored per upload so users can compare revisions, translations, or editions over time.
 
 ### Suggested site functionality (beyond core verify + discover)
 
 | Area | Ideas |
 |------|--------|
-| **Comparison** | Side-by-side two uploads (e.g. Cambridge KJV vs user file); highlight verses or tokens that change feature counts. |
-| **Reference alignment** | Optional alignment to KJPBS / kjvcode.com expected values; export a reconciliation report. |
-| **Feature browser** | Searchable catalog with definitions, formulas, example verses, and links to source code. |
-| **Custom feature sets** | Curated bundles (“7⁷ basics”, “Alpha & Omega”, “N.T. concealed capitals”) for focused audits. |
-| **Chapter & book drill-down** | Per-chapter totals, chapters divisible by 7, boundary-token heatmaps. |
-| **Upload validation** | Pre-flight parser report: malformed lines, missing books, canon mismatches, encoding issues. |
-| **API access** | JSON API for programmatic verification (CI for text publishers, Bible software teams). |
-| **Community patterns** | Submit a proposed feature; moderators promote vetted patterns into the global catalog. |
+| **Corpus profiles** | Per-tradition parsers and feature sets (Bible, Quran, Vedas, classical Greek, user-defined). |
+| **Comparison** | Side-by-side two uploads; highlight lines or tokens that change pattern counts. |
+| **Reference alignment** | Optional alignment to published reference counts (e.g. KJPBS / kjvcode.com for KJV). |
+| **Feature browser** | Searchable catalog with definitions, formulas, example locations, and source links. |
+| **Custom feature sets** | Curated bundles per corpus (“7⁷ basics”, “Alpha & Omega”, surah-level totals, meter patterns). |
+| **Structure drill-down** | Per-chapter, per-surah, or per-stanza totals; heatmaps for boundary or keyword tokens. |
+| **Upload validation** | Pre-flight report: encoding, structure, missing sections, canon or schema mismatches. |
+| **API access** | JSON API for programmatic verification (publishers, scholars, software integrations). |
+| **Community patterns** | Submit a proposed feature; moderators promote vetted patterns into a corpus catalog. |
 | **Notifications** | Alert when a re-upload fixes or breaks a previously failing feature. |
-| **Export** | PDF/CSV verification certificate, shareable read-only link for a completed audit. |
+| **Export** | PDF/CSV verification report, shareable read-only link for a completed audit. |
 | **Admin** | Corpus management, feature versioning, usage limits for registered and super-user accounts. |
 
 This repository is the **core engine** (parser, indexer, feature catalog, CLI). The Rails app will depend on it as a gem or mounted service.
 
 ---
 
-## What works today
+## What works today (KJV / Bible)
+
+The following is **implemented for the KJV plain-text layout only**. General text or other sacred works are not yet supported.
 
 ### Parsing & tokenization
 
@@ -152,10 +164,12 @@ bundle exec rspec
 
 ## Contributing
 
-New features should include:
+New **Bible/KJV** features should include:
 
 1. A clear **definition** (tokens, scope, case rules, exclusions).
 2. An **expected count** on `data/KJV.txt` (and `kjvcode_expected_count` when applicable).
 3. **RSpec** coverage so regressions are caught.
 
 Discovery candidates can start as scan results or alignment diffs before promotion into `Features::CATALOG`.
+
+For **non-Biblical corpora**, contributions should eventually include a parser profile, tokenizer rules, and a feature catalog appropriate to that text — the same verify-and-discover workflow, different schema.
