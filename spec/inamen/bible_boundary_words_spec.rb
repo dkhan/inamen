@@ -12,7 +12,7 @@ RSpec.describe Inamen::BibleBoundaryWords do
   describe ".anchor_tokens" do
     it "reads Genesis 1:1 and Revelation 22:21 boundary tokens from KJV verse text" do
       anchors = described_class.anchor_tokens(lines)
-      expect(anchors[:genesis_first]).to eq("IN")
+      expect(anchors[:genesis_first]).to eq("In")
       expect(anchors[:genesis_last]).to eq("earth")
       expect(anchors[:revelation_first]).to eq("The")
       expect(anchors[:revelation_last]).to eq("Amen")

@@ -161,17 +161,17 @@ module Inamen
         id: "jesus_boundary_same_verse",
         name: "Jesus + boundary forms in same verse",
         description: "In verses containing both Jesus (cs) and a seven-form boundary token, sum all such tokens.",
-        expected_count: 2408,
+        expected_count: 2401,
         kjvcode_expected_count: 2401,
         unit: "occurrences",
         scope: "verse_text",
-        notes: "Verses with 7-form boundary + Jesus (cs); excludes Acts 7:45 and Col 4:11. KJPBS: 1,658+743=7\u2074."
+        notes: "Verses with boundary forms + pure Jesus (cs, excl. Jesus'); antimention verses excluded. KJPBS: 1,658+743=7\u2074."
       ),
       FeatureEntry.new(
         id: "jesus_boundary_first7_nt",
         name: "Jesus in boundary verses (first 7 N.T. books)",
         description: "Jesus (cs) occurrences in scannable verses that also contain a seven-form boundary token, Matthew–1 Corinthians.",
-        expected_count: 537,
+        expected_count: 539,
         kjvcode_expected_count: 539,
         unit: "occurrences",
         scope: "first_7_nt",

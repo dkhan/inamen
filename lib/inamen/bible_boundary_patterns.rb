@@ -41,6 +41,12 @@ module Inamen
 
     SEVEN_FORM_TOKEN_SET = SEVEN_FORMS.flat_map { |f| f[:tokens] }.to_set.freeze
 
+    # kjvcode same-verse pattern: In | in | earth | The | THE | the | Amen (not all-caps IN).
+    JESUS_BOUNDARY_FORM_SET = %w[In in earth The THE the Amen].to_set.freeze
+
+    # Case-sensitive Jesus only; Jesus' (possessive) is excluded — not Christ.
+    JESUS_POSSESSIVE_SUFFIX = /['\u{2019}]/.freeze
+
     # Verses where token Jesus refers to Joshua or Jesus Justus (kjvcode pure Jesus).
     JESUS_NON_CHRIST_VERSES = [
       ["Acts", 7, 45],
@@ -217,31 +223,19 @@ module Inamen
       end
 
       def jesus_boundary_same_verse(lines, db: nil)
-        verses = verse_token_map(lines, db: db, bucket: :verse_text)
-        boundary = 0
-        jesus = 0
-        verses.each do |key, toks|
-          next unless toks.any? { |t| SEVEN_FORM_TOKEN_SET.include?(t) }
-          next unless toks.any? { |t| t == "Jesus" }
-          next if JESUS_NON_CHRIST_VERSE_SET.include?(key)
-
-          boundary += toks.count { |t| SEVEN_FORM_TOKEN_SET.include?(t) }
-          jesus += toks.count { |t| t == "Jesus" }
+        if db
+          jesus_boundary_same_verse_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
+        else
+          jesus_boundary_same_verse_from_lines(lines)
         end
-        { boundary: boundary, jesus: jesus, sum: boundary + jesus }
       end
 
       def jesus_boundary_first7_nt(lines, db: nil)
-        verses = verse_token_map(lines, db: db, bucket: :verse_text)
-        count = 0
-        verses.each do |(book, _ch, _v), toks|
-          next unless FIRST_7_NT_SET.include?(book)
-          next unless toks.any? { |t| SEVEN_FORM_TOKEN_SET.include?(t) }
-          next unless toks.any? { |t| t == "Jesus" }
-
-          count += toks.count { |t| t == "Jesus" }
+        if db
+          jesus_boundary_first7_nt_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
+        else
+          jesus_boundary_first7_nt_from_lines(lines)
         end
-        count
       end
 
       def god_pure_token?(tok)
@@ -250,6 +244,112 @@ module Inamen
 
       def seven_form_token?(tok)
         SEVEN_FORM_TOKEN_SET.include?(tok)
+      end
+
+      def any_pure_jesus?(text, toks)
+        count_pure_jesus(text, toks).positive?
+      end
+
+      # Case-sensitive Jesus only; possessive Jesus' is excluded (use Jesus* to include it).
+      def count_pure_jesus(text, toks)
+        count = 0
+        scan_pos = 0
+        toks.each do |tok|
+          next unless tok == "Jesus"
+
+          idx = text.index("Jesus", scan_pos)
+          break unless idx
+
+          after = text[idx + 5, 1]
+          count += 1 unless after&.match?(JESUS_POSSESSIVE_SUFFIX)
+          scan_pos = idx + 5
+        end
+        count
+      end
+
+      # KJPBS "Jesus" search in first-7 N.T.: Jesus + concealed JESUS; no Joshua/Justus exclusions.
+      def any_kjpbs_jesus?(text, toks)
+        count_kjpbs_jesus(text, toks).positive?
+      end
+
+      def count_kjpbs_jesus(text, toks)
+        count = 0
+        scan_pos = 0
+        toks.each do |tok|
+          if tok == "JESUS"
+            count += 1
+          elsif tok == "Jesus"
+            idx = text.index("Jesus", scan_pos)
+            break unless idx
+
+            after = text[idx + 5, 1]
+            count += 1 unless after&.match?(JESUS_POSSESSIVE_SUFFIX)
+            scan_pos = idx + 5
+          end
+        end
+        count
+      end
+
+      def jesus_boundary_same_verse_from_lines(lines)
+        boundary = 0
+        jesus = 0
+        VerseIndex.each_verse(lines) do |book, chapter, verse, text|
+          key = [book, chapter, verse]
+          next if JESUS_NON_CHRIST_VERSE_SET.include?(key)
+
+          toks = Tokenizer.tokenize(text)
+          next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          next unless any_pure_jesus?(text, toks)
+
+          boundary += toks.count { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          jesus += count_pure_jesus(text, toks)
+        end
+        { boundary: boundary, jesus: jesus, sum: boundary + jesus }
+      end
+
+      def jesus_boundary_same_verse_from_map(verses, lines)
+        boundary = 0
+        jesus = 0
+        verses.each do |key, toks|
+          next if JESUS_NON_CHRIST_VERSE_SET.include?(key)
+
+          book, chapter, verse = key
+          text = VerseIndex.verse_text(lines, book: book, chapter: chapter, verse: verse).to_s
+          next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          next unless any_pure_jesus?(text, toks)
+
+          boundary += toks.count { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          jesus += count_pure_jesus(text, toks)
+        end
+        { boundary: boundary, jesus: jesus, sum: boundary + jesus }
+      end
+
+      def jesus_boundary_first7_nt_from_lines(lines)
+        count = 0
+        VerseIndex.each_verse(lines) do |book, chapter, verse, text|
+          next unless FIRST_7_NT_SET.include?(book)
+
+          toks = Tokenizer.tokenize(text)
+          next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          next unless any_kjpbs_jesus?(text, toks)
+
+          count += count_kjpbs_jesus(text, toks)
+        end
+        count
+      end
+
+      def jesus_boundary_first7_nt_from_map(verses, lines)
+        count = 0
+        verses.each do |(book, chapter, verse), toks|
+          next unless FIRST_7_NT_SET.include?(book)
+
+          text = VerseIndex.verse_text(lines, book: book, chapter: chapter, verse: verse).to_s
+          next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          next unless any_kjpbs_jesus?(text, toks)
+
+          count += count_kjpbs_jesus(text, toks)
+        end
+        count
       end
 
       private

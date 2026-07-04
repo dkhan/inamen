@@ -32,12 +32,12 @@ RSpec.describe Inamen::KjvcodeAlignment do
       expect(Inamen::BibleBoundaryPatterns.god_pure_nt(lines)).to eq(1370)
 
       same = Inamen::BibleBoundaryPatterns.jesus_boundary_same_verse(lines)
-      expect(same[:sum]).to eq(2408)
-      expect(same[:sum] - 2401).to eq(7)
+      expect(same[:sum]).to eq(2401)
+      expect(same[:sum] - 2401).to eq(0)
 
       first7 = Inamen::BibleBoundaryPatterns.jesus_boundary_first7_nt(lines)
-      expect(first7).to eq(537)
-      expect(first7 - 539).to eq(-2)
+      expect(first7).to eq(539)
+      expect(first7 - 539).to eq(0)
     end
   end
 

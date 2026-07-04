@@ -91,15 +91,15 @@ RSpec.describe Inamen::BibleBoundaryPatterns do
   describe ".jesus_boundary_same_verse" do
     it "totals boundary forms and pure Jesus in shared verses (excl. Joshua/Justus)" do
       counts = described_class.jesus_boundary_same_verse(lines)
-      expect(counts[:boundary]).to eq(1661)
-      expect(counts[:jesus]).to eq(747)
-      expect(counts[:sum]).to eq(2408)
+      expect(counts[:boundary]).to eq(1658)
+      expect(counts[:jesus]).to eq(743)
+      expect(counts[:sum]).to eq(2401)
     end
   end
 
   describe ".jesus_boundary_first7_nt" do
-    it "counts Jesus in boundary verses across Matthew–1 Corinthians" do
-      expect(described_class.jesus_boundary_first7_nt(lines)).to eq(537)
+    it "counts KJPBS Jesus (excl. possessive Jesus') in boundary verses across Matthew–1 Corinthians" do
+      expect(described_class.jesus_boundary_first7_nt(lines)).to eq(539)
     end
   end
 
