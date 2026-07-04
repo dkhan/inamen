@@ -12,7 +12,7 @@ A second long-term goal is **discovery**: surfacing candidate patterns the catal
 
 The plan is a **Rails** application that wraps this library:
 
-- **Registered, paid users** upload a Bible text file.
+- **Registered users** (and **super users** for advanced tooling) upload a Bible text file.
 - The site runs the full **feature verification** suite and presents pass/fail results with diffs against expected counts.
 - Users can run **discovery scans** on their upload to hunt for new numeric or structural patterns.
 - Results are stored per upload so users can compare revisions, translations, or editions over time.
@@ -31,7 +31,7 @@ The plan is a **Rails** application that wraps this library:
 | **Community patterns** | Submit a proposed feature; moderators promote vetted patterns into the global catalog. |
 | **Notifications** | Alert when a re-upload fixes or breaks a previously failing feature. |
 | **Export** | PDF/CSV verification certificate, shareable read-only link for a completed audit. |
-| **Admin** | Corpus management, feature versioning, usage metering for paid tiers. |
+| **Admin** | Corpus management, feature versioning, usage limits for registered and super-user accounts. |
 
 This repository is the **core engine** (parser, indexer, feature catalog, CLI). The Rails app will depend on it as a gem or mounted service.
 
