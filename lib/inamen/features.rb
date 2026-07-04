@@ -211,10 +211,17 @@ module Inamen
       end
 
       def print_catalog(out: $stdout)
-        out.puts "id\texpected\tunit\tscope\tname"
-        CATALOG.each do |entry|
-          out.puts "#{entry.id}\t#{entry.expected_count}\t#{entry.unit}\t#{entry.scope}\t#{entry.name}"
+        headers = %w[id expected unit scope name]
+        rows = CATALOG.map do |entry|
+          [
+            entry.id,
+            format_count(entry.expected_count),
+            entry.unit,
+            entry.scope,
+            entry.name
+          ]
         end
+        print_table(out, headers, rows, align: { "expected" => :right })
       end
 
       def print_result(result, out: $stdout)
@@ -234,6 +241,28 @@ module Inamen
       end
 
       private
+
+      def format_count(number)
+        number.to_s.reverse.scan(/.{1,3}/).join(",").reverse
+      end
+
+      def print_table(out, headers, rows, align: {})
+        widths = headers.each_index.map do |i|
+          ([headers[i]] + rows.map { |row| row[i].to_s }).map(&:length).max
+        end
+
+        write_row = lambda do |cells|
+          line = cells.each_with_index.map do |cell, i|
+            text = cell.to_s
+            align[headers[i]] === :right ? text.rjust(widths[i]) : text.ljust(widths[i])
+          end.join("  ")
+          out.puts line
+        end
+
+        write_row.call(headers)
+        write_row.call(widths.map { |w| "-" * w })
+        rows.each { |row| write_row.call(row) }
+      end
 
       def compute(id, lines, db:)
         case id.to_s
