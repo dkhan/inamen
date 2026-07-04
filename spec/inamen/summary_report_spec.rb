@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Inamen::SummaryReport do
-  let(:lines) do
-    path = File.expand_path("../../data/KJV.txt", __dir__)
-    File.readlines(path, chomp: true)
-  end
+  let(:lines) { Inamen::KjvFixture.lines }
 
   describe ".build" do
     it "matches the public KJV summary figures" do

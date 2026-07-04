@@ -5,10 +5,7 @@ require "inamen/corpus_store"
 require "inamen/divisible_by_seven_scan"
 
 RSpec.describe Inamen::CorpusStore do
-  let(:full_lines) do
-    path = File.expand_path("../../data/KJV.txt", __dir__)
-    File.readlines(path, chomp: true)
-  end
+  let(:full_lines) { Inamen::KjvFixture.lines }
 
   describe ".build!" do
     it "indexes Matthew sample verses with correct token locations" do
@@ -34,21 +31,15 @@ RSpec.describe Inamen::CorpusStore do
     end
 
     it "indexes Psalm superscriptions and colophons" do
-      Dir.mktmpdir do |dir|
-        path = File.join(dir, "kjv.sqlite")
-        described_class.build!(full_lines, path: path)
+      db = Inamen::KjvFixture.db
+      counts = described_class.bucket_counts(db)
+      moses = Inamen::DivisibleBySevenScan.count_for(db, token: "Moses", exact: true)
 
-        db = described_class.open(path)
-        counts = described_class.bucket_counts(db)
-        moses = Inamen::DivisibleBySevenScan.count_for(db, token: "Moses", exact: true)
-        db.close
-
-        expect(counts[described_class::BUCKET_VERSE_TEXT]).to eq(789_629)
-        expect(counts[described_class::BUCKET_PSALM_HEADING]).to eq(1034)
-        expect(counts[described_class::BUCKET_COLOPHON]).to eq(186)
-        expect(counts.values.sum).to eq(790_849)
-        expect(moses).to eq(848)
-      end
+      expect(counts[described_class::BUCKET_VERSE_TEXT]).to eq(789_629)
+      expect(counts[described_class::BUCKET_PSALM_HEADING]).to eq(1034)
+      expect(counts[described_class::BUCKET_COLOPHON]).to eq(186)
+      expect(counts.values.sum).to eq(790_849)
+      expect(moses).to eq(848)
     end
   end
 end

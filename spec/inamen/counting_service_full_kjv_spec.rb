@@ -2,8 +2,7 @@
 
 RSpec.describe Inamen::CountingService, "#total_for_lines" do
   it "matches full KJV totals (7^7)" do
-    kjv_path = File.expand_path("../../data/KJV.txt", __dir__)
-    lines = File.readlines(kjv_path, chomp: true)
+    lines = Inamen::KjvFixture.lines
 
     totals = described_class.total_for_lines(lines)
 

@@ -43,8 +43,7 @@ end
 
 RSpec.describe "KjvLineParser event stream" do
   it "emits only kinds registered on KjvParseEvent for the full KJV file" do
-    kjv_path = File.expand_path("../../data/KJV.txt", __dir__)
-    lines = File.readlines(kjv_path, chomp: true)
+    lines = Inamen::KjvFixture.lines
     kinds = []
     Inamen::KjvLineParser.each_event(lines) { |e| kinds << e.kind }
 

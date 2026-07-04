@@ -19,14 +19,15 @@ def parse_scan_scope(raw)
   end
 end
 
-file = File.expand_path("../data/KJV.txt", __dir__)
-lines = File.readlines(file, chomp: true)
+def kjv_lines
+  @kjv_lines ||= File.readlines(File.expand_path("../data/KJV.txt", __dir__), chomp: true)
+end
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
 
 if ARGV[0] == "kjvcode-align"
   require "inamen/kjvcode_alignment"
-  Inamen::KjvcodeAlignment.report(lines)
+  Inamen::KjvcodeAlignment.report(kjv_lines)
   exit 0
 end
 
@@ -58,7 +59,7 @@ if ARGV[0] == "index"
     exit 1
   end
 
-  path = Inamen::CorpusStore.build!(lines, path: output)
+  path = Inamen::CorpusStore.build!(kjv_lines, path: output)
   db = Inamen::CorpusStore.open(path)
   counts = Inamen::CorpusStore.bucket_counts(db)
   db.close
@@ -161,14 +162,14 @@ if ARGV[0] == "feature" || ARGV[0] == "features"
   end
 
   if args.first == "--all"
-    Inamen::Features.run_all(lines: lines, db: db).each do |result|
+    Inamen::Features.run_all(lines: kjv_lines, db: db).each do |result|
       Inamen::Features.print_result(result)
       puts
     end
   else
     id = args.first
     begin
-      result = Inamen::Features.run(id, lines: lines, db: db)
+      result = Inamen::Features.run(id, lines: kjv_lines, db: db)
       Inamen::Features.print_result(result)
     rescue ArgumentError => e
       warn e.message
@@ -195,7 +196,7 @@ if ARGV[0] == "chapter"
 
   book_name = ARGV[1..-2].join(" ")
   begin
-    Inamen::ChapterReport.print_chapter(lines, book: book_name, chapter: ch_arg.to_i)
+    Inamen::ChapterReport.print_chapter(kjv_lines, book: book_name, chapter: ch_arg.to_i)
   rescue ArgumentError => e
     warn e.message
     exit 1
@@ -204,39 +205,39 @@ if ARGV[0] == "chapter"
 end
 
 if ARGV[0] == "chapters-divisible-by-7"
-  Inamen::ChapterReport.print_chapters_divisible_by_7(lines)
+  Inamen::ChapterReport.print_chapters_divisible_by_7(kjv_lines)
   exit 0
 end
 
 if ARGV[0] == "line-samples"
   limit = (n = ARGV[1].to_i).positive? ? n : 3
-  Inamen::LineClassifier.print_sample_report(lines, limit: limit)
+  Inamen::LineClassifier.print_sample_report(kjv_lines, limit: limit)
   exit 0
 end
 
 if ARGV[0] == "text-words-debug"
-  Inamen::TextWordsDebugReport.print_report(lines)
+  Inamen::TextWordsDebugReport.print_report(kjv_lines)
   exit 0
 end
 
 if ARGV[0] == "psalm-heading-words-debug"
-  Inamen::PsalmHeadingWordsDebugReport.print_report(lines)
+  Inamen::PsalmHeadingWordsDebugReport.print_report(kjv_lines)
   exit 0
 end
 
 if ARGV[0] == "psalms-unclassified-debug"
-  Inamen::LineClassifier.print_psalms_unclassified_report(lines)
+  Inamen::LineClassifier.print_psalms_unclassified_report(kjv_lines)
   exit 0
 end
 
 if ARGV[0] == "book-stats-debug"
   all = ARGV.include?("--all")
-  Inamen::BookStatsReport.print_comparison(lines, all: all)
+  Inamen::BookStatsReport.print_comparison(kjv_lines, all: all)
   exit 0
 end
 
 if ARGV[0] == "numeric-chapters-debug"
-  entries = Inamen::CountingService.numeric_chapter_debug_entries(lines)
+  entries = Inamen::CountingService.numeric_chapter_debug_entries(kjv_lines)
   entries.each do |e|
     puts "---"
     puts "line #{e[:lineno]}: #{e[:raw]}"
@@ -249,7 +250,7 @@ if ARGV[0] == "numeric-chapters-debug"
 end
 
 if ARGV[0] == "psalm-debug"
-  lines.each_with_index do |line, i|
+  kjv_lines.each_with_index do |line, i|
     next unless line.to_s.strip.match?(PSALM_HEADER)
 
     lineno = i + 1
@@ -258,8 +259,8 @@ if ARGV[0] == "psalm-debug"
 
     shown = 0
     j = i + 1
-    while j < lines.length && shown < 2
-      nxt = lines[j]
+    while j < kjv_lines.length && shown < 2
+      nxt = kjv_lines[j]
       j += 1
       next if nxt.to_s.strip.empty?
 
@@ -272,4 +273,4 @@ if ARGV[0] == "psalm-debug"
   exit 0
 end
 
-Inamen::SummaryReport.print_summary(lines)
+Inamen::SummaryReport.print_summary(kjv_lines)

@@ -156,15 +156,8 @@ module Inamen
       end
 
       def the_amen_nt_concealed(lines)
-        the_star = 0
-        amen = 0
-        each_verse_text_token(lines) do |tok, rec|
-          next unless NT_BOOK_SET.include?(rec[:book])
-
-          the_star += 1 if the_star_nt_token?(tok)
-          amen += 1 if amen_star_nt_token?(tok)
-        end
-        { the_star: the_star, amen: amen, sum: the_star + amen }
+        tallies = nt_verse_token_tallies(lines)
+        { the_star: tallies[:the_star], amen: tallies[:amen], sum: tallies[:the_star] + tallies[:amen] }
       end
 
       def the_star_nt_token?(tok)
@@ -196,23 +189,17 @@ module Inamen
       end
 
       def first_last_chapter_word_count(lines)
-        gen = chapter_word_count(lines, book: "Genesis", chapter: 1)
-        rev = chapter_word_count(lines, book: "Revelation", chapter: 22)
-        { genesis: gen, revelation: rev, sum: gen + rev }
+        counts = boundary_chapter_word_counts(lines)
+        { genesis: counts[:genesis], revelation: counts[:revelation], sum: counts[:genesis] + counts[:revelation] }
       end
 
       def ot_first_last_chapter_word_count(lines)
-        gen = chapter_word_count(lines, book: "Genesis", chapter: 1)
-        mal = chapter_word_count(lines, book: "Malachi", chapter: 4)
-        { genesis: gen, malachi: mal, sum: gen + mal }
+        counts = boundary_chapter_word_counts(lines)
+        { genesis: counts[:genesis], malachi: counts[:malachi], sum: counts[:genesis] + counts[:malachi] }
       end
 
       def god_pure_nt(lines)
-        count = 0
-        each_verse_text_token(lines) do |tok, rec|
-          count += 1 if NT_BOOK_SET.include?(rec[:book]) && god_pure_token?(tok)
-        end
-        count
+        nt_verse_token_tallies(lines)[:god_pure]
       end
 
       def beginning_end_amen(lines, db: nil)
@@ -226,7 +213,7 @@ module Inamen
         if db
           jesus_boundary_same_verse_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
         else
-          jesus_boundary_same_verse_from_lines(lines)
+          jesus_boundary_tallies(lines)[:same_verse]
         end
       end
 
@@ -234,7 +221,7 @@ module Inamen
         if db
           jesus_boundary_first7_nt_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
         else
-          jesus_boundary_first7_nt_from_lines(lines)
+          jesus_boundary_tallies(lines)[:first7_nt]
         end
       end
 
@@ -308,13 +295,13 @@ module Inamen
       end
 
       def jesus_boundary_same_verse_from_map(verses, lines)
+        texts = VerseIndex.verse_map(lines)
         boundary = 0
         jesus = 0
         verses.each do |key, toks|
           next if JESUS_NON_CHRIST_VERSE_SET.include?(key)
 
-          book, chapter, verse = key
-          text = VerseIndex.verse_text(lines, book: book, chapter: chapter, verse: verse).to_s
+          text = texts[key].to_s
           next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
           next unless any_pure_jesus?(text, toks)
 
@@ -339,11 +326,12 @@ module Inamen
       end
 
       def jesus_boundary_first7_nt_from_map(verses, lines)
+        texts = VerseIndex.verse_map(lines)
         count = 0
         verses.each do |(book, chapter, verse), toks|
           next unless FIRST_7_NT_SET.include?(book)
 
-          text = VerseIndex.verse_text(lines, book: book, chapter: chapter, verse: verse).to_s
+          text = texts[[book, chapter, verse]].to_s
           next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
           next unless any_kjpbs_jesus?(text, toks)
 
@@ -353,6 +341,73 @@ module Inamen
       end
 
       private
+
+      def nt_verse_token_tallies(lines)
+        @nt_verse_cache ||= {}
+        @nt_verse_cache[lines.__id__] ||= compute_nt_verse_token_tallies(lines)
+      end
+
+      def compute_nt_verse_token_tallies(lines)
+        the_star = 0
+        amen = 0
+        god_pure = 0
+        VerseIndex.each_verse(lines) do |book, _chapter, _verse, text|
+          next unless NT_BOOK_SET.include?(book)
+
+          Tokenizer.tokenize(text).each do |tok|
+            the_star += 1 if the_star_nt_token?(tok)
+            amen += 1 if amen_star_nt_token?(tok)
+            god_pure += 1 if god_pure_token?(tok)
+          end
+        end
+        { the_star: the_star, amen: amen, god_pure: god_pure }
+      end
+
+      def boundary_chapter_word_counts(lines)
+        @boundary_chapter_cache ||= {}
+        @boundary_chapter_cache[lines.__id__] ||= compute_boundary_chapter_word_counts(lines)
+      end
+
+      def compute_boundary_chapter_word_counts(lines)
+        genesis = malachi = revelation = 0
+        VerseIndex.each_verse(lines) do |book, chapter, _verse, text|
+          count = Tokenizer.tokenize(text).size
+          genesis += count if book == "Genesis" && chapter == 1
+          malachi += count if book == "Malachi" && chapter == 4
+          revelation += count if book == "Revelation" && chapter == 22
+        end
+        { genesis: genesis, malachi: malachi, revelation: revelation }
+      end
+
+      def jesus_boundary_tallies(lines)
+        @jesus_boundary_cache ||= {}
+        @jesus_boundary_cache[lines.__id__] ||= compute_jesus_boundary_tallies(lines)
+      end
+
+      def compute_jesus_boundary_tallies(lines)
+        same_boundary = 0
+        same_jesus = 0
+        first7 = 0
+        VerseIndex.each_verse(lines) do |book, chapter, verse, text|
+          key = [book, chapter, verse]
+          toks = Tokenizer.tokenize(text)
+          next unless toks.any? { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+
+          if FIRST_7_NT_SET.include?(book) && any_kjpbs_jesus?(text, toks)
+            first7 += count_kjpbs_jesus(text, toks)
+          end
+
+          next if JESUS_NON_CHRIST_VERSE_SET.include?(key)
+          next unless any_pure_jesus?(text, toks)
+
+          same_boundary += toks.count { |t| JESUS_BOUNDARY_FORM_SET.include?(t) }
+          same_jesus += count_pure_jesus(text, toks)
+        end
+        {
+          same_verse: { boundary: same_boundary, jesus: same_jesus, sum: same_boundary + same_jesus },
+          first7_nt: first7
+        }
+      end
 
       def each_scannable_token(lines, db: nil)
         if db

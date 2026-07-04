@@ -3,6 +3,8 @@
 module Inamen
   # Verse body text keyed by (book, chapter, verse) from the KjvLineParser event stream.
   module VerseIndex
+    @verse_map_cache = {}
+
     def self.each_verse(lines)
       return enum_for(:each_verse, lines) unless block_given?
 
@@ -48,18 +50,29 @@ module Inamen
       end
     end
 
+    def self.verse_map(lines)
+      @verse_map_cache[lines.__id__] ||= build_verse_map(lines)
+    end
+
+    def self.clear_cache!
+      @verse_map_cache = {}
+    end
+
     def self.verse_text(lines, book:, chapter:, verse:)
-      target = [book.to_s, Integer(chapter), Integer(verse)]
-      each_verse(lines) do |b, ch, v, text|
-        return text if [b, ch, v] == target
-      end
-      nil
+      verse_map(lines)[[book.to_s, Integer(chapter), Integer(verse)]]
     end
 
     def self.name_token_indices(text, name_prefix)
       re = /\A#{Regexp.escape(name_prefix)}/i
       Tokenizer.tokenize(text).each_with_index.filter_map { |tok, i| i + 1 if tok.match?(re) }
     end
+
+    def self.build_verse_map(lines)
+      map = {}
+      each_verse(lines) { |book, chapter, verse, text| map[[book, chapter, verse]] = text }
+      map
+    end
+    private_class_method :build_verse_map
 
     def self.verse_body_from_stripped(stripped)
       s = stripped.to_s

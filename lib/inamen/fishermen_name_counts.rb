@@ -64,22 +64,43 @@ module Inamen
     }.freeze
 
     def self.counts(lines, scope: :nt)
-      books = scope_books(scope)
-      tallies = PREFIX_NAMES.transform_values { 0 }.merge(james: 0, john: 0)
+      both = counts_both(lines)
+      case scope
+      when :nt then both[:nt]
+      when :gospels then both[:gospels]
+      else
+        raise ArgumentError, "Unknown scope: #{scope.inspect} (use :nt or :gospels)"
+      end
+    end
+
+    def self.counts_both(lines)
+      @counts_cache ||= {}
+      @counts_cache[lines.__id__] ||= compute_counts_both(lines)
+    end
+
+    def self.compute_counts_both(lines)
+      nt_books = NT_BOOKS.to_set
+      gospel_books = GOSPEL_BOOKS.to_set
+      nt = PREFIX_NAMES.transform_values { 0 }.merge(james: 0, john: 0)
+      gospels = PREFIX_NAMES.transform_values { 0 }.merge(james: 0, john: 0)
 
       VerseIndex.each_verse(lines) do |book, _chapter, _verse, text|
-        next unless books.include?(book)
-
         PREFIX_NAMES.each do |key, prefix|
-          tallies[key] += prefix_match_count(text, prefix)
+          n = prefix_match_count(text, prefix)
+          nt[key] += n if nt_books.include?(book)
+          gospels[key] += n if gospel_books.include?(book)
         end
       end
 
-      tallies[:james] = whitelist_count(JAMES_SON_OF_ZEBEDEE, books)
-      tallies[:john] = whitelist_count(JOHN_APOSTLE_SON_OF_ZEBEDEE, books)
-      tallies[:sum] = tallies.values_at(:peter, :thomas, :nathanael, :james, :john).sum
-      tallies
+      nt[:james] = whitelist_count(JAMES_SON_OF_ZEBEDEE, nt_books)
+      nt[:john] = whitelist_count(JOHN_APOSTLE_SON_OF_ZEBEDEE, nt_books)
+      gospels[:james] = whitelist_count(JAMES_SON_OF_ZEBEDEE, gospel_books)
+      gospels[:john] = whitelist_count(JOHN_APOSTLE_SON_OF_ZEBEDEE, gospel_books)
+      nt[:sum] = nt.values_at(:peter, :thomas, :nathanael, :james, :john).sum
+      gospels[:sum] = gospels.values_at(:peter, :thomas, :nathanael, :james, :john).sum
+      { nt: nt, gospels: gospels }
     end
+    private_class_method :compute_counts_both
 
     def self.scope_books(scope)
       case scope
@@ -97,10 +118,11 @@ module Inamen
     end
     private_class_method :whitelist_count
 
-    def self.whitelist_matches?(whitelist, lines, name:)
+    def self.whitelist_matches?(whitelist, lines, name:, texts: nil)
+      texts ||= VerseIndex.verse_map(lines)
       whitelist.all? do |ref, expected_indices|
         book, chapter, verse = ref
-        text = VerseIndex.verse_text(lines, book: book, chapter: chapter, verse: verse)
+        text = texts[[book, chapter, verse]]
         return false if text.nil?
 
         actual = VerseIndex.name_token_indices(text, name)

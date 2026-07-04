@@ -1,21 +1,8 @@
 # frozen_string_literal: true
 
-require "fileutils"
-require "tmpdir"
-
 RSpec.describe Inamen::DivisibleBySevenScan do
   before(:context) do
-    path = File.expand_path("../../data/KJV.txt", __dir__)
-    lines = File.readlines(path, chomp: true)
-    @tmpdir = Dir.mktmpdir
-    @db_path = File.join(@tmpdir, "kjv.sqlite")
-    Inamen::CorpusStore.build!(lines, path: @db_path)
-    @db = Inamen::CorpusStore.open(@db_path)
-  end
-
-  after(:context) do
-    @db&.close
-    FileUtils.remove_entry(@tmpdir) if @tmpdir
+    @db = Inamen::KjvFixture.db
   end
 
   let(:db) { @db }

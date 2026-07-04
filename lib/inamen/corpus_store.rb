@@ -22,6 +22,8 @@ module Inamen
       OT_BOOKS.to_h { |b| [b, "OT"] }.merge(NT_BOOKS.to_h { |b| [b, "NT"] })
     ).freeze
 
+    INSERT_BATCH_SIZE = 500
+
     class << self
       def build!(lines, path: DEFAULT_PATH)
         FileUtils.mkdir_p(File.dirname(path))
@@ -114,22 +116,37 @@ module Inamen
       end
 
       def insert_tokens!(db, lines)
-        insert = db.prepare(<<~SQL)
-          INSERT INTO tokens (book, chapter, verse, word_index, token_raw, token_norm, testament, bucket, lineno)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        SQL
+        db.execute("PRAGMA journal_mode = OFF")
+        db.execute("PRAGMA synchronous = OFF")
+        db.execute("PRAGMA temp_store = MEMORY")
+        db.execute("PRAGMA cache_size = -64000")
+
+        columns = %i[book chapter verse word_index token_raw token_norm testament bucket lineno]
+        batch = []
 
         db.transaction do
           CorpusIndexer.each_token_record(lines) do |rec|
-            insert.execute(
+            batch << [
               rec[:book], rec[:chapter], rec[:verse], rec[:word_index],
               rec[:token_raw], normalize_token(rec[:token_raw]), rec[:testament],
               rec[:bucket], rec[:lineno]
-            )
+            ]
+            next if batch.length < INSERT_BATCH_SIZE
+
+            flush_insert_batch!(db, columns, batch)
+            batch.clear
           end
+          flush_insert_batch!(db, columns, batch) unless batch.empty?
         end
-      ensure
-        insert&.close
+      end
+
+      def flush_insert_batch!(db, columns, batch)
+        return if batch.empty?
+
+        row = "(#{(['?'] * columns.length).join(', ')})"
+        placeholders = ([row] * batch.length).join(", ")
+        sql = "INSERT INTO tokens (#{columns.join(', ')}) VALUES #{placeholders}"
+        db.execute(sql, batch.flatten)
       end
 
       def record_build_metadata!(db, lines)

@@ -206,6 +206,7 @@ module Inamen
       end
 
       def run_all(lines:, db: nil)
+        VerseIndex.verse_map(lines)
         CATALOG.map { |entry| run(entry.id, lines: lines, db: db) }
       end
 

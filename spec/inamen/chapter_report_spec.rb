@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Inamen::ChapterReport do
-  let(:lines) do
-    path = File.expand_path("../../data/KJV.txt", __dir__)
-    File.readlines(path, chomp: true)
-  end
+  let(:lines) { Inamen::KjvFixture.lines }
 
   describe ".stats_for_chapter" do
     it "reports Genesis 1 with canon verse count and stable totals from the event stream" do
