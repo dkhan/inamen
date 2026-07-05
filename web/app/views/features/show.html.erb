@@ -12,6 +12,10 @@
   </p>
   <h1><%= (@row || @entry).name %></h1>
   <p class="lead"><%= (@row || @entry).description %></p>
+  <% kjvcode_url = (@row&.kjvcode_url || @entry.kjvcode_url) %>
+  <% if kjvcode_url.present? %>
+    <p class="lead-meta"><%= feature_kjvcode_link(kjvcode_url) %></p>
+  <% end %>
 </div>
 
 <% if @status == :computing %>

@@ -11,6 +11,7 @@ module Inamen
     :description,
     :notes,
     :details,
+    :kjvcode_url,
     keyword_init: true
   )
 
@@ -24,6 +25,7 @@ module Inamen
     :scope,
     :notes,
     :kjvcode_expected_count,
+    :kjvcode_url,
     keyword_init: true
   )
 end

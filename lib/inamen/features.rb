@@ -18,7 +18,8 @@ module Inamen
         expected_count: 823_543,
         unit: "tokens",
         scope: "whole_bible",
-        notes: "789,629 verse text + 1,034 psalm headings + 186 colophons + 567 other text + 22 psalm 119 divisions + 1,189 chapters + 31,102 verses = 823,543 = 7⁷."
+        notes: "789,629 verse text + 1,034 psalm headings + 186 colophons + 567 other text + 22 psalm 119 divisions + 1,189 chapters + 31,102 verses = 823,543 = 7⁷.",
+        kjvcode_url: "https://kjvcode.com/pattern/elton-anomaly/"
       ),
       FeatureEntry.new(
         id: "peter_verses",
@@ -27,7 +28,8 @@ module Inamen
         expected_count: 153,
         unit: "verses",
         scope: "whole_bible",
-        notes: "Verse text only. Does not count Simon without the token Peter."
+        notes: "Verse text only. Does not count Simon without the token Peter.",
+        kjvcode_url: "https://kjvcode.com/pattern/peter-fisher-of-the-jews-153v/"
       ),
       FeatureEntry.new(
         id: "paul_verses",
@@ -36,7 +38,8 @@ module Inamen
         expected_count: 153,
         unit: "verses",
         scope: "whole_bible",
-        notes: "Verse text only. Does not include Saul."
+        notes: "Verse text only. Does not include Saul.",
+        kjvcode_url: "https://kjvcode.com/pattern/paul-fisher-of-the-gentiles-153v/"
       ),
       FeatureEntry.new(
         id: "fishermen_gospels",
@@ -45,7 +48,8 @@ module Inamen
         expected_count: 153,
         unit: "occurrences",
         scope: "gospels",
-        notes: "See FishermenNameCounts. Sum of five names in Matthew–John."
+        notes: "See FishermenNameCounts. Sum of five names in Matthew–John.",
+        kjvcode_url: "https://kjvcode.com/pattern/men-who-caught-153-fishes-153x-in-gospels/"
       ),
       FeatureEntry.new(
         id: "jesus_mentions",
@@ -54,7 +58,8 @@ module Inamen
         expected_count: 980,
         unit: "occurrences",
         scope: "scannable",
-        notes: "980 = 7×70 + 7×70. Raw scannable Jesus+JESUS count is 983; three non-Christ verses excluded."
+        notes: "980 = 7×70 + 7×70. Raw scannable Jesus+JESUS count is 983; three non-Christ verses excluded.",
+        kjvcode_url: "https://kjvcode.com/pattern/jesus-70x7/?logic=total-mentions"
       ),
       FeatureEntry.new(
         id: "bible_boundary_words",
@@ -63,7 +68,8 @@ module Inamen
         expected_count: 77_777,
         unit: "occurrences",
         scope: "scannable",
-        notes: "Genesis 1:1: IN…earth. Revelation 22:21: The…Amen. Counts: in=12,674 + earth=985 + the=64,041 + amen=77 = 77,777."
+        notes: "Genesis 1:1: IN…earth. Revelation 22:21: The…Amen. Counts: in=12,674 + earth=985 + the=64,041 + amen=77 = 77,777.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-words-first-last-verses-77777x/"
       ),
       FeatureEntry.new(
         id: "amen_77",
@@ -72,7 +78,8 @@ module Inamen
         expected_count: 77,
         unit: "occurrences",
         scope: "scannable",
-        notes: "Revelation 22:21 ends with Amen. Case-insensitive count is 78 (Numbers 5:22 has amen)."
+        notes: "Revelation 22:21 ends with Amen. Case-insensitive count is 78 (Numbers 5:22 has amen).",
+        kjvcode_url: "https://kjvcode.com/pattern/amen-77x-last-word-of-bible/"
       ),
       FeatureEntry.new(
         id: "boundary_anchor_verses",
@@ -81,7 +88,8 @@ module Inamen
         expected_count: 7,
         unit: "occurrences",
         scope: "verse_text",
-        notes: "Genesis 1:1 has five boundary tokens; Revelation 22:21 has two."
+        notes: "Genesis 1:1 has five boundary tokens; Revelation 22:21 has two.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-words-first-last-verses-77777x/"
       ),
       FeatureEntry.new(
         id: "boundary_seven_forms",
@@ -90,7 +98,8 @@ module Inamen
         expected_count: 77_777,
         unit: "occurrences",
         scope: "scannable",
-        notes: "In+IN=336 + in=12,338 + earth=985 + The=1,762 + the=62,173 + THE=106 + Amen=77 = 77,777."
+        notes: "In+IN=336 + in=12,338 + earth=985 + The=1,762 + the=62,173 + THE=106 + Amen=77 = 77,777.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-words-first-last-verses-77777x/"
       ),
       FeatureEntry.new(
         id: "in_amen_genesis_revelation",
@@ -99,7 +108,8 @@ module Inamen
         expected_count: 777,
         unit: "occurrences",
         scope: "genesis_revelation",
-        notes: "Sister pattern to the 77,777 boundary sum; 777 = 7×111."
+        notes: "Sister pattern to the 77,777 boundary sum; 777 = 7×111.",
+        kjvcode_url: "https://kjvcode.com/pattern/777x-first-and-last-words-of-the-bible/"
       ),
       FeatureEntry.new(
         id: "the_amen_nt_concealed",
@@ -109,7 +119,8 @@ module Inamen
         kjvcode_expected_count: 980,
         unit: "occurrences",
         scope: "new_testament",
-        notes: "Concealed capitals: Then, Therefore, etc. KJPBS/Cambridge: 929+51=980."
+        notes: "Concealed capitals: Then, Therefore, etc. KJPBS/Cambridge: 929+51=980.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-and-last-words-nt-980x/"
       ),
       FeatureEntry.new(
         id: "god_jesus_genesis_revelation",
@@ -118,7 +129,8 @@ module Inamen
         expected_count: 343,
         unit: "occurrences",
         scope: "genesis_revelation",
-        notes: "343 = 7×7×7. God=329 + Jesus=14 in first and last books."
+        notes: "343 = 7×7×7. God=329 + Jesus=14 in first and last books.",
+        kjvcode_url: "https://kjvcode.com/pattern/7x7x7-god-jesus/"
       ),
       FeatureEntry.new(
         id: "first_last_chapter_words",
@@ -127,7 +139,8 @@ module Inamen
         expected_count: 1370,
         unit: "tokens",
         scope: "verse_text",
-        notes: "Genesis 1=797 + Revelation 22=573 = 1,370. KJV Code pairs this with God* pure NT count."
+        notes: "Genesis 1=797 + Revelation 22=573 = 1,370. KJV Code pairs this with God* pure NT count.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-chapters-1370-god-1370/"
       ),
       FeatureEntry.new(
         id: "ot_first_last_chapter_words",
@@ -136,7 +149,8 @@ module Inamen
         expected_count: 980,
         unit: "tokens",
         scope: "old_testament",
-        notes: "Genesis 1=797 + Malachi 4=183 = 980. Matches pure Jesus N.T. mention count."
+        notes: "Genesis 1=797 + Malachi 4=183 = 980. Matches pure Jesus N.T. mention count.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-chapters-ot-980-words-jesus-980x/"
       ),
       FeatureEntry.new(
         id: "god_pure_nt",
@@ -146,7 +160,8 @@ module Inamen
         kjvcode_expected_count: 1370,
         unit: "occurrences",
         scope: "new_testament",
-        notes: "Verse text: God, God\u2019s, Gods, Godhead, God-ward in N.T. Pairs with 1,370-word Gen 1 + Rev 22 count."
+        notes: "Verse text: God, God\u2019s, Gods, Godhead, God-ward in N.T. Pairs with 1,370-word Gen 1 + Rev 22 count.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-chapters-1370-god-1370/"
       ),
       FeatureEntry.new(
         id: "beginning_end_amen",
@@ -155,7 +170,8 @@ module Inamen
         expected_count: 490,
         unit: "occurrences",
         scope: "scannable",
-        notes: "490 = 70×7. Alpha/Omega titles from Revelation 22:13."
+        notes: "490 = 70×7. Alpha/Omega titles from Revelation 22:13.",
+        kjvcode_url: "https://kjvcode.com/pattern/beginning-end-amen-70x7-in-the-bible/"
       ),
       FeatureEntry.new(
         id: "jesus_boundary_same_verse",
@@ -165,7 +181,8 @@ module Inamen
         kjvcode_expected_count: 2401,
         unit: "occurrences",
         scope: "verse_text",
-        notes: "Verses with boundary forms + pure Jesus (cs, excl. Jesus'); antimention verses excluded. KJPBS: 1,658+743=7\u2074."
+        notes: "Verses with boundary forms + pure Jesus (cs, excl. Jesus'); antimention verses excluded. KJPBS: 1,658+743=7\u2074.",
+        kjvcode_url: "https://kjvcode.com/pattern/first-last-words-of-first-last-verses-jesus-7x7x7x7-same-verse/"
       ),
       FeatureEntry.new(
         id: "jesus_boundary_first7_nt",
@@ -175,7 +192,8 @@ module Inamen
         kjvcode_expected_count: 539,
         unit: "occurrences",
         scope: "first_7_nt",
-        notes: "Jesus (cs) in verse-text verses with a 7-form boundary token, Matthew\u20131 Corinthians. KJPBS: 77\u00d77."
+        notes: "Jesus (cs) in verse-text verses with a 7-form boundary token, Matthew\u20131 Corinthians. KJPBS: 77\u00d77.",
+        kjvcode_url: "https://kjvcode.com/pattern/jesus-77x7-same-v-77777x-anomaly-first-7-books/"
       )
     ].freeze
 
@@ -201,7 +219,8 @@ module Inamen
           scope: entry.scope,
           description: entry.description,
           notes: entry.notes,
-          details: details
+          details: details,
+          kjvcode_url: entry.kjvcode_url
         )
       end
 

@@ -15,4 +15,10 @@ module FeaturesHelper
       selected_id
     )
   end
+
+  def feature_kjvcode_link(url)
+    return if url.blank?
+
+    link_to "KJV Code", url, class: "inline-link", target: "_blank", rel: "noopener noreferrer"
+  end
 end
