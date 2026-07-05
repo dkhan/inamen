@@ -29,6 +29,8 @@ module Inamen
           state[:verse] = KjvLineParser.verse_line_number(s) if d[:verse_numbers].to_i.positive?
         when KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING
           state[:verse] = 1 if d[:implicit_psalm_verse_1].to_i.positive? || d[:verse_numbers].to_i.positive?
+        when KjvParseEvent::KIND_IMPLICIT_CHAPTER_OPENING
+          state[:verse] = 1 if d[:implicit_chapter_verse_1].to_i.positive? || d[:verse_numbers].to_i.positive?
         when KjvParseEvent::KIND_SPLIT_VERSE_NUMBER
           state[:verse] = s.to_i
         end

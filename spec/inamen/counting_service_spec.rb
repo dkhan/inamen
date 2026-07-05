@@ -252,11 +252,63 @@ RSpec.describe Inamen::CountingService do
       expect(c[:numbered_verse_lines]).to eq(1)
     end
 
+    it "counts CHAPTER N lines with implicit verse 1 (Concord-style)" do
+      v1 = "IN the beginning God created the heaven and the earth."
+      v2 = "2 And the earth was without form, and void; and darkness was upon the face of the deep."
+      lines = ["CHAPTER 1", v1, v2]
+
+      v1_n = Inamen::Tokenizer.tokenize(v1).size
+      v2_body = v2.sub(/\A[0-9]+\s+/, "")
+      v2_n = Inamen::Tokenizer.tokenize(v2_body).size
+
+      c = described_class.total_for_lines(lines)
+      expect(c[:chapter_numbers]).to eq(1)
+      expect(c[:verse_numbers]).to eq(2)
+      expect(c[:implicit_chapter_verse_1]).to eq(1)
+      expect(c[:numbered_verse_lines]).to eq(1)
+      expect(c[:verse_text_words]).to eq(v1_n + v2_n)
+      expect(c[:numeric_chapter_lines]).to eq(1)
+    end
+
     it "increments numeric_chapter_lines for digit-only chapter lines" do
       c = described_class.total_for_lines(["1", "1 IN the beginning"])
       expect(c[:numeric_chapter_lines]).to eq(1)
       expect(c[:psalm_chapter_titles]).to eq(0)
       expect(c[:numbered_verse_lines]).to eq(1)
+    end
+
+    it "counts numeric psalm chapter lines inside Psalms (no PSALM prefix)" do
+      v1 = "1 Blessed is the man that walketh not in the counsel of the ungodly."
+      v2 = "2 But his delight is in the law of the LORD."
+      lines = ["BOOK OF PSALMS.", "1", v1, v2]
+
+      v1_n = Inamen::Tokenizer.tokenize(v1.sub(/\A[0-9]+\s+/, "")).size
+      v2_n = Inamen::Tokenizer.tokenize(v2.sub(/\A[0-9]+\s+/, "")).size
+
+      c = described_class.total_for_lines(lines)
+      expect(c[:chapter_numbers]).to eq(1)
+      expect(c[:verse_numbers]).to eq(2)
+      expect(c[:psalm_chapter_titles]).to eq(1)
+      expect(c[:numeric_chapter_lines]).to eq(0)
+      expect(c[:implicit_psalm_verse_1]).to eq(0)
+      expect(c[:numbered_verse_lines]).to eq(2)
+      expect(c[:verse_text_words]).to eq(v1_n + v2_n)
+    end
+
+    it "counts psalm heading then explicit verse 1 with numeric psalm chapter line" do
+      heading = "A Psalm of David, when he fled from Absalom his son."
+      v1 = "1 LORD, how are they increased that trouble me!"
+      v2 = "2 Many there be which say of my soul, There is no help for him in God. Selah."
+      lines = ["BOOK OF PSALMS.", "3", heading, v1, v2]
+
+      h_n = Inamen::Tokenizer.tokenize(heading).size
+      v1_n = Inamen::Tokenizer.tokenize(v1.sub(/\A[0-9]+\s+/, "")).size
+      v2_n = Inamen::Tokenizer.tokenize(v2.sub(/\A[0-9]+\s+/, "")).size
+
+      c = described_class.total_for_lines(lines)
+      expect(c[:psalm_heading_words]).to eq(h_n)
+      expect(c[:verse_numbers]).to eq(2)
+      expect(c[:verse_text_words]).to eq(v1_n + v2_n)
     end
   end
 end

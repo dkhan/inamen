@@ -30,7 +30,7 @@ module Inamen
       out = []
       j = idx - 1
       while j >= 0 && out.length < max
-        t = lines[j].to_s.strip
+        t = KjvLine.strip(lines[j])
         out << t unless t.empty?
         j -= 1
       end
@@ -46,9 +46,17 @@ module Inamen
       prev_strips(lines, idx, 1).first
     end
 
+    MOSES_BOOK_NAMES = {
+      "GENESIS" => "Genesis",
+      "EXODUS" => "Exodus",
+      "LEVITICUS" => "Leviticus",
+      "NUMBERS" => "Numbers",
+      "DEUTERONOMY" => "Deuteronomy"
+    }.freeze
+
     # Returns new book name when +lines[i]+ starts a book, else nil.
     def self.book_at(lines, i)
-      s = lines[i].to_s.strip
+      s = KjvLine.strip(lines[i])
       prev = prior_stripped(lines, i)
       blob = prev_blob(lines, i)
 
@@ -63,11 +71,13 @@ module Inamen
       when "THE BOOK OF RUTH." then "Ruth"
       when "FIRST BOOK OF SAMUEL," then "1 Samuel"
       when "SECOND BOOK OF SAMUEL," then "2 Samuel"
+      when "THE FIRST BOOK OF THE KINGS." then book_from_kings_title_line(blob)
+      when "THE SECOND BOOK OF THE KINGS." then book_from_kings_title_line(blob)
       when "THE THIRD BOOK OF THE KINGS." then "1 Kings"
       when "THE FOURTH BOOK OF THE KINGS." then "2 Kings"
       when "CHRONICLES."
-        return "1 Chronicles" if prev == "THE FIRST BOOK OF THE"
-        return "2 Chronicles" if prev == "THE SECOND BOOK OF THE"
+        return "1 Chronicles" if prev == "THE FIRST BOOK OF THE" || blob.include?("FIRST BOOK OF THE")
+        return "2 Chronicles" if prev == "THE SECOND BOOK OF THE" || blob.include?("SECOND BOOK OF THE")
 
         nil
       when "EZRA." then "Ezra"
@@ -137,8 +147,52 @@ module Inamen
 
         nil
       when "JUDE." then "Jude"
+      else
+        book_from_combined_title(s, blob)
       end
     end
+
+    def self.book_from_kings_title_line(blob)
+      return "1 Samuel" if blob.include?("FIRST BOOK OF SAMUEL")
+      return "2 Samuel" if blob.include?("SECOND BOOK OF SAMUEL")
+      return "1 Kings" if blob.include?("THIRD BOOK OF THE KINGS") || blob.include?("COMMONLY CALLED")
+      return "2 Kings" if blob.include?("FOURTH BOOK OF THE KINGS")
+
+      nil
+    end
+    private_class_method :book_from_kings_title_line
+
+    def self.book_from_combined_title(s, blob)
+      if (m = s.match(/\ATHE (FIRST|SECOND|THIRD|FOURTH|FIFTH) BOOK OF MOSES, CALLED ([A-Z]+)\.\z/))
+        return MOSES_BOOK_NAMES[m[2]]
+      end
+
+      if s.match?(/\ATHE GOSPEL ACCORDING TO ST\. MATTHEW\.\z/) || blob.include?("GOSPEL ACCORDING TO") && s == "ST. MATTHEW."
+        return "Matthew"
+      end
+      return "Mark" if s.match?(/\A(ST\. MARK\.|THE GOSPEL ACCORDING TO ST\. MARK\.)\z/)
+      return "Luke" if s.match?(/\A(ST\. LUKE\.|THE GOSPEL ACCORDING TO ST\. LUKE\.)\z/)
+      return "John" if s.match?(/\A(ST\. JOHN\.|THE GOSPEL ACCORDING TO ST\. JOHN\.)\z/)
+
+      if s.match?(/\ATHE (FIRST|SECOND) BOOK OF THE (CHRONICLES|KINGS)\.\z/)
+        return "1 Chronicles" if s == "THE FIRST BOOK OF THE CHRONICLES."
+        return "2 Chronicles" if s == "THE SECOND BOOK OF THE CHRONICLES."
+        return book_from_kings_title_line(blob) if s == "THE FIRST BOOK OF THE KINGS."
+        return book_from_kings_title_line(blob) if s == "THE SECOND BOOK OF THE KINGS."
+      end
+
+      return "Lamentations" if s.match?(/\ATHE LAMENTATIONS(?:\s+OF JEREMIAH)?\.?\z/)
+      return "Revelation" if s.match?(/\ATHE REVELATION(?:\s+OF ST\. JOHN THE DIVINE)?\.?\z/)
+      return "Psalms" if s.match?(/\A(?:THE )?BOOK OF PSALMS\.\z/)
+
+      if s.match?(/\ACORINTHIANS\.\z/)
+        return "1 Corinthians" if blob.include?("FIRST EPISTLE")
+        return "2 Corinthians" if blob.include?("SECOND EPISTLE")
+      end
+
+      nil
+    end
+    private_class_method :book_from_combined_title
 
     def self.book_label_at_each_index(lines)
       book = "Front matter"
@@ -157,6 +211,10 @@ module Inamen
       when KjvParseEvent::KIND_SPLIT_VERSE_NUMBER
         [0, 1]
       when KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING
+        [0, d[:verse_numbers].to_i]
+      when KjvParseEvent::KIND_CHAPTER_TITLE
+        [1, 0]
+      when KjvParseEvent::KIND_IMPLICIT_CHAPTER_OPENING
         [0, d[:verse_numbers].to_i]
       when KjvParseEvent::KIND_NUMBERED_LINE, KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING
         [d[:chapter_numbers].to_i, d[:verse_numbers].to_i]

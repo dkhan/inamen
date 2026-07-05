@@ -22,6 +22,8 @@ module Inamen
     KIND_PSALM_HEADING = :psalm_heading
     KIND_VERSE_AFTER_PSALM_HEADING = :verse_after_psalm_heading
     KIND_IMPLICIT_PSALM_OPENING = :implicit_psalm_opening
+    KIND_CHAPTER_TITLE = :chapter_title
+    KIND_IMPLICIT_CHAPTER_OPENING = :implicit_chapter_opening
     KIND_SPLIT_VERSE_NUMBER = :split_verse_number
     KIND_NUMBERED_LINE = :numbered_line
 
@@ -32,6 +34,8 @@ module Inamen
       KIND_PSALM_HEADING,
       KIND_VERSE_AFTER_PSALM_HEADING,
       KIND_IMPLICIT_PSALM_OPENING,
+      KIND_CHAPTER_TITLE,
+      KIND_IMPLICIT_CHAPTER_OPENING,
       KIND_SPLIT_VERSE_NUMBER,
       KIND_NUMBERED_LINE
     ].freeze

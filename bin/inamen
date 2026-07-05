@@ -20,7 +20,11 @@ def parse_scan_scope(raw)
 end
 
 def kjv_lines
-  @kjv_lines ||= File.readlines(File.expand_path("../data/KJV.txt", __dir__), chomp: true)
+  @kjv_lines ||= Inamen::KjvEditions.read_lines(kjv_input_path)
+end
+
+def kjv_input_path
+  @kjv_input_path ||= File.expand_path("../data/KJV.txt", __dir__)
 end
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
@@ -44,11 +48,25 @@ if ARGV[0] == "index"
     when "--output", "-o"
       i += 1
       output = File.expand_path(args[i])
+    when "--input", "-i"
+      i += 1
+      @kjv_input_path = File.expand_path(args[i])
+      @kjv_lines = nil
+    when "--edition", "-e"
+      i += 1
+      edition = args[i].to_s
+      path = Inamen::KjvEditions::EDITIONS[edition]
+      unless path
+        warn "Unknown edition: #{edition} (choose: #{Inamen::KjvEditions::EDITIONS.keys.join(", ")})"
+        exit 1
+      end
+      @kjv_input_path = path
+      @kjv_lines = nil
     when "--force", "-f"
       force = true
     else
       warn "Unknown option: #{args[i]}"
-      warn "Usage: #{$PROGRAM_NAME} index [--output PATH] [--force]"
+      warn "Usage: #{$PROGRAM_NAME} index [--input PATH | --edition ID] [--output PATH] [--force]"
       exit 1
     end
     i += 1
@@ -63,6 +81,7 @@ if ARGV[0] == "index"
   db = Inamen::CorpusStore.open(path)
   counts = Inamen::CorpusStore.bucket_counts(db)
   db.close
+  puts "Source: #{kjv_input_path}"
   puts "Corpus: #{path}"
   counts.each { |bucket, n| puts "#{bucket}: #{n}" }
   puts "scannable total: #{counts.values.sum}"

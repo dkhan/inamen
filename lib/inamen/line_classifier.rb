@@ -9,6 +9,7 @@ module Inamen
     ].freeze
 
     CHAPTER_LINE = /\A[0-9]+\z/
+    CHAPTER_WORD_LINE = /\ACHAPTER\s+[0-9]+\z/i
     VERSE_LINE = /\A[0-9]+\s+\S/
 
     # One alternation per line; combined behavior matches the historical single-regex colophon rule.
@@ -24,9 +25,10 @@ module Inamen
     COLOPHON_LINE = Regexp.new(COLOPHON_SUBPATTERNS.join("|"), Regexp::IGNORECASE | Regexp::EXTENDED)
 
     def self.classify(line)
-      s = line.to_s.strip
+      s = KjvLine.strip(line)
       return :other if s.empty?
 
+      return :chapter if s.match?(CHAPTER_WORD_LINE)
       return :chapter if s.match?(CHAPTER_LINE)
       return :psalm_119_division if PsalmHeading.stanza_label?(s)
       return :verse if s.match?(VERSE_LINE)
@@ -71,6 +73,7 @@ module Inamen
       [/\ATHE SECOND EPISTLE OF\z/, nil],
       [/\ATHE BOOK OF .+\.\z/, nil],
       [/\APSALM [0-9]+\z/, nil],
+      [CHAPTER_WORD_LINE, nil],
       [/\AST\. [A-Z.]+\z/, nil],
       [/\AOR, .+\.\z/, nil],
       [/\A[A-Z][A-Z\s,'-]+\.\z/, ->(line) { !line.match?(/[a-z]/) }],
@@ -130,14 +133,15 @@ module Inamen
       s = lines[idx].to_s.strip
       return false if s.empty?
       return false if PsalmHeading.stanza_label?(s)
-      return false if s.match?(/\APSALM [0-9]+\z/)
+      return false if s.match?(Inamen::CountingService::PSALM_TITLE)
+      return false if Inamen::CountingService.psalm_chapter_line?(s, in_psalms: psalms_interior_index_range(lines)&.cover?(idx))
       return false if PsalmHeading.match?(s)
       return false if s.match?(CHAPTER_LINE)
       return false if s.match?(VERSE_LINE)
 
       nxt = following_non_empty_line(lines, idx)&.to_s&.strip
       return false unless nxt
-      return true if nxt.match?(Inamen::CountingService::PSALM_TITLE)
+      return true if Inamen::CountingService.psalm_chapter_line?(nxt, in_psalms: true)
 
       vn = Inamen::CountingService.verse_line_number(nxt)
       vn && vn >= 2

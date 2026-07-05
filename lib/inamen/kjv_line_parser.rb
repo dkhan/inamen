@@ -4,13 +4,14 @@ module Inamen
   # Canonical line-by-line traversal of KJV-shaped text. Yields one KjvParseEvent per non-empty line.
   class KjvLineParser
     CHAPTER_LINE = CountingService::CHAPTER_LINE
+    CHAPTER_WORD_LINE = CountingService::CHAPTER_WORD_LINE
     VERSE_LINE = CountingService::VERSE_LINE
     PSALM_TITLE = CountingService::PSALM_TITLE
 
     def self.each_event(lines)
       state = ParserState.new
       lines.each_with_index do |line, i|
-        s = line.to_s.strip
+        s = KjvLine.strip(line)
         next if s.empty?
 
         yield advance!(lines, i, line, s, state)
@@ -22,6 +23,9 @@ module Inamen
     end
 
     def self.advance!(lines, i, line, s, state)
+      nb = BookStatsReport.book_at(lines, i)
+      state.current_book = nb if nb
+
       if state.expecting_split_verse_body
         tok = Tokenizer.tokenize(s).size
         state.expecting_split_verse_body = false
@@ -44,16 +48,13 @@ module Inamen
         )
       end
 
-      if s.match?(PSALM_TITLE)
+      if psalm_chapter_line?(s, state)
         state.expecting_implicit_psalm_verse_1 = true
         state.prev_nonempty_stripped = s
         return build_event(
           KjvParseEvent::KIND_PSALM_TITLE,
           lines, i, line, s,
-          totals_delta: {
-            chapter_numbers: 1,
-            psalm_chapter_titles: 1
-          },
+          totals_delta: psalm_chapter_totals_delta(s, state),
           book_chapters: 1
         )
       end
@@ -80,7 +81,7 @@ module Inamen
           )
         end
 
-        r = implicit_psalm_unnumbered_resolution(lines, i, s)
+        r = implicit_psalm_unnumbered_resolution(lines, i, s, in_psalms: state.in_psalms?)
         state.expecting_implicit_psalm_verse_1 = false if r.clear_waiting
         state.prev_nonempty_stripped = s
         dbg = nil
@@ -96,6 +97,50 @@ module Inamen
           },
           book_verses: r.verse_numbers,
           psalm_heading_debug: dbg
+        )
+      end
+
+      if (m = s.match(CHAPTER_WORD_LINE))
+        state.expecting_implicit_verse_1_after_chapter = true
+        state.prev_nonempty_stripped = s
+        return build_event(
+          KjvParseEvent::KIND_CHAPTER_TITLE,
+          lines, i, line, s,
+          totals_delta: {
+            chapter_numbers: 1,
+            numeric_chapter_lines: 1
+          },
+          book_chapters: 1,
+          numeric_chapter_debug: {
+            lineno: i + 1,
+            raw: line.to_s,
+            prev_raw: prior_non_empty_line(lines, i),
+            next_raw: following_non_empty_line(lines, i),
+            chapter_number: m[1].to_i
+          }
+        )
+      end
+
+      if state.expecting_implicit_verse_1_after_chapter
+        if s.match?(VERSE_LINE)
+          state.expecting_implicit_verse_1_after_chapter = false
+          partial = CountingService.counts_for_line(s)
+          state.prev_nonempty_stripped = s
+          return numbered_line_step(lines, i, line, s, partial)
+        end
+
+        r = implicit_chapter_unnumbered_resolution(lines, i, s)
+        state.expecting_implicit_verse_1_after_chapter = false if r.clear_waiting
+        state.prev_nonempty_stripped = s
+        return build_event(
+          KjvParseEvent::KIND_IMPLICIT_CHAPTER_OPENING,
+          lines, i, line, s,
+          totals_delta: {
+            verse_numbers: r.verse_numbers,
+            implicit_chapter_verse_1: r.implicit_chapter_verse_1,
+            verse_text_words: r.verse_text_words
+          },
+          book_verses: r.verse_numbers
         )
       end
 
@@ -187,10 +232,70 @@ module Inamen
     end
 
     def self.split_verse_number_after_chapter?(prev_nonempty_stripped, stripped)
-      prev_nonempty_stripped&.match?(CHAPTER_LINE) && stripped.match?(CHAPTER_LINE)
+      prev = prev_nonempty_stripped.to_s
+      prev.match?(CHAPTER_LINE) && stripped.match?(CHAPTER_LINE)
     end
 
-    def self.implicit_psalm_unnumbered_resolution(lines, line_index, s)
+    ImplicitChapterResolution = Struct.new(
+      :clear_waiting, :verse_numbers, :implicit_chapter_verse_1, :verse_text_words, keyword_init: true
+    )
+
+    def self.implicit_chapter_unnumbered_resolution(lines, line_index, s)
+      tok = Tokenizer.tokenize(s).size
+      nxt = next_non_empty_stripped(lines, line_index)
+
+      if nxt && (vn = verse_line_number(nxt)) && vn >= 2
+        return ImplicitChapterResolution.new(
+          clear_waiting: true,
+          verse_numbers: 1,
+          implicit_chapter_verse_1: 1,
+          verse_text_words: tok
+        )
+      end
+
+      if nxt && CountingService.chapter_marker_line?(nxt)
+        return ImplicitChapterResolution.new(
+          clear_waiting: true,
+          verse_numbers: 1,
+          implicit_chapter_verse_1: 1,
+          verse_text_words: tok
+        )
+      end
+
+      if nxt
+        return ImplicitChapterResolution.new(
+          clear_waiting: false,
+          verse_numbers: 0,
+          implicit_chapter_verse_1: 0,
+          verse_text_words: 0
+        )
+      end
+
+      ImplicitChapterResolution.new(
+        clear_waiting: true,
+        verse_numbers: 1,
+        implicit_chapter_verse_1: 1,
+        verse_text_words: tok
+      )
+    end
+
+    def self.psalm_chapter_line?(stripped, state)
+      CountingService.psalm_chapter_line?(stripped, in_psalms: state.in_psalms?)
+    end
+    private_class_method :psalm_chapter_line?
+
+    def self.psalm_chapter_totals_delta(stripped, state)
+      if stripped.match?(PSALM_TITLE)
+        { chapter_numbers: 1, psalm_chapter_titles: 1 }
+      elsif state.in_psalms?
+        { chapter_numbers: 1, psalm_chapter_titles: 1 }
+      else
+        { chapter_numbers: 1, numeric_chapter_lines: 1 }
+      end
+    end
+    private_class_method :psalm_chapter_totals_delta
+
+    def self.implicit_psalm_unnumbered_resolution(lines, line_index, s, in_psalms: false)
       tok = Tokenizer.tokenize(s).size
       nxt = next_non_empty_stripped(lines, line_index)
 
@@ -214,7 +319,7 @@ module Inamen
         )
       end
 
-      if nxt && nxt.match?(PSALM_TITLE)
+      if nxt && (nxt.match?(PSALM_TITLE) || (in_psalms && nxt.match?(CHAPTER_LINE)))
         return ImplicitPsalmResolution.new(
           clear_waiting: true,
           verse_numbers: 1,

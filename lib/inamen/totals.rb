@@ -6,7 +6,7 @@ module Inamen
     KEYS = %i[
       text_words verse_text_words psalm_heading_words psalm_119_division_words
       chapter_numbers verse_numbers psalm_chapter_titles numeric_chapter_lines
-      implicit_psalm_verse_1 numbered_verse_lines
+      implicit_psalm_verse_1 implicit_chapter_verse_1 numbered_verse_lines
     ].freeze
 
     def self.empty
@@ -53,7 +53,7 @@ module Inamen
     end
 
     def verses_from_implicit_plus_numbered
-      @counts[:implicit_psalm_verse_1] + @counts[:numbered_verse_lines]
+      @counts[:implicit_psalm_verse_1] + @counts[:implicit_chapter_verse_1] + @counts[:numbered_verse_lines]
     end
   end
 end

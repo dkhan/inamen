@@ -28,7 +28,7 @@ module Inamen
       end
 
       h = totals.to_h
-      verse_count = h[:verse_numbers] + h[:implicit_psalm_verse_1]
+      verse_count = h[:verse_numbers] + h[:implicit_psalm_verse_1] + h[:implicit_chapter_verse_1]
       combined = CountingService.combined_total(h)
 
       {
@@ -102,9 +102,15 @@ module Inamen
       s = event.stripped
 
       if book == "Psalms"
-        if event.kind == KjvParseEvent::KIND_PSALM_TITLE && (m = s.match(PSALM_TITLE_RE))
-          state[:chapter] = m[1].to_i
+        if event.kind == KjvParseEvent::KIND_PSALM_TITLE
+          if (m = s.match(PSALM_TITLE_RE))
+            state[:chapter] = m[1].to_i
+          elsif s.match?(CountingService::CHAPTER_LINE)
+            state[:chapter] = s.to_i
+          end
         end
+      elsif event.kind == KjvParseEvent::KIND_CHAPTER_TITLE && (n = CountingService.chapter_word_line_number(s))
+        state[:chapter] = n
       elsif s.match?(CountingService::CHAPTER_LINE)
         state[:chapter] = s.to_i
       end

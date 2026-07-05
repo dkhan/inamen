@@ -15,10 +15,13 @@ module Inamen
       @lines ||= File.readlines(KJV_PATH, chomp: true)
     end
 
+    # Bump when tokenization or indexing rules change (invalidates cached SQLite).
+    INDEXER_REVISION = "4"
+
     def db_path
       @db_path ||= begin
         digest = Digest::SHA256.file(KJV_PATH).hexdigest[0, 16]
-        File.join(Dir.tmpdir, "inamen-kjv-#{digest}.sqlite")
+        File.join(Dir.tmpdir, "inamen-kjv-#{digest}-#{INDEXER_REVISION}.sqlite")
       end
     end
 

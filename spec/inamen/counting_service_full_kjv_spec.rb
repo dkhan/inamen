@@ -14,7 +14,7 @@ RSpec.describe Inamen::CountingService, "#total_for_lines" do
     expect(totals[:verse_numbers]).to eq(31_102)
 
     expect(totals[:psalm_chapter_titles] + totals[:numeric_chapter_lines]).to eq(totals[:chapter_numbers])
-    expect(totals[:implicit_psalm_verse_1] + totals[:numbered_verse_lines]).to eq(totals[:verse_numbers])
+    expect(totals[:implicit_psalm_verse_1] + totals[:implicit_chapter_verse_1] + totals[:numbered_verse_lines]).to eq(totals[:verse_numbers])
 
     combined = described_class.combined_total(totals)
     expect(combined).to eq(823_543)

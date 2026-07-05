@@ -4,16 +4,37 @@ module Inamen
   # Token labeling and orchestration; line traversal lives in KjvLineParser.
   class CountingService
     CHAPTER_LINE = /\A\d+\z/
+    CHAPTER_WORD_LINE = /\ACHAPTER\s+(\d+)\z/i
     VERSE_LINE = /\A(\d+)\s+(.+)\z/m
     PSALM_TITLE = /\APSALM [0-9]+\z/
+
+    def self.chapter_word_line_number(stripped)
+      (m = KjvLine.strip(stripped).match(CHAPTER_WORD_LINE)) ? m[1].to_i : nil
+    end
+
+    def self.chapter_marker_line?(stripped)
+      s = KjvLine.strip(stripped)
+      s.match?(CHAPTER_WORD_LINE) || s.match?(CHAPTER_LINE) || s.match?(PSALM_TITLE)
+    end
+
+    # "PSALM n" (legacy) or a lone chapter number inside the Psalms book.
+    def self.psalm_chapter_line?(stripped, in_psalms: false)
+      s = stripped.to_s.strip
+      return true if s.match?(PSALM_TITLE)
+      return false unless in_psalms
+
+      s.match?(CHAPTER_LINE)
+    end
 
     # Each entry is [category, token_string] with category one of
     # :chapter_number, :verse_number, :text_word, :verse_text_word.
     def self.labeled_tokens_for_line(line)
-      stripped = line.to_s.strip
+      stripped = KjvLine.strip(line)
       return [] if stripped.empty?
 
-      if stripped.match?(CHAPTER_LINE)
+      if (m = stripped.match(CHAPTER_WORD_LINE))
+        [[:chapter_number, m[1]]]
+      elsif stripped.match?(CHAPTER_LINE)
         [[:chapter_number, stripped]]
       elsif (m = stripped.match(VERSE_LINE))
         [[:verse_number, m[1]]] + Tokenizer.tokenize(m[2]).map { |t| [:verse_text_word, t] }
@@ -69,8 +90,8 @@ module Inamen
       KjvLineParser.split_verse_number_after_chapter?(prev_nonempty_stripped, stripped)
     end
 
-    def self.implicit_psalm_unnumbered_resolution(lines, line_index, s)
-      KjvLineParser.implicit_psalm_unnumbered_resolution(lines, line_index, s)
+    def self.implicit_psalm_unnumbered_resolution(lines, line_index, s, in_psalms: false)
+      KjvLineParser.implicit_psalm_unnumbered_resolution(lines, line_index, s, in_psalms: in_psalms)
     end
 
     def self.numeric_chapter_debug_entries(lines)

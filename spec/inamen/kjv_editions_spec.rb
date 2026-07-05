@@ -1,0 +1,59 @@
+# frozen_string_literal: true
+
+require "tmpdir"
+require "inamen/corpus_store"
+require "inamen/features"
+
+RSpec.describe "KJV editions" do
+  Inamen::KjvEditions::EDITIONS.each do |edition_id, path|
+    describe edition_id do
+      before(:context) do
+        @lines = Inamen::KjvEditions.read_lines(path)
+        @totals = Inamen::CountingService.total_for_lines(@lines)
+      end
+
+      it "parses to the 7⁷ combined total" do
+        combined = Inamen::CountingService.combined_total(@totals)
+        expect(combined).to eq(823_543)
+        expect(combined).to eq(7**7)
+        expect(@totals[:chapter_numbers]).to eq(1189)
+        expect(@totals[:verse_numbers]).to eq(31_102)
+        expect(@totals[:verse_text_words]).to eq(789_629)
+      end
+
+      it "builds a scannable corpus" do
+        Dir.mktmpdir do |dir|
+          db_path = File.join(dir, "#{edition_id}.sqlite")
+          Inamen::CorpusStore.build!(@lines, path: db_path)
+          db = Inamen::CorpusStore.open(db_path)
+          counts = Inamen::CorpusStore.bucket_counts(db)
+          db.close
+
+          expect(counts[Inamen::CorpusStore::BUCKET_VERSE_TEXT]).to eq(789_629)
+          expect(counts[Inamen::CorpusStore::BUCKET_PSALM_HEADING]).to eq(1034)
+          expect(counts[Inamen::CorpusStore::BUCKET_COLOPHON]).to eq(186)
+          expect(counts.values.sum).to eq(790_849)
+        end
+      end
+
+      it "passes every catalog feature" do
+        Dir.mktmpdir do |dir|
+          db_path = File.join(dir, "#{edition_id}-features.sqlite")
+          Inamen::CorpusStore.build!(@lines, path: db_path)
+          db = Inamen::CorpusStore.open(db_path)
+
+          results = Inamen::Features.run_all(lines: @lines, db: db)
+          db.close
+
+          expect(results.map(&:id)).to eq(Inamen::Features.catalog.map(&:id))
+          Inamen::Features.catalog.each do |entry|
+            result = results.find { |r| r.id == entry.id }
+            expected = Inamen::KjvEditions.expected_feature_count(edition_id, entry.id)
+            expect(result.count).to eq(expected),
+                                    "#{edition_id} #{entry.id}: got #{result.count}, expected #{expected}"
+          end
+        end
+      end
+    end
+  end
+end
