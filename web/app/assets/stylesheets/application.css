@@ -46,6 +46,180 @@ body {
   padding: 1rem 1.25rem 3rem;
 }
 
+.site-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.site-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
+}
+
+.page-header {
+  margin-bottom: 0.5rem;
+}
+
+.page-header h1 {
+  margin: 0.25rem 0 0.5rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+}
+
+.breadcrumb {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.breadcrumb a {
+  color: var(--accent);
+}
+
+.toolbar-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+}
+
+.toolbar-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.toolbar-form select {
+  min-width: 12rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+}
+
+.hint {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.button-primary {
+  background: var(--accent);
+  color: #0b1016;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.button-secondary:hover {
+  border-color: var(--accent);
+}
+
+.badge-pending {
+  background: rgba(110, 181, 255, 0.12);
+  color: var(--accent);
+}
+
+.notice {
+  border-color: var(--accent);
+}
+
+.row-pending .muted {
+  color: var(--muted);
+}
+
+.button {
+  display: inline-block;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.35rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.button-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+
+.button-secondary:hover {
+  border-color: var(--accent);
+}
+
+.inline-link {
+  color: var(--accent);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-pass {
+  background: rgba(80, 200, 120, 0.15);
+  color: #7ddea8;
+}
+
+.badge-fail {
+  background: rgba(255, 120, 100, 0.15);
+  color: #ff9b8a;
+}
+
+.features-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.feature-link {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.feature-link:hover {
+  color: var(--accent);
+}
+
+.feature-id {
+  margin-top: 0.15rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.detail-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.back-link {
+  margin-top: 2rem;
+}
+
+.back-link a {
+  color: var(--accent);
+}
+
 .hero .eyebrow {
   margin: 0 0 0.5rem;
   color: var(--accent);

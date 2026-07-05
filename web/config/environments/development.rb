@@ -25,8 +25,11 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
-  # Change to :null_store to avoid any caching.
-  config.cache_store = :memory_store
+  # Feature verification results are cached on disk (survives server restarts).
+  config.cache_store = :file_store, Rails.root.join("tmp/cache")
+
+  # Run verification jobs in a background thread pool (no Solid Queue DB required in dev).
+  config.active_job.queue_adapter = :async
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local

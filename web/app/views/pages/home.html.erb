@@ -49,9 +49,15 @@
   </table>
 </section>
 
-<section class="panel muted">
-  <h2>Phase 0</h2>
+<section class="panel">
+  <h2>Explore</h2>
   <p>
-    Rails shell wired to the <code>inamen</code> gem. Next: feature catalog browser and discovery scans.
+    Browse the <%= link_to "feature catalog", features_path, class: "inline-link" %>
+    — <%= @feature_count %> verified patterns with definitions and live counts.
   </p>
+</section>
+
+<section class="panel muted">
+  <h2>Coming next</h2>
+  <p>Discovery scans — find tokens and chapters with counts divisible by any integer.</p>
 </section>

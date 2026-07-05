@@ -18,7 +18,12 @@
 
   <body>
     <header class="site-header">
-      <a href="/" class="site-logo">Inamen</a>
+      <div class="site-header-row">
+        <a href="/" class="site-logo">Inamen</a>
+        <nav class="site-nav">
+          <%= link_to "Features", features_path %>
+        </nav>
+      </div>
       <p class="site-tagline">Discover mathematical patterns in text</p>
     </header>
     <main class="site-main">

@@ -1,0 +1,103 @@
+<% content_for :title, "Features — Inamen" %>
+<% if @status == :computing %>
+  <% content_for :head do %>
+    <meta http-equiv="refresh" content="3">
+  <% end %>
+<% end %>
+
+<div class="page-header">
+  <p class="eyebrow">Verified patterns</p>
+  <h1>Feature catalog</h1>
+  <% if @status == :ready %>
+    <p class="lead">
+      <%= @rows.size %> reproducible measurements on
+      <code><%= @edition.edition_id %></code>
+      (<%= @edition.filename %>).
+      <%= @match_count %> of <%= @rows.size %> match expected counts.
+    </p>
+  <% else %>
+    <p class="lead">
+      <%= @catalog.size %> reproducible measurements —
+      edition <code><%= @edition.edition_id %></code>
+      (<%= @edition.filename %>).
+    </p>
+  <% end %>
+</div>
+
+<section class="panel toolbar">
+  <%= form_with url: features_path, method: :get, local: true, class: "toolbar-form" do %>
+    <label>
+      Edition
+      <%= select_tag :edition, edition_options(@edition.edition_id), onchange: "this.form.requestSubmit()" %>
+    </label>
+  <% end %>
+
+  <%= form_with url: verify_features_path, method: :post, local: true, class: "toolbar-form toolbar-actions" do %>
+    <%= hidden_field_tag :edition, @edition.edition_id %>
+    <% unless @status == :ready %>
+      <%= button_tag "Run verification", type: "submit", class: "button button-primary" %>
+    <% end %>
+    <%= button_tag "Recompute", name: "refresh", value: "1", type: "submit", class: "button button-secondary" %>
+  <% end %>
+
+  <p class="hint">
+    Switch edition to view cached results. Recompute runs in the background (about 2–3 minutes).
+  </p>
+</section>
+
+<% if @status == :computing %>
+  <section class="panel notice">
+    <p><strong>Verifying…</strong> Building the corpus index and running all <%= @catalog.size %> features. This page refreshes every few seconds.</p>
+  </section>
+<% elsif @status == :pending %>
+  <section class="panel notice">
+    <p><strong>No results yet.</strong> Click <em>Run verification</em> to compute counts for this edition.</p>
+  </section>
+<% end %>
+
+<section class="panel">
+  <table class="features-table">
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Feature</th>
+        <th class="num">Actual</th>
+        <th class="num">Expected</th>
+        <th>Unit</th>
+        <th>Scope</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% if @status == :ready %>
+        <% @rows.each do |row| %>
+          <tr>
+            <td><%= feature_match_badge(row.match) %></td>
+            <td>
+              <%= link_to row.name, feature_path(row.id, edition: @edition.edition_id), class: "feature-link" %>
+              <div class="feature-id"><code><%= row.id %></code></div>
+            </td>
+            <td class="num"><%= format_feature_count(row.count) %></td>
+            <td class="num"><%= format_feature_count(row.expected) %></td>
+            <td><%= row.unit %></td>
+            <td><%= row.scope.tr("_", " ") %></td>
+          </tr>
+        <% end %>
+      <% else %>
+        <% @catalog.each do |entry| %>
+          <% expected = @edition.expected_count(entry.id) %>
+          <tr class="row-pending">
+            <td><span class="badge badge-pending">pending</span></td>
+            <td>
+              <%= link_to entry.name, feature_path(entry.id, edition: @edition.edition_id), class: "feature-link" %>
+              <div class="feature-id"><code><%= entry.id %></code></div>
+            </td>
+            <td class="num muted">—</td>
+            <td class="num"><%= format_feature_count(expected) %></td>
+            <td><%= entry.unit %></td>
+            <td><%= entry.scope.tr("_", " ") %></td>
+          </tr>
+        <% end %>
+      <% end %>
+    </tbody>
+  </table>
+</section>
