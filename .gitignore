@@ -4,3 +4,10 @@
 .DS_Store
 data/*.sqlite
 data/*.sqlite-*
+
+# Rails web app
+/web/tmp/
+/web/log/
+/web/storage/
+/web/vendor/bundle
+/web/config/master.key

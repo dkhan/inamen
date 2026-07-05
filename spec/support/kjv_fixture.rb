@@ -16,7 +16,7 @@ module Inamen
     end
 
     # Bump when tokenization or indexing rules change (invalidates cached SQLite).
-    INDEXER_REVISION = "4"
+    INDEXER_REVISION = Inamen::CorpusStore::INDEXER_REVISION
 
     def db_path
       @db_path ||= begin

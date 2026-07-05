@@ -1,0 +1,57 @@
+<div class="hero">
+  <p class="eyebrow">Text pattern research lab</p>
+  <h1>Inamen</h1>
+  <p class="lead">
+    Discover and verify mathematical patterns in plain text.
+    KJV is the flagship corpus; the engine supports multiple editions today.
+  </p>
+</div>
+
+<section class="panel">
+  <h2>Engine</h2>
+  <dl class="stats">
+    <div>
+      <dt>Version</dt>
+      <dd><code><%= @engine_version %></code></dd>
+    </div>
+    <div>
+      <dt>Catalog features</dt>
+      <dd><%= @feature_count %></dd>
+    </div>
+    <div>
+      <dt>Indexer revision</dt>
+      <dd><code><%= Rails.application.config.inamen.indexer_revision %></code></dd>
+    </div>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>Bundled corpora</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Edition</th>
+        <th>File</th>
+        <th>Size</th>
+        <th>SHA-256 (prefix)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @editions.each do |edition| %>
+        <tr>
+          <td><code><%= edition[:id] %></code></td>
+          <td><%= edition[:filename] %></td>
+          <td><%= number_to_human_size(edition[:bytes]) %></td>
+          <td><code><%= edition[:sha256] %></code></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel muted">
+  <h2>Phase 0</h2>
+  <p>
+    Rails shell wired to the <code>inamen</code> gem. Next: feature catalog browser and discovery scans.
+  </p>
+</section>
