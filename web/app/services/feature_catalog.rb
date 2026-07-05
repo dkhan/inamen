@@ -4,7 +4,7 @@
 class FeatureCatalog
   ResultRow = Struct.new(
     :id, :name, :description, :count, :expected, :unit, :scope, :match,
-    :kjvcode_expected, :kjvcode_match, :notes, :details,
+    :kjvcode_expected, :kjvcode_match, :kjvcode_url, :notes, :details,
     keyword_init: true
   )
 
@@ -23,12 +23,24 @@ class FeatureCatalog
     end
   end
 
-  def self.cached?(edition)
-    Rails.cache.exist?(cache_key_for(edition))
-  end
-
   def self.read_cached(edition)
     Rails.cache.read(cache_key_for(edition))
+  rescue TypeError
+    clear_cache!(edition)
+    nil
+  end
+
+  def self.cached?(edition)
+    key = cache_key_for(edition)
+    return false unless Rails.cache.exist?(key)
+
+    value = Rails.cache.read(key)
+    return false if value.nil?
+
+    true
+  rescue TypeError
+    Rails.cache.delete(key)
+    false
   end
 
   def self.clear_cache!(edition)
@@ -69,6 +81,7 @@ class FeatureCatalog
       match: result.count == expected,
       kjvcode_expected: kjvcode,
       kjvcode_match: kjvcode.nil? || result.count == kjvcode,
+      kjvcode_url: entry.kjvcode_url,
       notes: result.notes,
       details: result.details
     )
@@ -76,7 +89,7 @@ class FeatureCatalog
 
   def self.cache_key_for(edition)
     [
-      "feature_catalog/v1",
+      "feature_catalog/v2",
       edition.edition_id,
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION

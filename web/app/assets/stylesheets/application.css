@@ -240,6 +240,11 @@ body {
   max-width: 38rem;
 }
 
+.lead-meta {
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.95rem;
+}
+
 .panel {
   margin-top: 2rem;
   padding: 1.25rem 1.5rem;
