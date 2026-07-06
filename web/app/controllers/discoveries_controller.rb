@@ -22,6 +22,11 @@ class DiscoveriesController < ApplicationController
     edition = EditionContext.new(edition_id)
     scan_params = DiscoveryScan.normalize(scan_param_hash)
 
+    if scan_params.mode == "word_count" && scan_params.query_terms.blank?
+      redirect_to discoveries_path(scan_query(edition_id, scan_params)), alert: "Enter at least one search term."
+      return
+    end
+
     if params[:refresh] != "1" && DiscoveryScan.cached?(edition, scan_params)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
@@ -67,7 +72,8 @@ class DiscoveriesController < ApplicationController
       bucket: params[:bucket],
       min_count: params[:min_count],
       min_group_size: params[:min_group_size],
-      match_by: params[:match_by]
+      match_by: params[:match_by],
+      query_terms: params[:query_terms]
     }
   end
 
@@ -80,7 +86,8 @@ class DiscoveriesController < ApplicationController
       bucket: scan_params.bucket,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
-      match_by: scan_params.match_by
+      match_by: scan_params.match_by,
+      query_terms: scan_params.query_terms
     }
   end
 end

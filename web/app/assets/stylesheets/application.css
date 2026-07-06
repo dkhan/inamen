@@ -90,6 +90,35 @@ body {
   margin-bottom: 0.75rem;
 }
 
+.query-terms-field {
+  flex: 1 1 100%;
+  max-width: 32rem;
+}
+
+.query-terms-input {
+  display: block;
+  width: 100%;
+  min-height: 6rem;
+  margin-top: 0.25rem;
+  padding: 0.5rem 0.65rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  resize: vertical;
+}
+
+.badge-muted {
+  background: var(--border);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .input-narrow {
   width: 5rem;
   padding: 0.4rem 0.5rem;
@@ -105,6 +134,11 @@ body {
 
 .discovery-table code {
   font-size: 0.9rem;
+}
+
+.discovery-table tfoot .row-total td {
+  border-top: 2px solid var(--border);
+  padding-top: 0.65rem;
 }
 
 .toolbar-form {

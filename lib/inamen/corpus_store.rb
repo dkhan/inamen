@@ -11,7 +11,7 @@ module Inamen
     DEFAULT_PATH = File.expand_path("../../data/kjv_corpus.sqlite", __dir__)
     SCHEMA_VERSION = 2
     # Bump when indexing or tokenization rules change (invalidates cached corpora).
-    INDEXER_REVISION = "4"
+    INDEXER_REVISION = "5"
 
     BUCKET_VERSE_TEXT = "verse_text"
     BUCKET_PSALM_HEADING = "psalm_heading"
@@ -63,7 +63,11 @@ module Inamen
       end
 
       def normalize_token(token)
-        token.to_s.downcase
+        normalize_apostrophes(token.to_s.downcase)
+      end
+
+      def normalize_apostrophes(str)
+        str.to_s.tr("'", "\u{2019}")
       end
 
       def testament_for(book)

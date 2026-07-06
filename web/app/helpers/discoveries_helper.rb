@@ -4,6 +4,7 @@ module DiscoveriesHelper
   def discovery_mode_options(selected)
     options_for_select(
       [
+        ["Word count", "word_count"],
         ["Divisible by N", "divisible"],
         ["Equal occurrence count", "equal_count"]
       ],
@@ -50,8 +51,25 @@ module DiscoveriesHelper
       bucket: scan_params.bucket,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
-      match_by: scan_params.match_by
+      match_by: scan_params.match_by,
+      query_terms: scan_params.query_terms
     }
+  end
+
+  def discovery_word_count_total(rows)
+    rows.sum(&:count)
+  end
+
+  def discovery_word_count_spellings_label(spellings, limit: 8)
+    return "—" if spellings.blank?
+
+    pairs = spellings.sort_by { |raw, count| [-count, raw] }
+    if pairs.size <= limit
+      pairs.map { |raw, count| "<code>#{h(raw)}</code> (#{number_with_delimiter(count)})" }.join(", ").html_safe
+    else
+      preview = pairs.first(limit).map { |raw, count| "<code>#{h(raw)}</code> (#{number_with_delimiter(count)})" }.join(", ")
+      "#{preview}, … (+#{pairs.size - limit} more)".html_safe
+    end
   end
 
   def discovery_equal_count_words_label(words, match_by:, limit: 12)

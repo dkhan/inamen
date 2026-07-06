@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
+require "digest"
+
 # Runs and caches discovery scans for an edition corpus.
 class DiscoveryScan
   Params = Struct.new(
-    :mode, :divisible_by, :scope, :bucket, :min_count, :min_group_size, :match_by,
+    :mode, :divisible_by, :scope, :bucket, :min_count, :min_group_size, :match_by, :query_terms,
     keyword_init: true
   )
 
@@ -12,7 +14,9 @@ class DiscoveryScan
   EqualCountRow = Struct.new(:scope, :count, :words, :match_by, keyword_init: true)
   WordEntry = Struct.new(:token_norm, :token_raws, keyword_init: true)
 
-  MODES = %w[divisible equal_count].freeze
+  WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, keyword_init: true)
+
+  MODES = %w[divisible equal_count word_count].freeze
   MATCH_BY = %w[norm spelling].freeze
   SCOPES = %w[whole_bible ot nt].freeze
   BUCKETS = %w[default verse_text psalm_heading colophon].freeze
@@ -26,17 +30,20 @@ class DiscoveryScan
     bucket = raw[:bucket].to_s
 
     Params.new(
-      mode: MODES.include?(mode) ? mode : "divisible",
+      mode: MODES.include?(mode) ? mode : "word_count",
       divisible_by: divisible_by.positive? ? divisible_by : 7,
       scope: SCOPES.include?(scope) ? scope : "whole_bible",
       bucket: BUCKETS.include?(bucket) ? bucket : "default",
       min_count: min_count.positive? ? min_count : 7,
       min_group_size: min_group_size >= 2 ? min_group_size : 2,
-      match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm"
+      match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm",
+      query_terms: raw[:query_terms].to_s
     )
   end
 
   def self.run(edition, params, force: false)
+    return [] if params.mode == "word_count" && params.query_terms.blank?
+
     key = cache_key_for(edition, params)
     Rails.cache.delete(key) if force
 
@@ -49,6 +56,8 @@ class DiscoveryScan
     case params.mode
     when "equal_count"
       compute_equal_count(edition, params)
+    when "word_count"
+      compute_word_count(edition, params)
     else
       compute_divisible(edition, params)
     end
@@ -98,7 +107,34 @@ class DiscoveryScan
     end
   end
 
+  def self.compute_word_count(edition, params)
+    return [] if params.query_terms.blank?
+
+    scope_sym = params.scope.to_sym
+    bucket = params.bucket == "default" ? :default : params.bucket
+    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+
+    Inamen::TokenQuery.scan(
+      edition.db,
+      terms: terms,
+      scope: scope_sym,
+      bucket: bucket
+    ).map do |row|
+      WordCountRow.new(
+        pattern: row.pattern,
+        case_sensitive: row.case_sensitive,
+        count: row.count,
+        wildcard: row.wildcard,
+        scope: row.scope,
+        spellings: row.spellings
+      )
+    end
+  end
+
   def self.cached?(edition, params)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return false if p.mode == "word_count" && p.query_terms.blank?
+
     key = cache_key_for(edition, params)
     return false unless Rails.cache.exist?(key)
 
@@ -130,10 +166,15 @@ class DiscoveryScan
 
   def self.cache_key_for(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
+    terms_digest =
+      if p.mode == "word_count" && p.query_terms.present?
+        Digest::SHA256.hexdigest(p.query_terms)[0, 16]
+      end
     [
-      "discovery_scan/v3",
+      "discovery_scan/v4",
       p.mode,
       p.match_by,
+      terms_digest,
       edition.edition_id,
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION,

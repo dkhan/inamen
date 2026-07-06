@@ -5,13 +5,29 @@
   <% end %>
 <% end %>
 
+<% word_count_mode = @scan_params.mode == "word_count" %>
 <% equal_count_mode = @scan_params.mode == "equal_count" %>
+<% filter_scan_mode = !word_count_mode %>
 
 <div class="page-header">
   <p class="eyebrow">Pattern discovery</p>
-  <h1><%= equal_count_mode ? "Equal count groups" : "Divisibility scan" %></h1>
+  <h1>
+    <% if word_count_mode %>
+      Word count
+    <% elsif equal_count_mode %>
+      Equal count groups
+    <% else %>
+      Divisibility scan
+    <% end %>
+  </h1>
   <% if @status == :ready %>
-    <% if equal_count_mode %>
+    <% if word_count_mode %>
+      <p class="lead">
+        <strong><%= @rows.size %></strong> search terms on
+        <code><%= @edition.edition_id %></code>
+        (<%= @scan_params.scope.tr("_", " ") %>, <%= @scan_params.bucket.tr("_", " ") %>).
+      </p>
+    <% elsif equal_count_mode %>
       <p class="lead">
         <strong><%= @rows.size %></strong> groups on
         <code><%= @edition.edition_id %></code>
@@ -35,7 +51,8 @@
 </div>
 
 <section class="panel toolbar">
-  <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form discovery-filters" do %>
+  <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form", class: "toolbar-form discovery-filters" do %>
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
     <label>
       Scan type
       <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
@@ -44,7 +61,13 @@
       Edition
       <%= select_tag :edition, edition_options(@edition.edition_id) %>
     </label>
-    <% unless equal_count_mode %>
+    <% if word_count_mode %>
+      <label class="query-terms-field">
+        Search terms
+        <%= text_area_tag :query_terms, @scan_params.query_terms, rows: 5, class: "query-terms-input", placeholder: "*jesus*\nsix|cs\nseven" %>
+      </label>
+    <% end %>
+    <% unless equal_count_mode || word_count_mode %>
       <label>
         Divisible by
         <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
@@ -58,10 +81,12 @@
       Bucket
       <%= select_tag :bucket, discovery_bucket_options(@scan_params.bucket) %>
     </label>
-    <label>
-      Min count
-      <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
-    </label>
+    <% if filter_scan_mode %>
+      <label>
+        Min count
+        <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
+      </label>
+    <% end %>
     <% if equal_count_mode %>
       <label>
         Match by
@@ -72,22 +97,23 @@
         <%= number_field_tag :min_group_size, @scan_params.min_group_size, min: 2, class: "input-narrow" %>
       </label>
     <% end %>
-    <%= button_tag "Apply filters", type: "submit", class: "button button-secondary" %>
   <% end %>
 
-  <%= form_with url: scan_discoveries_path, method: :post, local: true, class: "toolbar-form toolbar-actions" do %>
-    <% discovery_scan_query(@edition, @scan_params).each do |key, value| %>
-      <%= hidden_field_tag key, value %>
-    <% end %>
+  <div class="toolbar-form toolbar-actions">
     <% unless @status == :ready %>
-      <%= button_tag "Run scan", type: "submit", class: "button button-primary" %>
+      <%= button_tag "Run scan", type: "submit", class: "button button-primary",
+          form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
     <% end %>
-    <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary" %>
-  <% end %>
+    <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary",
+        form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
+  </div>
 
   <p class="hint">
     First scan builds the corpus index if needed (about a minute), then queries are fast.
-    <% if equal_count_mode %>
+    <% if word_count_mode %>
+      One term per line. Append <code>|cs</code> for case-sensitive whole-token match.
+      Use <code>*</code> before or after text to match within a token (e.g. <code>*jesus*</code> matches <code>Bar-jesus</code>).
+    <% elsif equal_count_mode %>
       <strong>Normalized word</strong> sums all spellings (e.g. seven + Seven = 463).
       <strong>Spelling</strong> matches the divisibility list row-by-row (e.g. seven = 448).
     <% end %>
@@ -100,13 +126,49 @@
   </section>
 <% elsif @status == :pending %>
   <section class="panel notice">
-    <p><strong>No results yet.</strong> Set filters above, then click <em>Run scan</em>.</p>
+    <p><strong>No results yet.</strong>
+      <% if word_count_mode %>
+        Enter search terms above, then click <em>Run scan</em>.
+      <% else %>
+        Click <em>Run scan</em> to query with the current settings.
+      <% end %>
+    </p>
   </section>
 <% end %>
 
 <% if @status == :ready %>
   <section class="panel">
-    <% if equal_count_mode %>
+    <% if word_count_mode %>
+      <table class="features-table discovery-table">
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th>Case</th>
+            <th class="num">Count</th>
+            <th>Spellings</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rows.each do |row| %>
+            <tr>
+              <td><code><%= row.pattern %></code><% if row.wildcard %> <span class="badge badge-muted">wildcard</span><% end %></td>
+              <td><%= row.case_sensitive ? "sensitive" : "insensitive" %></td>
+              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="word-group"><%= discovery_word_count_spellings_label(row.spellings) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+        <% if @rows.size > 1 %>
+          <tfoot>
+            <tr class="row-total">
+              <td colspan="2"><strong>Total</strong></td>
+              <td class="num"><strong><%= format_feature_count(discovery_word_count_total(@rows)) %></strong></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        <% end %>
+      </table>
+    <% elsif equal_count_mode %>
       <table class="features-table discovery-table">
         <thead>
           <tr>

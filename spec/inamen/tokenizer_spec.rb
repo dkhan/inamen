@@ -23,6 +23,13 @@ RSpec.describe Inamen::Tokenizer do
       )
     end
 
+    it "keeps a trailing possessive apostrophe on the word token" do
+      input = "at Jesus\u{2019} feet"
+      expect(described_class.tokenize(input)).to eq(
+        ["at", "Jesus\u{2019}", "feet"]
+      )
+    end
+
     it "returns empty array for nil or blank" do
       expect(described_class.tokenize(nil)).to eq([])
       expect(described_class.tokenize("")).to eq([])

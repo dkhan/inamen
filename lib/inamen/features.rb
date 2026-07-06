@@ -8,6 +8,7 @@ require_relative "bible_boundary_patterns"
 module Inamen
   # Named, reproducible KJV pattern features with documented definitions.
   module Features
+    JESUS_POSSESSIVE = "Jesus\u2019"
     JESUS_NON_CHRIST_VERSES = BibleBoundaryPatterns::JESUS_NON_CHRIST_VERSES
 
     CATALOG = [
@@ -381,7 +382,7 @@ module Inamen
           rows = db.execute(<<~SQL)
             SELECT book, chapter, verse FROM tokens
             WHERE bucket IN ('verse_text', 'psalm_heading', 'colophon')
-              AND token_raw IN ('Jesus', 'JESUS')
+              AND token_raw IN ('Jesus', 'JESUS', '#{JESUS_POSSESSIVE}')
           SQL
           raw = rows.size
           count = rows.count { |book, chapter, verse| !excluded.include?([book, chapter, verse]) }
@@ -392,7 +393,7 @@ module Inamen
           count = 0
           CorpusIndexer.each_token_record(lines) do |rec|
             next unless CorpusStore::SCAN_BUCKETS.include?(rec[:bucket])
-            next unless rec[:token_raw] == "Jesus" || rec[:token_raw] == "JESUS"
+            next unless %w[Jesus JESUS].include?(rec[:token_raw]) || rec[:token_raw] == JESUS_POSSESSIVE
 
             raw += 1
             count += 1 unless excluded.include?([rec[:book], rec[:chapter], rec[:verse]])
