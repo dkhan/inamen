@@ -12,48 +12,6 @@
 <% equal_count_mode = @scan_params.mode == "equal_count" %>
 <% filter_scan_mode = !word_count_mode %>
 <% selection = @scan_params.search_selection %>
-<% selection_label = discovery_selection_label(selection) %>
-
-<div class="page-header">
-  <p class="eyebrow">Pattern discovery</p>
-  <h1>
-    <% if word_count_mode %>
-      Word count
-    <% elsif equal_count_mode %>
-      Equal count groups
-    <% else %>
-      Divisibility scan
-    <% end %>
-  </h1>
-  <% if @status == :ready %>
-    <% if word_count_mode %>
-      <p class="lead">
-        <strong><%= @rows.size %></strong> search terms on
-        <code><%= @edition.edition_id %></code>
-        (<%= selection_label %>).
-      </p>
-    <% elsif equal_count_mode %>
-      <p class="lead">
-        <strong><%= @rows.size %></strong> groups on
-        <code><%= @edition.edition_id %></code>
-        where <%= @scan_params.min_group_size %>+ <%= @scan_params.match_by == "spelling" ? "spellings" : "words" %> share the same count
-        (<%= selection_label %>, min count <%= @scan_params.min_count %>).
-      </p>
-    <% else %>
-      <p class="lead">
-        <strong><%= @rows.size %></strong> tokens on
-        <code><%= @edition.edition_id %></code>
-        whose counts are divisible by <%= @scan_params.divisible_by %>
-        (<%= selection_label %>, min <%= @scan_params.min_count %>).
-      </p>
-    <% end %>
-  <% else %>
-    <p class="lead">
-      Hunt for numeric patterns in token counts —
-      edition <code><%= @edition.edition_id %></code>.
-    </p>
-  <% end %>
-</div>
 
 <section class="panel toolbar">
   <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form" do %>

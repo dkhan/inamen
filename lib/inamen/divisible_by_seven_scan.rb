@@ -31,9 +31,17 @@ module Inamen
       def count_for(db, token:, search_selection: nil, scope: :whole_bible, bucket: :default, exact: false)
         selection = resolve_selection(search_selection, scope, bucket)
         col = exact ? "token_raw" : "token_norm"
-        val = exact ? token.to_s : CorpusStore.normalize_token(token)
+        val = exact ? CorpusStore.normalize_apostrophes(token.to_s) : CorpusStore.normalize_token(token)
         where_sql, where_params = selection.where_clause
         params = [val] + where_params
+
+        if CorpusStore.token_counts_available?(db)
+          sql = <<~SQL
+            SELECT COALESCE(SUM(count), 0) FROM token_counts
+            WHERE #{col} = ? #{where_sql}
+          SQL
+          return db.get_first_value(sql, params).to_i
+        end
 
         sql = <<~SQL
           SELECT COUNT(*) FROM tokens

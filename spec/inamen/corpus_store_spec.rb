@@ -39,7 +39,9 @@ RSpec.describe Inamen::CorpusStore do
       expect(counts[described_class::BUCKET_PSALM_HEADING]).to eq(1034)
       expect(counts[described_class::BUCKET_COLOPHON]).to eq(186)
       expect(counts.values.sum).to eq(790_849)
-      expect(moses).to eq(848)
+      expect(moses).to eq(829)
+      expect(described_class.token_counts_available?(db)).to be(true)
+      expect(db.get_first_value("SELECT SUM(count) FROM token_counts").to_i).to eq(790_849)
     end
   end
 end

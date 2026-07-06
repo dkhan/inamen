@@ -180,7 +180,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v5",
+      "discovery_scan/v6",
       p.mode,
       p.match_by,
       terms_digest,

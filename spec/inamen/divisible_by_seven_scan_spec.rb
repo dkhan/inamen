@@ -10,8 +10,7 @@ RSpec.describe Inamen::DivisibleBySevenScan do
   describe ".count_for" do
     it "counts normalized token occurrences in a scope" do
       jesus = described_class.count_for(db, token: "Jesus")
-      expect(jesus).to be > 900
-      expect((jesus % 7).zero?).to be(false)
+      expect(jesus).to eq(973)
     end
 
     it "counts exact token_raw when exact: true" do

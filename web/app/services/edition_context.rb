@@ -43,6 +43,12 @@ class EditionContext
     end
   end
 
+  def lexicon(search_selection = Inamen::SearchSelection.default)
+    @lexicons ||= {}
+    key = search_selection.cache_key
+    @lexicons[key] ||= Inamen::Lexicon.for(db, search_selection: search_selection)
+  end
+
   def corpus_db_path
     Rails.root.join(
       "tmp/corpora",

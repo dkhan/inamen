@@ -5,25 +5,6 @@
   <% end %>
 <% end %>
 
-<div class="page-header">
-  <p class="eyebrow">Verified patterns</p>
-  <h1>Feature catalog</h1>
-  <% if @status == :ready %>
-    <p class="lead">
-      <%= @rows.size %> reproducible measurements on
-      <code><%= @edition.edition_id %></code>
-      (<%= @edition.filename %>).
-      <%= @match_count %> of <%= @rows.size %> match expected counts.
-    </p>
-  <% else %>
-    <p class="lead">
-      <%= @catalog.size %> reproducible measurements —
-      edition <code><%= @edition.edition_id %></code>
-      (<%= @edition.filename %>).
-    </p>
-  <% end %>
-</div>
-
 <section class="panel toolbar">
   <%= form_with url: features_path, method: :get, local: true, class: "toolbar-form" do %>
     <label>

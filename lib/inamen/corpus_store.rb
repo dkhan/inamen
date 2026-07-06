@@ -11,7 +11,7 @@ module Inamen
     DEFAULT_PATH = File.expand_path("../../data/kjv_corpus.sqlite", __dir__)
     SCHEMA_VERSION = 2
     # Bump when indexing or tokenization rules change (invalidates cached corpora).
-    INDEXER_REVISION = "6"
+    INDEXER_REVISION = "7"
 
     BUCKET_VERSE_TEXT = "verse_text"
     BUCKET_PSALM_HEADING = "psalm_heading"
@@ -34,6 +34,7 @@ module Inamen
         db = open_db(path)
         create_schema!(db)
         insert_tokens!(db, lines)
+        populate_token_counts!(db)
         record_build_metadata!(db, lines)
         db.close
         path
@@ -44,6 +45,7 @@ module Inamen
 
         db = open_db(path)
         create_schema!(db) unless schema_present?(db)
+        ensure_token_counts!(db)
         db
       end
 
@@ -78,6 +80,11 @@ module Inamen
         return SCAN_BUCKETS if bucket.nil? || bucket == :default || bucket == "default" || bucket == "scannable"
 
         Array(bucket)
+      end
+
+      def token_counts_available?(db)
+        db.get_first_value("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'token_counts'").to_i == 1 &&
+          db.get_first_value("SELECT COUNT(*) FROM token_counts").to_i.positive?
       end
 
       private
@@ -118,6 +125,20 @@ module Inamen
           CREATE INDEX IF NOT EXISTS idx_tokens_norm_bucket ON tokens (token_norm, bucket);
           CREATE INDEX IF NOT EXISTS idx_tokens_testament ON tokens (testament, bucket);
           CREATE INDEX IF NOT EXISTS idx_tokens_book ON tokens (book, bucket);
+
+          CREATE TABLE IF NOT EXISTS token_counts (
+            token_norm TEXT NOT NULL,
+            token_raw TEXT NOT NULL,
+            bucket TEXT NOT NULL,
+            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
+            book TEXT NOT NULL,
+            count INTEGER NOT NULL,
+            PRIMARY KEY (token_norm, token_raw, bucket, testament, book)
+          );
+
+          CREATE INDEX IF NOT EXISTS idx_token_counts_norm ON token_counts (token_norm);
+          CREATE INDEX IF NOT EXISTS idx_token_counts_raw ON token_counts (token_raw);
+          CREATE INDEX IF NOT EXISTS idx_token_counts_bucket_book ON token_counts (bucket, book);
         SQL
       end
 
@@ -155,6 +176,27 @@ module Inamen
         db.execute(sql, batch.flatten)
       end
 
+      def populate_token_counts!(db)
+        db.execute("DELETE FROM token_counts")
+        db.execute(<<~SQL)
+          INSERT INTO token_counts (token_norm, token_raw, bucket, testament, book, count)
+          SELECT token_norm, token_raw, bucket, testament, book, COUNT(*) AS count
+          FROM tokens
+          GROUP BY token_norm, token_raw, bucket, testament, book
+        SQL
+      end
+
+      def ensure_token_counts!(db)
+        return unless schema_present?(db)
+
+        create_schema!(db)
+        token_rows = db.get_first_value("SELECT COUNT(*) FROM tokens").to_i
+        return if token_rows.zero?
+
+        count_rows = db.get_first_value("SELECT COUNT(*) FROM token_counts").to_i
+        populate_token_counts!(db) if count_rows.zero?
+      end
+
       def record_build_metadata!(db, lines)
         db.execute("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)", ["schema_version", SCHEMA_VERSION.to_s])
         bucket_counts(db).each do |bucket, count|
@@ -166,6 +208,10 @@ module Inamen
         db.execute(
           "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
           ["token_rows_scannable", token_count(db).to_s]
+        )
+        db.execute(
+          "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
+          ["token_count_rows", db.get_first_value("SELECT COUNT(*) FROM token_counts").to_s]
         )
         db.execute(
           "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
