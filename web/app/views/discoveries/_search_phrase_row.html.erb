@@ -2,7 +2,8 @@
   <div class="search-phrase-input-row">
     <div class="search-phrase-field">
       <%= text_field_tag "search_phrases[#{index}][phrase]", phrase.phrase,
-          class: "search-phrase-input", autocomplete: "off", spellcheck: false %>
+          class: "search-phrase-input", autocomplete: "off", spellcheck: false,
+          placeholder: "six|seven|*jesus*" %>
       <div class="search-phrase-options">
         <label class="search-phrase-option">
           <%= check_box_tag "search_phrases[#{index}][case_sensitive]", "1", phrase.case_sensitive %>

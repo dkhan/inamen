@@ -10,8 +10,13 @@ module Inamen
 
     class << self
       def parse_terms(text)
-        terms = text.to_s.each_line.filter_map { |line| TokenPattern.parse_line(line) }.map do |attrs|
-          QueryTerm.new(**attrs)
+        terms = text.to_s.each_line.flat_map do |line|
+          attrs = TokenPattern.parse_line(line)
+          next [] unless attrs
+
+          TokenPattern.split_phrase_patterns(attrs[:pattern]).map do |pattern|
+            QueryTerm.new(pattern: pattern, case_sensitive: attrs[:case_sensitive])
+          end
         end
         raise ArgumentError, "at least one search term required" if terms.empty?
         raise ArgumentError, "too many terms (max #{MAX_TERMS})" if terms.length > MAX_TERMS

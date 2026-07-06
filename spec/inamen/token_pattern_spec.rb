@@ -17,6 +17,13 @@ RSpec.describe Inamen::TokenPattern do
     end
   end
 
+  describe ".split_phrase_patterns" do
+    it "splits pipe-separated phrases" do
+      expect(described_class.split_phrase_patterns("six|seven")).to eq(%w[six seven])
+      expect(described_class.split_phrase_patterns("*jesus*|Jesus Christ")).to eq(["*jesus*", "Jesus Christ"])
+    end
+  end
+
   describe ".matches?" do
     it "matches whole tokens for exact case-sensitive patterns" do
       expect(described_class.matches?("six", token_raw: "six", token_norm: "six", case_sensitive: true)).to be(true)

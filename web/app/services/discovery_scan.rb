@@ -241,7 +241,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v9",
+      "discovery_scan/v10",
       p.mode,
       p.match_by,
       terms_digest,

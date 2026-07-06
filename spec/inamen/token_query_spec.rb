@@ -16,6 +16,12 @@ RSpec.describe Inamen::TokenQuery do
       expect(terms.map(&:case_sensitive)).to eq([false, true])
     end
 
+    it "parses pipe-separated phrases on one line with shared case sensitivity" do
+      terms = described_class.parse_terms("six|seven|cs\n*jesus*|Jesus Christ\n")
+      expect(terms.map(&:pattern)).to eq(["six", "seven", "*jesus*", "Jesus Christ"])
+      expect(terms.map(&:case_sensitive)).to eq([true, true, false, false])
+    end
+
     it "rejects empty input" do
       expect { described_class.parse_terms("  \n") }.to raise_error(ArgumentError, /at least one search term/)
     end
@@ -111,6 +117,17 @@ RSpec.describe Inamen::TokenQuery do
       row = rows.first
       expect(row.count).to eq(196)
       expect(row.spellings).to eq("Jesus Christ" => 196)
+    end
+
+    it "counts pipe-separated terms from one input line" do
+      rows = described_class.scan(
+        db,
+        terms: described_class.parse_terms("six|seven\n"),
+        scope: :whole_bible,
+        bucket: :default
+      )
+      expect(rows.map(&:pattern)).to eq(%w[six seven])
+      expect(rows.map(&:count)).to eq([202, 463])
     end
 
     it "returns independent counts for multiple terms" do

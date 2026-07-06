@@ -31,8 +31,13 @@ module Inamen
           stripped = stripped[0...match.begin(0)].strip
         end
 
-        validate!(stripped)
+        return nil if stripped.empty?
+
         { pattern: stripped, case_sensitive: case_sensitive }
+      end
+
+      def split_phrase_patterns(pattern)
+        pattern.to_s.split("|").map(&:strip).reject(&:empty?).each { |part| validate!(part) }
       end
 
       def matches?(pattern, token_raw:, token_norm:, case_sensitive:)
