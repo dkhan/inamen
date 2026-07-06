@@ -60,7 +60,7 @@ module Inamen
     def wildcard_rows(pattern, case_sensitive:)
       regex = TokenPattern.to_regex(pattern, case_sensitive: case_sensitive)
       prefilter_rows(pattern, case_sensitive: case_sensitive).select do |row|
-        wildcard_row_match?(regex, row, case_sensitive: case_sensitive)
+        wildcard_row_match?(regex, row, pattern: pattern, case_sensitive: case_sensitive)
       end
     end
 
@@ -102,10 +102,10 @@ module Inamen
       true
     end
 
-    def wildcard_row_match?(regex, row, case_sensitive:)
+    def wildcard_row_match?(regex, row, pattern:, case_sensitive:)
       text = case_sensitive ? row.token_raw : row.token_norm
       text = CorpusStore.normalize_apostrophes(text)
-      text = text.sub(TokenPattern::TRAILING_POSSESSIVE, "")
+      text = text.sub(TokenPattern::TRAILING_POSSESSIVE, "") if TokenPattern.strip_trailing_possessive_for_wildcard?(pattern)
       regex.match?(text)
     end
 

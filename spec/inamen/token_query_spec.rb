@@ -76,6 +76,43 @@ RSpec.describe Inamen::TokenQuery do
       expect(possessive.spellings).to eq("Jesus\u{2019}" => 10)
     end
 
+    it "counts *jesus' the same as exact jesus'" do
+      rows = described_class.scan(
+        db,
+        terms: [described_class::QueryTerm.new(pattern: "*jesus'", case_sensitive: false)],
+        scope: :whole_bible,
+        bucket: :default
+      )
+      row = rows.first
+      expect(row.count).to eq(10)
+      expect(row.spellings).to eq("Jesus\u{2019}" => 10)
+    end
+
+    it "counts consecutive-word phrases" do
+      rows = described_class.scan(
+        db,
+        terms: [described_class::QueryTerm.new(pattern: "Jesus Christ", case_sensitive: false)],
+        scope: :whole_bible,
+        bucket: :default
+      )
+      row = rows.first
+      expect(row.count).to eq(196)
+      expect(row.wildcard).to be(false)
+      expect(row.spellings).to eq("Jesus Christ" => 196)
+    end
+
+    it "counts phrases with wildcards in words" do
+      rows = described_class.scan(
+        db,
+        terms: [described_class::QueryTerm.new(pattern: "Jesus Chris*", case_sensitive: false)],
+        scope: :whole_bible,
+        bucket: :default
+      )
+      row = rows.first
+      expect(row.count).to eq(196)
+      expect(row.spellings).to eq("Jesus Christ" => 196)
+    end
+
     it "returns independent counts for multiple terms" do
       terms = described_class.parse_terms("seven\ncities")
       rows = described_class.scan(db, terms: terms, scope: :whole_bible, bucket: :default)

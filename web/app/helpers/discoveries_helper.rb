@@ -53,6 +53,14 @@ module DiscoveriesHelper
     discovery_category_indeterminate?(selection, books)
   end
 
+  def discovery_search_phrases(scan_params)
+    if params[:search_phrases].present?
+      DiscoveryScan.phrase_entries_from_params(params[:search_phrases])
+    else
+      DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms)
+    end
+  end
+
   def discovery_scan_hidden_fields(scan_params)
     selection = scan_params.search_selection
     parts = [

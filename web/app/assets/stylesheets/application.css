@@ -237,24 +237,93 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.query-terms-field {
+.search-phrases-field {
   flex: 1 1 100%;
-  max-width: 32rem;
+  max-width: 36rem;
 }
 
-.query-terms-input {
+.search-phrases-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.search-phrase-row + .search-phrase-row {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+
+.search-phrase-input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.search-phrase-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-phrase-input {
   display: block;
   width: 100%;
-  min-height: 6rem;
-  margin-top: 0.25rem;
-  padding: 0.5rem 0.65rem;
+  padding: 0.45rem 0.65rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.9rem;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 0.35rem;
-  resize: vertical;
+}
+
+.search-phrase-row:first-child [data-remove-phrase] {
+  display: none;
+}
+
+.search-phrase-icon-button {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  cursor: pointer;
+}
+
+.search-phrase-icon-button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.search-phrase-options {
+  margin-top: 0.45rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.search-phrase-option {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.search-phrase-option-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.search-phrases-actions {
+  margin-top: 0.85rem;
+  text-align: center;
 }
 
 .badge-muted {
@@ -301,6 +370,15 @@ body {
   gap: 0.35rem;
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.toolbar-form label.search-phrase-option {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  width: auto;
+  font-size: 0.85rem;
 }
 
 .toolbar-form select {

@@ -1,0 +1,19 @@
+<% phrases = discovery_search_phrases(scan_params) %>
+
+<div class="search-phrases-field" id="search-phrases-panel">
+  <span class="search-phrases-label">Search phrases</span>
+  <div id="search-phrases-list" data-search-phrases-list>
+    <% phrases.each_with_index do |phrase, index| %>
+      <%= render "search_phrase_row", index: index, phrase: phrase %>
+    <% end %>
+  </div>
+  <div class="search-phrases-actions">
+    <button type="button" class="button button-primary" id="add-search-phrase">Add Search Phrase</button>
+  </div>
+</div>
+
+<template id="search-phrase-row-template">
+  <%= render "search_phrase_row",
+      index: "__INDEX__",
+      phrase: DiscoveryScan::PhraseEntry.new(phrase: "", case_sensitive: false) %>
+</template>

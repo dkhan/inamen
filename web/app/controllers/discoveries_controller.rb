@@ -75,7 +75,8 @@ class DiscoveriesController < ApplicationController
       min_count: params[:min_count],
       min_group_size: params[:min_group_size],
       match_by: params[:match_by],
-      query_terms: params[:query_terms]
+      query_terms: params[:query_terms],
+      search_phrases: params[:search_phrases]
     }
   end
 

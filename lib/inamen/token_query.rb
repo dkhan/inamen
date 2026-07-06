@@ -24,7 +24,14 @@ module Inamen
         scope_label = TokenCountQuery.selection_label(selection)
         Array(terms).map do |term|
           count, spellings =
-            if TokenPattern.wildcard?(term.pattern)
+            if PhraseQuery.phrase?(term.pattern)
+              PhraseQuery.count(
+                db,
+                pattern: term.pattern,
+                search_selection: selection,
+                case_sensitive: term.case_sensitive
+              )
+            elsif TokenPattern.wildcard?(term.pattern)
               rows = TokenCountQuery.wildcard_aggregate(
                 db,
                 pattern: term.pattern,

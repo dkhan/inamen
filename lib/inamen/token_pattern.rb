@@ -77,6 +77,10 @@ module Inamen
         str.gsub(/([\[\]\?*])/, '[\\1]')
       end
 
+      def strip_trailing_possessive_for_wildcard?(pattern)
+        !CorpusStore.normalize_apostrophes(pattern).gsub("*", "").match?(/['\u{2019}]/)
+      end
+
       private
 
       def exact_match?(pattern, token_raw:, token_norm:, case_sensitive:)
@@ -95,11 +99,14 @@ module Inamen
       def wildcard_match?(pattern, token_raw:, token_norm:, case_sensitive:)
         raw = CorpusStore.normalize_apostrophes(token_raw)
         norm = CorpusStore.normalize_apostrophes(token_norm)
-        text = wildcard_match_text(case_sensitive ? raw : norm)
+        text = wildcard_match_text(case_sensitive ? raw : norm, pattern)
         to_regex(pattern, case_sensitive: case_sensitive).match?(text)
       end
 
-      def wildcard_match_text(text)
+      def wildcard_match_text(text, pattern)
+        text = CorpusStore.normalize_apostrophes(text)
+        return text unless strip_trailing_possessive_for_wildcard?(pattern)
+
         text.sub(TRAILING_POSSESSIVE, "")
       end
 

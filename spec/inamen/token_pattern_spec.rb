@@ -37,6 +37,7 @@ RSpec.describe Inamen::TokenPattern do
       expect(described_class.matches?("*jesus*", token_raw: "JESUS", token_norm: "jesus", case_sensitive: false)).to be(true)
       expect(described_class.matches?("*jesus*", token_raw: curly, token_norm: "jesus\u{2019}", case_sensitive: false)).to be(true)
       expect(described_class.matches?("jesus*", token_raw: curly, token_norm: "jesus\u{2019}", case_sensitive: false)).to be(true)
+      expect(described_class.matches?("*Jesus\u{2019}", token_raw: curly, token_norm: "jesus\u{2019}", case_sensitive: false)).to be(true)
       expect(described_class.matches?("*jesus*", token_raw: "Ephesus", token_norm: "ephesus", case_sensitive: false)).to be(false)
     end
 

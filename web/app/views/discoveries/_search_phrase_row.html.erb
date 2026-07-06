@@ -1,0 +1,16 @@
+<div class="search-phrase-row" data-search-phrase-row>
+  <div class="search-phrase-input-row">
+    <div class="search-phrase-field">
+      <%= text_field_tag "search_phrases[#{index}][phrase]", phrase.phrase,
+          class: "search-phrase-input", autocomplete: "off", spellcheck: false %>
+      <div class="search-phrase-options">
+        <label class="search-phrase-option">
+          <%= check_box_tag "search_phrases[#{index}][case_sensitive]", "1", phrase.case_sensitive %>
+          <span class="search-phrase-option-label">Case Sensitive</span>
+        </label>
+      </div>
+    </div>
+    <button type="button" class="search-phrase-icon-button" data-clear-phrase aria-label="Clear phrase" title="Clear phrase">⌫</button>
+    <button type="button" class="search-phrase-icon-button" data-remove-phrase aria-label="Remove phrase" title="Remove phrase">×</button>
+  </div>
+</div>

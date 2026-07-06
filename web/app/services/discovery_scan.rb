@@ -19,6 +19,8 @@ class DiscoveryScan
   MODES = %w[divisible equal_count word_count].freeze
   MATCH_BY = %w[norm spelling].freeze
 
+  PhraseEntry = Struct.new(:phrase, :case_sensitive, keyword_init: true)
+
   def self.normalize(raw)
     mode = raw[:mode].to_s
     divisible_by = raw[:divisible_by].to_i
@@ -37,6 +39,8 @@ class DiscoveryScan
         Inamen::SearchSelection.default
       end
 
+    query_terms = query_terms_from_raw(raw)
+
     Params.new(
       mode: MODES.include?(mode) ? mode : "word_count",
       divisible_by: divisible_by.positive? ? divisible_by : 7,
@@ -44,9 +48,66 @@ class DiscoveryScan
       min_count: min_count.positive? ? min_count : 7,
       min_group_size: min_group_size >= 2 ? min_group_size : 2,
       match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm",
-      query_terms: raw[:query_terms].to_s
+      query_terms: query_terms
     )
   end
+
+  def self.query_terms_from_raw(raw)
+    if raw[:search_phrases].present?
+      query_terms_from_phrases(raw[:search_phrases])
+    else
+      raw[:query_terms].to_s
+    end
+  end
+
+  def self.phrase_entries_from_params(raw_phrases)
+    entries = phrase_hashes(raw_phrases).map do |entry|
+      PhraseEntry.new(
+        phrase: entry[:phrase].to_s,
+        case_sensitive: ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive])
+      )
+    end
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false)]
+  end
+
+  def self.phrase_entries_from_query_terms(text)
+    entries = text.to_s.each_line.filter_map do |line|
+      attrs = Inamen::TokenPattern.parse_line(line)
+      next unless attrs
+
+      PhraseEntry.new(phrase: attrs[:pattern], case_sensitive: attrs[:case_sensitive])
+    end
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false)]
+  end
+
+  def self.query_terms_from_phrases(raw_phrases)
+    phrase_hashes(raw_phrases).filter_map do |entry|
+      phrase = entry[:phrase].to_s.strip
+      next if phrase.empty?
+
+      case_sensitive = ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive])
+      case_sensitive ? "#{phrase}|cs" : phrase
+    end.join("\n")
+  end
+
+  def self.phrase_hashes(raw_phrases)
+    return [] if raw_phrases.blank?
+
+    list =
+      if raw_phrases.is_a?(ActionController::Parameters)
+        raw_phrases.permit!.to_h.values
+      elsif raw_phrases.is_a?(Hash)
+        raw_phrases.values
+      else
+        Array(raw_phrases)
+      end
+
+    list.compact.map do |entry|
+      hash = entry.respond_to?(:to_unsafe_h) ? entry.to_unsafe_h : entry.to_h
+      hash.symbolize_keys
+    end
+  end
+  private_class_method :phrase_hashes
 
   def self.run(edition, params, force: false)
     return [] if params.mode == "word_count" && params.query_terms.blank?
@@ -180,7 +241,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v6",
+      "discovery_scan/v9",
       p.mode,
       p.match_by,
       terms_digest,

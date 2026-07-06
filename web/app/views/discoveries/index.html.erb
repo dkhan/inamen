@@ -6,6 +6,8 @@
 <% end %>
 <% content_for :head do %>
   <%= javascript_include_tag "search_within_tree", defer: true %>
+  <%= javascript_include_tag "search_phrases", defer: true %>
+  <%= javascript_include_tag "discovery_scan_form", defer: true %>
 <% end %>
 
 <% word_count_mode = @scan_params.mode == "word_count" %>
@@ -28,7 +30,8 @@
 </section>
 
 <section class="panel toolbar discovery-toolbar">
-  <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form", class: "discovery-layout" do %>
+  <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form",
+      class: "discovery-layout", data: { scan_action: scan_discoveries_path } do %>
     <%= hidden_field_tag :edition, @edition.edition_id %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
 
@@ -43,11 +46,7 @@
           <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
         </label>
         <% if word_count_mode %>
-          <label class="query-terms-field">
-            Search terms
-            <%= text_area_tag :query_terms, @scan_params.query_terms, rows: 6, class: "query-terms-input",
-                placeholder: "*jesus*\nsix|cs\nseven" %>
-          </label>
+          <%= render "search_phrases", scan_params: @scan_params %>
         <% end %>
         <% unless equal_count_mode || word_count_mode %>
           <label>
@@ -72,26 +71,6 @@
           </label>
         <% end %>
       </div>
-
-      <div class="toolbar-form toolbar-actions">
-        <% unless @status == :ready %>
-          <%= button_tag "Run scan", type: "submit", class: "button button-primary",
-              form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
-        <% end %>
-        <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary",
-            form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
-      </div>
-
-      <p class="hint">
-        First scan builds the corpus index if needed (about a minute), then queries are fast.
-        <% if word_count_mode %>
-          One term per line. Append <code>|cs</code> for case-sensitive whole-token match.
-          Use <code>*</code> before or after text to match within a token (e.g. <code>*jesus*</code> matches <code>Bar-jesus</code>).
-        <% elsif equal_count_mode %>
-          <strong>Normalized word</strong> sums all spellings (e.g. seven + Seven = 463).
-          <strong>Spelling</strong> matches the divisibility list row-by-row (e.g. seven = 448).
-        <% end %>
-      </p>
     </div>
   <% end %>
 </section>
@@ -104,9 +83,9 @@
   <section class="panel notice">
     <p><strong>No results yet.</strong>
       <% if word_count_mode %>
-        Enter search terms above, then click <em>Run scan</em>.
+        Enter a search phrase and press <em>Enter</em>, click away, or toggle <em>Case Sensitive</em> to scan.
       <% else %>
-        Click <em>Run scan</em> to query with the current settings.
+        Press <em>Enter</em> in a filter field to run a scan with the current settings.
       <% end %>
     </p>
   </section>

@@ -201,7 +201,6 @@ Full web setup, development workflow, and deploy notes: **[web/README.md](web/RE
 
 - User uploads and corpus profiles beyond bundled KJV editions
 - Registered users, saved results, edition comparison UI
-- Phrase / consecutive-word search
 - JSON API for programmatic verification
 
 ---
