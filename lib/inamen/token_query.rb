@@ -19,21 +19,21 @@ module Inamen
         terms
       end
 
-      def scan(db, terms:, scope: :whole_bible, bucket: :default)
-        scope_label = TokenCountQuery.scope_label(scope)
+      def scan(db, terms:, search_selection: nil, scope: :whole_bible, bucket: :default)
+        selection = resolve_selection(search_selection, scope, bucket)
+        scope_label = TokenCountQuery.selection_label(selection)
         Array(terms).map do |term|
           count, spellings =
             if TokenPattern.wildcard?(term.pattern)
               rows = TokenCountQuery.wildcard_aggregate(
                 db,
                 pattern: term.pattern,
-                scope: scope,
-                bucket: bucket,
+                search_selection: selection,
                 case_sensitive: term.case_sensitive
               )
               count_wildcard(rows, term)
             else
-              count_exact(db, term, scope: scope, bucket: bucket)
+              count_exact(db, term, selection: selection)
             end
 
           ResultRow.new(
@@ -49,12 +49,17 @@ module Inamen
 
       private
 
-      def count_exact(db, term, scope:, bucket:)
+      def resolve_selection(search_selection, scope, bucket)
+        return search_selection if search_selection.is_a?(SearchSelection)
+
+        SearchSelection.from_legacy(scope: scope, bucket: bucket)
+      end
+
+      def count_exact(db, term, selection:)
         spellings = TokenCountQuery.spellings_for_token(
           db,
           token: term.pattern,
-          scope: scope,
-          bucket: bucket,
+          search_selection: selection,
           case_sensitive: term.case_sensitive
         )
         [spellings.values.sum, spellings]

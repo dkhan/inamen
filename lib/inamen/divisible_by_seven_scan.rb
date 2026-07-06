@@ -8,17 +8,18 @@ module Inamen
     ScopeRow = Struct.new(:scope, :token_norm, :token_raw, :count, :divisible_by, keyword_init: true)
 
     class << self
-      def scan(db, divisible_by: 7, scope: :whole_bible, bucket: :default, min_count: 1)
+      def scan(db, divisible_by: 7, search_selection: nil, scope: :whole_bible, bucket: :default, min_count: 1)
         raise ArgumentError, "divisible_by must be positive" unless divisible_by.to_i.positive?
 
-        rows = TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
+        selection = resolve_selection(search_selection, scope, bucket)
+        rows = TokenCountQuery.aggregate(db, search_selection: selection, group: :norm_raw)
         rows.filter_map do |row|
           count = row[:count]
           next if count < min_count
           next unless (count % divisible_by).zero?
 
           ScopeRow.new(
-            scope: TokenCountQuery.scope_label(scope),
+            scope: TokenCountQuery.selection_label(selection),
             token_norm: row[:token_norm],
             token_raw: row[:token_raw],
             count: count,
@@ -27,17 +28,16 @@ module Inamen
         end.sort_by { |r| [-r.count, r.token_norm, r.token_raw] }
       end
 
-      def count_for(db, token:, scope: :whole_bible, bucket: :default, exact: false)
+      def count_for(db, token:, search_selection: nil, scope: :whole_bible, bucket: :default, exact: false)
+        selection = resolve_selection(search_selection, scope, bucket)
         col = exact ? "token_raw" : "token_norm"
         val = exact ? token.to_s : CorpusStore.normalize_token(token)
-        buckets = CorpusStore.resolve_buckets(bucket)
-        bucket_sql, bucket_params = TokenCountQuery.bucket_clause(buckets)
-        where_sql, scope_params = TokenCountQuery.scope_clause(scope)
-        params = bucket_params + [val] + scope_params
+        where_sql, where_params = selection.where_clause
+        params = [val] + where_params
 
         sql = <<~SQL
           SELECT COUNT(*) FROM tokens
-          WHERE #{bucket_sql} AND #{col} = ? #{where_sql}
+          WHERE #{col} = ? #{where_sql}
         SQL
         db.get_first_value(sql, params).to_i
       end
@@ -58,6 +58,13 @@ module Inamen
       def scope_label(scope)
         TokenCountQuery.scope_label(scope)
       end
+
+      def resolve_selection(search_selection, scope, bucket)
+        return search_selection if search_selection.is_a?(SearchSelection)
+
+        SearchSelection.from_legacy(scope: scope, bucket: bucket)
+      end
+      private :resolve_selection
     end
   end
 end

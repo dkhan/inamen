@@ -4,10 +4,15 @@
     <meta http-equiv="refresh" content="3">
   <% end %>
 <% end %>
+<% content_for :head do %>
+  <%= javascript_include_tag "search_within_tree", defer: true %>
+<% end %>
 
 <% word_count_mode = @scan_params.mode == "word_count" %>
 <% equal_count_mode = @scan_params.mode == "equal_count" %>
 <% filter_scan_mode = !word_count_mode %>
+<% selection = @scan_params.search_selection %>
+<% selection_label = discovery_selection_label(selection) %>
 
 <div class="page-header">
   <p class="eyebrow">Pattern discovery</p>
@@ -25,21 +30,21 @@
       <p class="lead">
         <strong><%= @rows.size %></strong> search terms on
         <code><%= @edition.edition_id %></code>
-        (<%= @scan_params.scope.tr("_", " ") %>, <%= @scan_params.bucket.tr("_", " ") %>).
+        (<%= selection_label %>).
       </p>
     <% elsif equal_count_mode %>
       <p class="lead">
         <strong><%= @rows.size %></strong> groups on
         <code><%= @edition.edition_id %></code>
         where <%= @scan_params.min_group_size %>+ <%= @scan_params.match_by == "spelling" ? "spellings" : "words" %> share the same count
-        (<%= @scan_params.scope.tr("_", " ") %>, min count <%= @scan_params.min_count %>).
+        (<%= selection_label %>, min count <%= @scan_params.min_count %>).
       </p>
     <% else %>
       <p class="lead">
         <strong><%= @rows.size %></strong> tokens on
         <code><%= @edition.edition_id %></code>
         whose counts are divisible by <%= @scan_params.divisible_by %>
-        (<%= @scan_params.scope.tr("_", " ") %>, min <%= @scan_params.min_count %>).
+        (<%= selection_label %>, min <%= @scan_params.min_count %>).
       </p>
     <% end %>
   <% else %>
@@ -50,74 +55,76 @@
   <% end %>
 </div>
 
-<section class="panel toolbar">
-  <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form", class: "toolbar-form discovery-filters" do %>
+<section class="panel toolbar discovery-toolbar">
+  <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form", class: "discovery-layout" do %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
-    <label>
-      Scan type
-      <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
-    </label>
-    <label>
-      Edition
-      <%= select_tag :edition, edition_options(@edition.edition_id) %>
-    </label>
-    <% if word_count_mode %>
-      <label class="query-terms-field">
-        Search terms
-        <%= text_area_tag :query_terms, @scan_params.query_terms, rows: 5, class: "query-terms-input", placeholder: "*jesus*\nsix|cs\nseven" %>
-      </label>
-    <% end %>
-    <% unless equal_count_mode || word_count_mode %>
-      <label>
-        Divisible by
-        <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
-      </label>
-    <% end %>
-    <label>
-      Scope
-      <%= select_tag :scope, discovery_scope_options(@scan_params.scope) %>
-    </label>
-    <label>
-      Bucket
-      <%= select_tag :bucket, discovery_bucket_options(@scan_params.bucket) %>
-    </label>
-    <% if filter_scan_mode %>
-      <label>
-        Min count
-        <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
-      </label>
-    <% end %>
-    <% if equal_count_mode %>
-      <label>
-        Match by
-        <%= select_tag :match_by, discovery_match_by_options(@scan_params.match_by) %>
-      </label>
-      <label>
-        Min words per group
-        <%= number_field_tag :min_group_size, @scan_params.min_group_size, min: 2, class: "input-narrow" %>
-      </label>
-    <% end %>
+
+    <aside class="discovery-search-within">
+      <%= render "search_within_tree", selection: selection %>
+    </aside>
+
+    <div class="discovery-main">
+      <div class="toolbar-form discovery-filters">
+        <label>
+          Scan type
+          <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
+        </label>
+        <label>
+          Edition
+          <%= select_tag :edition, edition_options(@edition.edition_id) %>
+        </label>
+        <% if word_count_mode %>
+          <label class="query-terms-field">
+            Search terms
+            <%= text_area_tag :query_terms, @scan_params.query_terms, rows: 6, class: "query-terms-input",
+                placeholder: "*jesus*\nsix|cs\nseven" %>
+          </label>
+        <% end %>
+        <% unless equal_count_mode || word_count_mode %>
+          <label>
+            Divisible by
+            <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
+          </label>
+        <% end %>
+        <% if filter_scan_mode %>
+          <label>
+            Min count
+            <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
+          </label>
+        <% end %>
+        <% if equal_count_mode %>
+          <label>
+            Match by
+            <%= select_tag :match_by, discovery_match_by_options(@scan_params.match_by) %>
+          </label>
+          <label>
+            Min words per group
+            <%= number_field_tag :min_group_size, @scan_params.min_group_size, min: 2, class: "input-narrow" %>
+          </label>
+        <% end %>
+      </div>
+
+      <div class="toolbar-form toolbar-actions">
+        <% unless @status == :ready %>
+          <%= button_tag "Run scan", type: "submit", class: "button button-primary",
+              form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
+        <% end %>
+        <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary",
+            form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
+      </div>
+
+      <p class="hint">
+        First scan builds the corpus index if needed (about a minute), then queries are fast.
+        <% if word_count_mode %>
+          One term per line. Append <code>|cs</code> for case-sensitive whole-token match.
+          Use <code>*</code> before or after text to match within a token (e.g. <code>*jesus*</code> matches <code>Bar-jesus</code>).
+        <% elsif equal_count_mode %>
+          <strong>Normalized word</strong> sums all spellings (e.g. seven + Seven = 463).
+          <strong>Spelling</strong> matches the divisibility list row-by-row (e.g. seven = 448).
+        <% end %>
+      </p>
+    </div>
   <% end %>
-
-  <div class="toolbar-form toolbar-actions">
-    <% unless @status == :ready %>
-      <%= button_tag "Run scan", type: "submit", class: "button button-primary",
-          form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
-    <% end %>
-    <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary",
-        form: "discovery-filters-form", formaction: scan_discoveries_path, formmethod: "post" %>
-  </div>
-
-  <p class="hint">
-    First scan builds the corpus index if needed (about a minute), then queries are fast.
-    <% if word_count_mode %>
-      One term per line. Append <code>|cs</code> for case-sensitive whole-token match.
-      Use <code>*</code> before or after text to match within a token (e.g. <code>*jesus*</code> matches <code>Bar-jesus</code>).
-    <% elsif equal_count_mode %>
-      <strong>Normalized word</strong> sums all spellings (e.g. seven + Seven = 463).
-      <strong>Spelling</strong> matches the divisibility list row-by-row (e.g. seven = 448).
-    <% end %>
-  </p>
 </section>
 
 <% if @status == :computing %>

@@ -22,6 +22,11 @@ class DiscoveriesController < ApplicationController
     edition = EditionContext.new(edition_id)
     scan_params = DiscoveryScan.normalize(scan_param_hash)
 
+    if scan_params.search_selection.empty?
+      redirect_to discoveries_path(scan_query(edition_id, scan_params)), alert: "Select at least one book or text type."
+      return
+    end
+
     if scan_params.mode == "word_count" && scan_params.query_terms.blank?
       redirect_to discoveries_path(scan_query(edition_id, scan_params)), alert: "Enter at least one search term."
       return
@@ -41,7 +46,7 @@ class DiscoveriesController < ApplicationController
     end
 
     unless DiscoveryScan.running?(edition, scan_params)
-      DiscoveryScanJob.perform_later(edition_id, scan_params.to_h, force: false)
+      DiscoveryScanJob.perform_later(edition_id, DiscoveryScan.job_payload(scan_params), force: false)
     end
 
     redirect_to discoveries_path(scan_query(edition_id, scan_params).merge(waiting: 1))
@@ -74,6 +79,7 @@ class DiscoveriesController < ApplicationController
     {
       mode: params[:mode],
       divisible_by: params[:divisible_by],
+      search_selection: search_selection_param_hash,
       scope: params[:scope],
       bucket: params[:bucket],
       min_count: params[:min_count],
@@ -83,17 +89,44 @@ class DiscoveriesController < ApplicationController
     }
   end
 
-  def scan_query(edition_id, scan_params)
+  def search_selection_param_hash
+    return params[:search_selection].to_unsafe_h if params[:search_selection].present?
+    return nil unless params[:submitted].present? || params[:books].present?
+
     {
+      submitted: params[:submitted],
+      colophons: params[:colophons],
+      superscriptions: params[:superscriptions],
+      books: params[:books],
+      all_books: params[:all_books]
+    }.compact
+  end
+
+  def scan_query(edition_id, scan_params)
+    selection = scan_params.search_selection
+    query = {
       edition: edition_id,
       mode: scan_params.mode,
       divisible_by: scan_params.divisible_by,
-      scope: scan_params.scope,
-      bucket: scan_params.bucket,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
       match_by: scan_params.match_by,
       query_terms: scan_params.query_terms
     }
+
+    return query if selection.default?
+
+    selection_query = {
+      submitted: "1",
+      colophons: selection.colophons ? "1" : "0",
+      superscriptions: selection.superscriptions ? "1" : "0"
+    }
+    if selection.books.sort == Inamen::BookCategories.all_books.sort
+      selection_query[:all_books] = "1"
+    else
+      selection_query[:books] = selection.books
+    end
+    query[:search_selection] = selection_query
+    query
   end
 end

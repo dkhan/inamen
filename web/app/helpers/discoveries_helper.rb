@@ -22,38 +22,62 @@ module DiscoveriesHelper
     )
   end
 
-  def discovery_scope_options(selected)
-    options_for_select(
-      DiscoveryScan::SCOPES.map { |s| [s.tr("_", " "), s] },
-      selected
-    )
+  def discovery_selection_label(selection)
+    selection.label
   end
 
-  def discovery_bucket_options(selected)
-    labels = {
-      "default" => "Scannable (verse text + headings + colophons)",
-      "verse_text" => "Verse text only",
-      "psalm_heading" => "Psalm headings",
-      "colophon" => "Colophons"
-    }
-    options_for_select(
-      DiscoveryScan::BUCKETS.map { |b| [labels.fetch(b, b), b] },
-      selected
-    )
+  def discovery_book_checked?(selection, book)
+    selection.books.include?(book)
+  end
+
+  def discovery_category_checked?(selection, books)
+    return false if books.empty?
+
+    books.all? { |book| selection.books.include?(book) }
+  end
+
+  def discovery_category_indeterminate?(selection, books)
+    return false if books.empty?
+
+    checked = books.count { |book| selection.books.include?(book) }
+    checked.positive? && checked < books.length
+  end
+
+  def discovery_testament_checked?(selection, testament)
+    books = testament == :ot ? Inamen::BookCategories.ot_books : Inamen::BookCategories.nt_books
+    discovery_category_checked?(selection, books)
+  end
+
+  def discovery_testament_indeterminate?(selection, testament)
+    books = testament == :ot ? Inamen::BookCategories.ot_books : Inamen::BookCategories.nt_books
+    discovery_category_indeterminate?(selection, books)
   end
 
   def discovery_scan_query(edition, scan_params)
-    {
+    selection = scan_params.search_selection
+    query = {
       edition: edition.edition_id,
       mode: scan_params.mode,
       divisible_by: scan_params.divisible_by,
-      scope: scan_params.scope,
-      bucket: scan_params.bucket,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
       match_by: scan_params.match_by,
       query_terms: scan_params.query_terms
     }
+
+    return query if selection.default?
+
+    selection_query = {
+      submitted: "1",
+      colophons: selection.colophons ? "1" : "0",
+      superscriptions: selection.superscriptions ? "1" : "0"
+    }
+    if selection.books.sort == Inamen::BookCategories.all_books.sort
+      selection_query[:all_books] = "1"
+    else
+      selection_query[:books] = selection.books
+    end
+    query.merge(search_selection: selection_query)
   end
 
   def discovery_word_count_total(rows)

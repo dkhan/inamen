@@ -1,0 +1,68 @@
+<% selection = local_assigns.fetch(:selection) %>
+<div class="search-within-panel" id="search-within-panel">
+  <div class="search-within-header">
+    <h2 class="search-within-title">Search Within</h2>
+    <div class="search-within-actions">
+      <button type="button" class="link-button" data-search-within-action="all">All</button>
+      <button type="button" class="link-button" data-search-within-action="none">None</button>
+    </div>
+  </div>
+
+  <%= hidden_field_tag "search_selection[submitted]", "1", id: nil %>
+  <ul class="search-within-tree" role="tree" aria-label="Search within">
+    <li class="search-within-node" role="treeitem">
+      <label class="search-within-row">
+        <%= check_box_tag "search_selection[colophons]", "1", selection.colophons,
+            id: "search_selection_colophons", class: "search-within-leaf" %>
+        <span>Colophons</span>
+      </label>
+    </li>
+    <li class="search-within-node" role="treeitem">
+      <label class="search-within-row">
+        <%= check_box_tag "search_selection[superscriptions]", "1", selection.superscriptions,
+            id: "search_selection_superscriptions", class: "search-within-leaf" %>
+        <span>Superscriptions</span>
+      </label>
+    </li>
+
+    <% Inamen::BookCategories.tree.each do |testament| %>
+      <% testament_books = testament.categories.flat_map(&:books) %>
+      <li class="search-within-node search-within-branch is-expanded" role="treeitem" aria-expanded="true">
+        <div class="search-within-row">
+          <button type="button" class="search-within-toggle" aria-label="Collapse <%= testament.label %>">▾</button>
+          <label class="search-within-parent">
+            <%= check_box_tag nil, nil, discovery_category_checked?(selection, testament_books),
+                class: "search-within-parent-input" %>
+            <span><%= testament.label %></span>
+          </label>
+        </div>
+        <ul class="search-within-children" role="group">
+          <% testament.categories.each do |category| %>
+            <li class="search-within-node search-within-branch" role="treeitem" aria-expanded="false">
+              <div class="search-within-row">
+                <button type="button" class="search-within-toggle" aria-label="Expand <%= category.label %>">▸</button>
+                <label class="search-within-parent">
+                  <%= check_box_tag nil, nil, discovery_category_checked?(selection, category.books),
+                      class: "search-within-parent-input" %>
+                  <span><%= category.label %></span>
+                </label>
+              </div>
+              <ul class="search-within-children search-within-books" role="group">
+                <% category.books.each do |book| %>
+                  <li class="search-within-node" role="treeitem">
+                    <label class="search-within-row search-within-book">
+                      <%= check_box_tag "search_selection[books][]", book, discovery_book_checked?(selection, book),
+                          id: "search_selection_book_#{book.parameterize}",
+                          class: "search-within-leaf search-within-book-leaf" %>
+                      <span><%= book %></span>
+                    </label>
+                  </li>
+                <% end %>
+              </ul>
+            </li>
+          <% end %>
+        </ul>
+      </li>
+    <% end %>
+  </ul>
+</div>

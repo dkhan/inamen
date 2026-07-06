@@ -9,11 +9,13 @@ module Inamen
     WordEntry = Struct.new(:token_norm, :token_raws, keyword_init: true)
 
     class << self
-      def scan(db, scope: :whole_bible, bucket: :default, min_count: 1, min_group_size: 2, match_by: :norm)
+      def scan(db, search_selection: nil, scope: :whole_bible, bucket: :default, min_count: 1, min_group_size: 2,
+               match_by: :norm)
         match = normalize_match_by(match_by)
         raise ArgumentError, "min_group_size must be at least 2" unless min_group_size.to_i >= 2
 
-        rows = TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
+        selection = resolve_selection(search_selection, scope, bucket)
+        rows = TokenCountQuery.aggregate(db, search_selection: selection, group: :norm_raw)
         groups = case match
                  when :spelling then groups_by_spelling(rows, min_count:, min_group_size:)
                  else groups_by_norm(rows, min_count:, min_group_size:)
@@ -21,7 +23,7 @@ module Inamen
 
         groups.map do |count, words|
           CountGroup.new(
-            scope: TokenCountQuery.scope_label(scope),
+            scope: TokenCountQuery.selection_label(selection),
             count: count,
             words: words,
             match_by: match
@@ -61,6 +63,12 @@ module Inamen
       end
 
       private
+
+      def resolve_selection(search_selection, scope, bucket)
+        return search_selection if search_selection.is_a?(SearchSelection)
+
+        SearchSelection.from_legacy(scope: scope, bucket: bucket)
+      end
 
       def groups_by_norm(rows, min_count:, min_group_size:)
         by_norm = build_norm_index(rows)

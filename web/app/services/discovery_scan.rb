@@ -5,7 +5,7 @@ require "digest"
 # Runs and caches discovery scans for an edition corpus.
 class DiscoveryScan
   Params = Struct.new(
-    :mode, :divisible_by, :scope, :bucket, :min_count, :min_group_size, :match_by, :query_terms,
+    :mode, :divisible_by, :search_selection, :min_count, :min_group_size, :match_by, :query_terms,
     keyword_init: true
   )
 
@@ -18,22 +18,29 @@ class DiscoveryScan
 
   MODES = %w[divisible equal_count word_count].freeze
   MATCH_BY = %w[norm spelling].freeze
-  SCOPES = %w[whole_bible ot nt].freeze
-  BUCKETS = %w[default verse_text psalm_heading colophon].freeze
 
   def self.normalize(raw)
     mode = raw[:mode].to_s
     divisible_by = raw[:divisible_by].to_i
     min_count = raw[:min_count].to_i
     min_group_size = raw[:min_group_size].to_i
-    scope = raw[:scope].to_s
-    bucket = raw[:bucket].to_s
+
+    search_selection =
+      if raw[:search_selection]
+        Inamen::SearchSelection.from_params(raw[:search_selection])
+      elsif raw[:scope] || raw[:bucket]
+        Inamen::SearchSelection.from_legacy(
+          scope: raw[:scope].presence || "whole_bible",
+          bucket: raw[:bucket].presence || "default"
+        )
+      else
+        Inamen::SearchSelection.default
+      end
 
     Params.new(
       mode: MODES.include?(mode) ? mode : "word_count",
       divisible_by: divisible_by.positive? ? divisible_by : 7,
-      scope: SCOPES.include?(scope) ? scope : "whole_bible",
-      bucket: BUCKETS.include?(bucket) ? bucket : "default",
+      search_selection: search_selection,
       min_count: min_count.positive? ? min_count : 7,
       min_group_size: min_group_size >= 2 ? min_group_size : 2,
       match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm",
@@ -64,14 +71,10 @@ class DiscoveryScan
   end
 
   def self.compute_divisible(edition, params)
-    scope_sym = params.scope.to_sym
-    bucket = params.bucket == "default" ? :default : params.bucket
-
     Inamen::DivisibleBySevenScan.scan(
       edition.db,
       divisible_by: params.divisible_by,
-      scope: scope_sym,
-      bucket: bucket,
+      search_selection: params.search_selection,
       min_count: params.min_count
     ).map do |row|
       DivisibleRow.new(
@@ -85,13 +88,9 @@ class DiscoveryScan
   end
 
   def self.compute_equal_count(edition, params)
-    scope_sym = params.scope.to_sym
-    bucket = params.bucket == "default" ? :default : params.bucket
-
     Inamen::EqualCountScan.scan(
       edition.db,
-      scope: scope_sym,
-      bucket: bucket,
+      search_selection: params.search_selection,
       min_count: params.min_count,
       min_group_size: params.min_group_size,
       match_by: params.match_by
@@ -110,15 +109,12 @@ class DiscoveryScan
   def self.compute_word_count(edition, params)
     return [] if params.query_terms.blank?
 
-    scope_sym = params.scope.to_sym
-    bucket = params.bucket == "default" ? :default : params.bucket
     terms = Inamen::TokenQuery.parse_terms(params.query_terms)
 
     Inamen::TokenQuery.scan(
       edition.db,
       terms: terms,
-      scope: scope_sym,
-      bucket: bucket
+      search_selection: params.search_selection
     ).map do |row|
       WordCountRow.new(
         pattern: row.pattern,
@@ -164,6 +160,19 @@ class DiscoveryScan
     "#{cache_key_for(edition, params)}/running"
   end
 
+  def self.job_payload(params)
+    p = params.is_a?(Params) ? params : normalize(params)
+    {
+      mode: p.mode,
+      divisible_by: p.divisible_by,
+      search_selection: p.search_selection.to_h.merge(submitted: "1"),
+      min_count: p.min_count,
+      min_group_size: p.min_group_size,
+      match_by: p.match_by,
+      query_terms: p.query_terms
+    }
+  end
+
   def self.cache_key_for(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
     terms_digest =
@@ -171,7 +180,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v4",
+      "discovery_scan/v5",
       p.mode,
       p.match_by,
       terms_digest,
@@ -179,8 +188,7 @@ class DiscoveryScan
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION,
       p.divisible_by,
-      p.scope,
-      p.bucket,
+      p.search_selection.cache_key,
       p.min_count,
       p.min_group_size
     ]
