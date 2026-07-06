@@ -24,6 +24,28 @@ module Inamen
         end
       end
 
+      def spellings_for_token(db, token:, scope:, bucket:, case_sensitive:)
+        buckets = CorpusStore.resolve_buckets(bucket)
+        bucket_sql, bucket_params = bucket_clause(buckets)
+        where_sql, scope_params = scope_clause(scope)
+        if case_sensitive
+          column = "token_raw"
+          value = CorpusStore.normalize_apostrophes(token.to_s)
+        else
+          column = "token_norm"
+          value = CorpusStore.normalize_token(token)
+        end
+
+        sql = <<~SQL
+          SELECT token_raw, COUNT(*) AS count
+          FROM tokens
+          WHERE #{bucket_sql} AND #{column} = ? #{where_sql}
+          GROUP BY token_raw
+          ORDER BY count DESC, token_raw
+        SQL
+        db.execute(sql, bucket_params + [value] + scope_params).to_h { |raw, count| [raw, count.to_i] }
+      end
+
       def scope_label(scope)
         scope.to_s.tr("_", " ")
       end

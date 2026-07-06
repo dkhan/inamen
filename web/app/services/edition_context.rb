@@ -49,4 +49,8 @@ class EditionContext
       "#{edition_id}-#{checksum_prefix}-#{Inamen::CorpusStore::INDEXER_REVISION}.sqlite"
     )
   end
+
+  def corpus_ready?
+    corpus_db_path.file?
+  end
 end

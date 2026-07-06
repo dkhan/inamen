@@ -34,6 +34,12 @@ class DiscoveriesController < ApplicationController
 
     DiscoveryScan.clear_cache!(edition, scan_params) if params[:refresh] == "1"
 
+    if scan_params.mode == "word_count" && edition.corpus_ready?
+      DiscoveryScan.run(edition, scan_params, force: params[:refresh] == "1")
+      redirect_to discoveries_path(scan_query(edition_id, scan_params))
+      return
+    end
+
     unless DiscoveryScan.running?(edition, scan_params)
       DiscoveryScanJob.perform_later(edition_id, scan_params.to_h, force: false)
     end

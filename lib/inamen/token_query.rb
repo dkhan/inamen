@@ -21,8 +21,17 @@ module Inamen
 
       def scan(db, terms:, scope: :whole_bible, bucket: :default)
         scope_label = TokenCountQuery.scope_label(scope)
-        Array(terms).map do |term|
-          count, spellings = count_with_spellings(db, term, scope: scope, bucket: bucket)
+        terms = Array(terms)
+        wildcard_rows = load_wildcard_rows(db, terms, scope: scope, bucket: bucket)
+
+        terms.map do |term|
+          count, spellings =
+            if TokenPattern.wildcard?(term.pattern)
+              count_wildcard(wildcard_rows, term)
+            else
+              count_exact(db, term, scope: scope, bucket: bucket)
+            end
+
           ResultRow.new(
             pattern: term.pattern,
             case_sensitive: term.case_sensitive,
@@ -36,34 +45,25 @@ module Inamen
 
       private
 
-      def count_with_spellings(db, term, scope:, bucket:)
-        if TokenPattern.wildcard?(term.pattern)
-          count_wildcard(db, term, scope: scope, bucket: bucket)
-        else
-          count_exact(db, term, scope: scope, bucket: bucket)
-        end
+      def load_wildcard_rows(db, terms, scope:, bucket:)
+        return nil unless terms.any? { |term| TokenPattern.wildcard?(term.pattern) }
+
+        TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
       end
 
       def count_exact(db, term, scope:, bucket:)
-        rows = TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
-        spellings = {}
-        rows.each do |row|
-          next unless TokenPattern.matches?(
-            term.pattern,
-            token_raw: row[:token_raw],
-            token_norm: row[:token_norm],
-            case_sensitive: term.case_sensitive
-          )
-
-          spellings[row[:token_raw]] = row[:count]
-        end
-        [spellings.values.sum, spellings.sort_by { |raw, c| [-c, raw] }.to_h]
+        spellings = TokenCountQuery.spellings_for_token(
+          db,
+          token: term.pattern,
+          scope: scope,
+          bucket: bucket,
+          case_sensitive: term.case_sensitive
+        )
+        [spellings.values.sum, spellings]
       end
 
-      def count_wildcard(db, term, scope:, bucket:)
-        rows = TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
+      def count_wildcard(rows, term)
         spellings = {}
-        total = 0
         rows.each do |row|
           next unless TokenPattern.matches?(
             term.pattern,
@@ -73,9 +73,8 @@ module Inamen
           )
 
           spellings[row[:token_raw]] = row[:count]
-          total += row[:count]
         end
-        [total, spellings.sort_by { |raw, c| [-c, raw] }.to_h]
+        [spellings.values.sum, spellings.sort_by { |raw, count| [-count, raw] }.to_h]
       end
     end
   end
