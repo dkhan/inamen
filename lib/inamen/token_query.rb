@@ -11,8 +11,9 @@ module Inamen
     class << self
       def parse_terms(text)
         terms = text.to_s.each_line.flat_map do |line|
-          attrs = TokenPattern.parse_line(line)
+          attrs = TokenPattern.parse_query_line(line)
           next [] unless attrs
+          next [] if attrs[:disabled]
 
           TokenPattern.split_phrase_patterns(attrs[:pattern]).map do |pattern|
             QueryTerm.new(pattern: pattern, case_sensitive: attrs[:case_sensitive])

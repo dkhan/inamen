@@ -23,7 +23,7 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if scan_params.mode == "word_count" && scan_params.query_terms.blank?
+    if scan_params.mode == "word_count" && !DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
       redirect_to discoveries_path(scan_query(edition_id, scan_params)), alert: "Enter at least one search term."
       return
     end

@@ -24,6 +24,12 @@ RSpec.describe Inamen::TokenQuery do
 
     it "rejects empty input" do
       expect { described_class.parse_terms("  \n") }.to raise_error(ArgumentError, /at least one search term/)
+      expect { described_class.parse_terms("six|disabled\n") }.to raise_error(ArgumentError, /at least one search term/)
+    end
+
+    it "skips disabled phrase lines" do
+      terms = described_class.parse_terms("six|disabled\nseven\n")
+      expect(terms.map(&:pattern)).to eq(%w[seven])
     end
   end
 

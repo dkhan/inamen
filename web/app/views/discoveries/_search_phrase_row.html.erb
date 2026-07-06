@@ -1,4 +1,4 @@
-<div class="search-phrase-row" data-search-phrase-row>
+<div class="search-phrase-row" data-search-phrase-row<%= " data-disabled" if phrase.disabled %>>
   <div class="search-phrase-input-row">
     <div class="search-phrase-field">
       <%= text_field_tag "search_phrases[#{index}][phrase]", phrase.phrase,
@@ -8,6 +8,11 @@
         <label class="search-phrase-option">
           <%= check_box_tag "search_phrases[#{index}][case_sensitive]", "1", phrase.case_sensitive %>
           <span class="search-phrase-option-label">Case Sensitive</span>
+        </label>
+        <label class="search-phrase-option">
+          <%= check_box_tag "search_phrases[#{index}][disabled]", "1", phrase.disabled,
+              data: { search_phrase_disable: true } %>
+          <span class="search-phrase-option-label">Disable</span>
         </label>
       </div>
     </div>

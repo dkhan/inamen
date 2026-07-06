@@ -5,6 +5,7 @@ module Inamen
   module TokenPattern
     MAX_LENGTH = 120
     CASE_SUFFIX = /\|cs\z/i
+    DISABLED_SUFFIX = /\|disabled\z/i
     # Letters, digits, hyphen — not punctuation, space, or newline.
     WILDCARD_FRAGMENT = "(?:[\\p{L}\\p{M}0-9\\-]*)"
     TRAILING_POSSESSIVE = /['\u{2019}]\z/
@@ -38,6 +39,23 @@ module Inamen
 
       def split_phrase_patterns(pattern)
         pattern.to_s.split("|").map(&:strip).reject(&:empty?).each { |part| validate!(part) }
+      end
+
+      def parse_query_line(line)
+        stripped = line.to_s.strip
+        return nil if stripped.empty?
+
+        disabled = false
+        if (match = stripped.match(DISABLED_SUFFIX))
+          disabled = true
+          stripped = stripped[0...match.begin(0)].strip
+        end
+        return nil if stripped.empty?
+
+        attrs = parse_line(stripped)
+        return nil unless attrs
+
+        attrs.merge(disabled: disabled)
       end
 
       def matches?(pattern, token_raw:, token_norm:, case_sensitive:)

@@ -63,10 +63,26 @@
     });
   }
 
+  function setRowDisabled(row, disabled) {
+    if (disabled) {
+      row.setAttribute("data-disabled", "");
+    } else {
+      row.removeAttribute("data-disabled");
+    }
+  }
+
   function bindRow(root, row) {
     const clearButton = row.querySelector("[data-clear-phrase]");
     const removeButton = row.querySelector("[data-remove-phrase]");
+    const disableCheckbox = row.querySelector("[data-search-phrase-disable]");
     const input = row.querySelector(".search-phrase-input");
+
+    if (disableCheckbox) {
+      setRowDisabled(row, disableCheckbox.checked);
+      disableCheckbox.addEventListener("change", () => {
+        setRowDisabled(row, disableCheckbox.checked);
+      });
+    }
 
     if (clearButton && input) {
       clearButton.addEventListener("mousedown", (event) => event.preventDefault());

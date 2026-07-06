@@ -19,7 +19,7 @@ class DiscoveryScan
   MODES = %w[divisible equal_count word_count].freeze
   MATCH_BY = %w[norm spelling].freeze
 
-  PhraseEntry = Struct.new(:phrase, :case_sensitive, keyword_init: true)
+  PhraseEntry = Struct.new(:phrase, :case_sensitive, :disabled, keyword_init: true)
 
   def self.normalize(raw)
     mode = raw[:mode].to_s
@@ -64,20 +64,25 @@ class DiscoveryScan
     entries = phrase_hashes(raw_phrases).map do |entry|
       PhraseEntry.new(
         phrase: entry[:phrase].to_s,
-        case_sensitive: ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive])
+        case_sensitive: ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive]),
+        disabled: ActiveModel::Type::Boolean.new.cast(entry[:disabled])
       )
     end
-    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false)]
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, disabled: false)]
   end
 
   def self.phrase_entries_from_query_terms(text)
     entries = text.to_s.each_line.filter_map do |line|
-      attrs = Inamen::TokenPattern.parse_line(line)
+      attrs = Inamen::TokenPattern.parse_query_line(line)
       next unless attrs
 
-      PhraseEntry.new(phrase: attrs[:pattern], case_sensitive: attrs[:case_sensitive])
+      PhraseEntry.new(
+        phrase: attrs[:pattern],
+        case_sensitive: attrs[:case_sensitive],
+        disabled: attrs[:disabled]
+      )
     end
-    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false)]
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, disabled: false)]
   end
 
   def self.query_terms_from_phrases(raw_phrases)
@@ -86,8 +91,19 @@ class DiscoveryScan
       next if phrase.empty?
 
       case_sensitive = ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive])
-      case_sensitive ? "#{phrase}|cs" : phrase
+      disabled = ActiveModel::Type::Boolean.new.cast(entry[:disabled])
+      line = phrase
+      line += "|cs" if case_sensitive
+      line += "|disabled" if disabled
+      line
     end.join("\n")
+  end
+
+  def self.enabled_search_terms?(query_terms)
+    query_terms.to_s.each_line.any? do |line|
+      attrs = Inamen::TokenPattern.parse_query_line(line)
+      attrs && !attrs[:disabled]
+    end
   end
 
   def self.phrase_hashes(raw_phrases)
@@ -110,7 +126,7 @@ class DiscoveryScan
   private_class_method :phrase_hashes
 
   def self.run(edition, params, force: false)
-    return [] if params.mode == "word_count" && params.query_terms.blank?
+    return [] if params.mode == "word_count" && !enabled_search_terms?(params.query_terms)
 
     key = cache_key_for(edition, params)
     Rails.cache.delete(key) if force
@@ -168,7 +184,7 @@ class DiscoveryScan
   end
 
   def self.compute_word_count(edition, params)
-    return [] if params.query_terms.blank?
+    return [] unless enabled_search_terms?(params.query_terms)
 
     terms = Inamen::TokenQuery.parse_terms(params.query_terms)
 
@@ -190,7 +206,7 @@ class DiscoveryScan
 
   def self.cached?(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
-    return false if p.mode == "word_count" && p.query_terms.blank?
+    return false if p.mode == "word_count" && !enabled_search_terms?(p.query_terms)
 
     key = cache_key_for(edition, params)
     return false unless Rails.cache.exist?(key)
@@ -241,7 +257,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v10",
+      "discovery_scan/v11",
       p.mode,
       p.match_by,
       terms_digest,

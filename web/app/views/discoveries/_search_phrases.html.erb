@@ -15,5 +15,5 @@
 <template id="search-phrase-row-template">
   <%= render "search_phrase_row",
       index: "__INDEX__",
-      phrase: DiscoveryScan::PhraseEntry.new(phrase: "", case_sensitive: false) %>
+      phrase: DiscoveryScan::PhraseEntry.new(phrase: "", case_sensitive: false, disabled: false) %>
 </template>

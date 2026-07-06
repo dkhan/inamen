@@ -17,6 +17,17 @@ RSpec.describe Inamen::TokenPattern do
     end
   end
 
+  describe ".parse_query_line" do
+    it "parses disabled suffix on a phrase line" do
+      expect(described_class.parse_query_line("six|seven|cs|disabled")).to eq(
+        pattern: "six|seven", case_sensitive: true, disabled: true
+      )
+      expect(described_class.parse_query_line("six|seven")).to eq(
+        pattern: "six|seven", case_sensitive: false, disabled: false
+      )
+    end
+  end
+
   describe ".split_phrase_patterns" do
     it "splits pipe-separated phrases" do
       expect(described_class.split_phrase_patterns("six|seven")).to eq(%w[six seven])

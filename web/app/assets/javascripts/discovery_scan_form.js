@@ -13,9 +13,19 @@
     return discoveryForm.querySelector("#search-phrases-panel") !== null;
   }
 
+  function rowDisabled(row) {
+    if (!row) return false;
+    const checkbox = row.querySelector("[data-search-phrase-disable]");
+    return checkbox ? checkbox.checked : false;
+  }
+
   function hasSearchTerms(discoveryForm) {
     const inputs = discoveryForm.querySelectorAll(".search-phrase-input");
-    return Array.from(inputs).some((input) => input.value.trim() !== "");
+    return Array.from(inputs).some((input) => {
+      const row = input.closest("[data-search-phrase-row]");
+      if (rowDisabled(row)) return false;
+      return input.value.trim() !== "";
+    });
   }
 
   function canScan(discoveryForm) {
