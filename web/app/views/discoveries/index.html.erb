@@ -1,0 +1,99 @@
+<% content_for :title, "Discover — Inamen" %>
+<% if @status == :computing %>
+  <% content_for :head do %>
+    <meta http-equiv="refresh" content="3">
+  <% end %>
+<% end %>
+
+<div class="page-header">
+  <p class="eyebrow">Pattern discovery</p>
+  <h1>Divisibility scan</h1>
+  <% if @status == :ready %>
+    <p class="lead">
+      <strong><%= @rows.size %></strong> tokens on
+      <code><%= @edition.edition_id %></code>
+      whose counts are divisible by <%= @scan_params.divisible_by %>
+      (<%= @scan_params.scope.tr("_", " ") %>, min <%= @scan_params.min_count %>).
+    </p>
+  <% else %>
+    <p class="lead">
+      Find tokens whose occurrence counts divide evenly by any integer —
+      edition <code><%= @edition.edition_id %></code>.
+    </p>
+  <% end %>
+</div>
+
+<section class="panel toolbar">
+  <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form discovery-filters" do %>
+    <label>
+      Edition
+      <%= select_tag :edition, edition_options(@edition.edition_id), onchange: "this.form.requestSubmit()" %>
+    </label>
+    <label>
+      Divisible by
+      <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
+    </label>
+    <label>
+      Scope
+      <%= select_tag :scope, discovery_scope_options(@scan_params.scope) %>
+    </label>
+    <label>
+      Bucket
+      <%= select_tag :bucket, discovery_bucket_options(@scan_params.bucket) %>
+    </label>
+    <label>
+      Min count
+      <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
+    </label>
+    <%= button_tag "Apply filters", type: "submit", class: "button button-secondary" %>
+  <% end %>
+
+  <%= form_with url: scan_discoveries_path, method: :post, local: true, class: "toolbar-form toolbar-actions" do %>
+    <% discovery_scan_query(@edition, @scan_params).each do |key, value| %>
+      <%= hidden_field_tag key, value %>
+    <% end %>
+    <% unless @status == :ready %>
+      <%= button_tag "Run scan", type: "submit", class: "button button-primary" %>
+    <% end %>
+    <%= button_tag "Rescan", name: "refresh", value: "1", type: "submit", class: "button button-secondary" %>
+  <% end %>
+
+  <p class="hint">
+    First scan builds the corpus index if needed (about a minute), then queries are fast.
+  </p>
+</section>
+
+<% if @status == :computing %>
+  <section class="panel notice">
+    <p><strong>Scanning…</strong> Building the index and querying token counts. This page refreshes every few seconds.</p>
+  </section>
+<% elsif @status == :pending %>
+  <section class="panel notice">
+    <p><strong>No results yet.</strong> Set filters above, then click <em>Run scan</em>.</p>
+  </section>
+<% end %>
+
+<% if @status == :ready %>
+  <section class="panel">
+    <table class="features-table discovery-table">
+      <thead>
+        <tr>
+          <th>Token (normalized)</th>
+          <th>Token (raw)</th>
+          <th class="num">Count</th>
+          <th class="num">÷ <%= @scan_params.divisible_by %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @rows.each do |row| %>
+          <tr>
+            <td><code><%= row.token_norm %></code></td>
+            <td><code><%= row.token_raw %></code></td>
+            <td class="num"><%= format_feature_count(row.count) %></td>
+            <td class="num"><%= row.count / @scan_params.divisible_by %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>

@@ -23,8 +23,12 @@ Open http://localhost:3000 — Phase 0 home page lists engine version, catalog f
 
 ### Features catalog (Phase 1)
 
-- `/features` — all 18 catalog features with live counts vs expected (edition selector, cached results)
+- `/features` — all catalog features with live counts vs expected (edition selector, cached results)
 - `/features/:id` — definition, notes, KJV Code alignment, and detail lines
+
+### Discovery (Phase 2)
+
+- `/discover` — divisibility scan: tokens whose counts divide evenly by N (filters for scope, bucket, min count)
 
 First verification run builds the SQLite corpus and may take several minutes; results cache under `tmp/cache/` for one week.
 

@@ -7,5 +7,11 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :discoveries, only: [:index], path: "discover" do
+    collection do
+      post :scan
+    end
+  end
+
   root "pages#home"
 end

@@ -82,6 +82,27 @@ body {
   color: var(--accent);
 }
 
+.discovery-filters {
+  margin-bottom: 0.75rem;
+}
+
+.input-narrow {
+  width: 5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+}
+
+.site-nav a + a {
+  margin-left: 1rem;
+}
+
+.discovery-table code {
+  font-size: 0.9rem;
+}
+
 .toolbar-form {
   display: flex;
   flex-wrap: wrap;
