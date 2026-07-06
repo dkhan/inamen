@@ -8,7 +8,7 @@ RSpec.describe Inamen::Features do
     it "lists known pattern features" do
       ids = described_class.catalog.map(&:id)
       expect(ids).to include(
-        "combined_total", "peter_verses", "paul_verses", "fishermen_gospels",
+        "combined_total", "file_character_total", "peter_verses", "paul_verses", "fishermen_gospels",
         "jesus_mentions", "bible_boundary_words", "amen_77", "boundary_anchor_verses",
         "boundary_seven_forms", "in_amen_genesis_revelation", "the_amen_nt_concealed",
         "god_jesus_genesis_revelation", "first_last_chapter_words",
@@ -33,6 +33,17 @@ RSpec.describe Inamen::Features do
     it "matches combined total 7^7" do
       expect(@combined.count).to eq(823_543)
       expect(@combined.count).to eq(7**7)
+    end
+
+    it "counts every UTF-8 code point in the file as 7 × ⌈777.7²⌉" do
+      result = described_class.run(
+        "file_character_total",
+        lines: @lines,
+        path: Inamen::KjvFixture::KJV_PATH
+      )
+      expect(result.count).to eq(4_233_726)
+      expect(result.count).to eq(7 * (777.7 * 777.7).ceil)
+      expect(result.details).to include("codepoints=4233726")
     end
 
     it "counts 153 verses each for Peter and Paul" do
@@ -67,7 +78,7 @@ RSpec.describe Inamen::Features do
 
   describe ".run_all" do
     it "returns every catalog feature with expected counts" do
-      results = described_class.run_all(lines: lines, db: db)
+      results = described_class.run_all(lines: lines, db: db, path: Inamen::KjvFixture::KJV_PATH)
       expect(results.map(&:id)).to eq(described_class.catalog.map(&:id))
       described_class.catalog.each do |entry|
         result = results.find { |r| r.id == entry.id }

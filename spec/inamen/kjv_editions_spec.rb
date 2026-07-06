@@ -42,7 +42,7 @@ RSpec.describe "KJV editions" do
           Inamen::CorpusStore.build!(@lines, path: db_path)
           db = Inamen::CorpusStore.open(db_path)
 
-          results = Inamen::Features.run_all(lines: @lines, db: db)
+          results = Inamen::Features.run_all(lines: @lines, db: db, path: path)
           db.close
 
           expect(results.map(&:id)).to eq(Inamen::Features.catalog.map(&:id))

@@ -22,6 +22,15 @@ module Inamen
         kjvcode_url: "https://kjvcode.com/pattern/elton-anomaly/"
       ),
       FeatureEntry.new(
+        id: "file_character_total",
+        name: "File character total (UTF-8)",
+        description: "Every Unicode code point in the edition file as stored on disk—including letters, digits, punctuation, spaces, and newlines.",
+        expected_count: 4_233_726,
+        unit: "characters",
+        scope: "whole_file",
+        notes: "4,233,726 = 7 × ⌈777.7 × 777.7⌉. Counts code points, not raw bytes (curly apostrophes U+2019 are one character, three bytes). Inamen discovery."
+      ),
+      FeatureEntry.new(
         id: "peter_verses",
         name: "Verses mentioning Peter",
         description: "Distinct verses whose body text contains token Peter (case-insensitive exact match).",
@@ -208,9 +217,9 @@ module Inamen
         BY_ID.fetch(id.to_s) { raise ArgumentError, "Unknown feature: #{id.inspect}" }
       end
 
-      def run(id, lines:, db: nil)
+      def run(id, lines:, db: nil, path: nil)
         entry = fetch(id)
-        count, details = compute(id, lines, db: db)
+        count, details = compute(id, lines, db: db, path: path)
         FeatureResult.new(
           id: entry.id,
           name: entry.name,
@@ -224,9 +233,9 @@ module Inamen
         )
       end
 
-      def run_all(lines:, db: nil)
+      def run_all(lines:, db: nil, path: nil)
         VerseIndex.verse_map(lines)
-        CATALOG.map { |entry| run(entry.id, lines: lines, db: db) }
+        CATALOG.map { |entry| run(entry.id, lines: lines, db: db, path: path) }
       end
 
       def print_catalog(out: $stdout)
@@ -283,10 +292,12 @@ module Inamen
         rows.each { |row| write_row.call(row) }
       end
 
-      def compute(id, lines, db:)
+      def compute(id, lines, db:, path:)
         case id.to_s
         when "combined_total"
           combined_total(lines)
+        when "file_character_total"
+          file_character_total(path)
         when "peter_verses"
           name_verse_count(lines, /\APeter\z/i)
         when "paul_verses"
@@ -330,6 +341,23 @@ module Inamen
         totals = CountingService.total_for_lines(lines)
         count = CountingService.combined_total(totals)
         [count, ["combined_total=#{count}", "7^7=#{7**7}"]]
+      end
+
+      def file_character_total(path)
+        raise ArgumentError, "file_character_total requires path:" if path.to_s.empty?
+
+        text = File.read(path, encoding: "UTF-8")
+        count = text.length
+        bytes = File.binread(path).bytesize
+        seven_factor = 7 * (777.7 * 777.7).ceil
+        [
+          count,
+          [
+            "codepoints=#{count}",
+            "bytes=#{bytes}",
+            "7*ceil(777.7^2)=#{seven_factor}"
+          ]
+        ]
       end
 
       def name_verse_count(lines, token_re)

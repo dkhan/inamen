@@ -18,7 +18,7 @@ class FeatureCatalog
   end
 
   def self.compute_all(edition)
-    Inamen::Features.run_all(lines: edition.lines, db: edition.db).map do |result|
+    Inamen::Features.run_all(lines: edition.lines, db: edition.db, path: edition.path).map do |result|
       build_row(edition, result)
     end
   end
@@ -62,7 +62,7 @@ class FeatureCatalog
   end
 
   def self.run_one(edition, feature_id)
-    result = Inamen::Features.run(feature_id, lines: edition.lines, db: edition.db)
+    result = Inamen::Features.run(feature_id, lines: edition.lines, db: edition.db, path: edition.path)
     build_row(edition, result)
   end
 
@@ -89,7 +89,7 @@ class FeatureCatalog
 
   def self.cache_key_for(edition)
     [
-      "feature_catalog/v2",
+      "feature_catalog/v3",
       edition.edition_id,
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION

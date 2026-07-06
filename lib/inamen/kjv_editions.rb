@@ -6,8 +6,7 @@ module Inamen
     ROOT = File.expand_path("../../data", __dir__)
 
     EDITIONS = {
-      "kjv" => File.join(ROOT, "KJV.txt"),
-      "kjv_20260704" => File.join(ROOT, "KJV_20260704.txt"),
+      "kjv_normalized" => File.join(ROOT, "KJV.txt"),
       "concord" => File.join(ROOT, "Holy-Bible-King-James-Version-Entire-Bible-Concord.txt")
     }.freeze
 
@@ -16,7 +15,8 @@ module Inamen
       "concord" => {
         "the_amen_nt_concealed" => 981,
         "god_pure_nt" => 1369,
-        "jesus_boundary_same_verse" => 2398
+        "jesus_boundary_same_verse" => 2398,
+        "file_character_total" => 4_241_503
       }
     }.freeze
 

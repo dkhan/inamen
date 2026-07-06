@@ -14,7 +14,7 @@ class FeaturesController < ApplicationController
   end
 
   def verify
-    edition_id = params[:edition].presence || "kjv"
+    edition_id = params[:edition].presence || "kjv_normalized"
     unless EditionContext.all_ids.include?(edition_id)
       redirect_to features_path, alert: "Unknown edition: #{edition_id}"
       return
@@ -62,7 +62,7 @@ class FeaturesController < ApplicationController
   end
 
   def set_edition
-    edition_id = params[:edition].presence || "kjv"
+    edition_id = params[:edition].presence || "kjv_normalized"
     unless EditionContext.all_ids.include?(edition_id)
       redirect_to features_path, alert: "Unknown edition: #{edition_id}"
       return

@@ -181,14 +181,14 @@ if ARGV[0] == "feature" || ARGV[0] == "features"
   end
 
   if args.first == "--all"
-    Inamen::Features.run_all(lines: kjv_lines, db: db).each do |result|
+    Inamen::Features.run_all(lines: kjv_lines, db: db, path: kjv_input_path).each do |result|
       Inamen::Features.print_result(result)
       puts
     end
   else
     id = args.first
     begin
-      result = Inamen::Features.run(id, lines: kjv_lines, db: db)
+      result = Inamen::Features.run(id, lines: kjv_lines, db: db, path: kjv_input_path)
       Inamen::Features.print_result(result)
     rescue ArgumentError => e
       warn e.message
