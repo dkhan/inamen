@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 class DiscoveriesController < ApplicationController
-  before_action :set_edition
+  include EditionSelectable
+
   before_action :set_scan_params
 
   def index
@@ -13,13 +14,8 @@ class DiscoveriesController < ApplicationController
   end
 
   def scan
-    edition_id = params[:edition].presence || "kjv_normalized"
-    unless EditionContext.all_ids.include?(edition_id)
-      redirect_to discoveries_path, alert: "Unknown edition: #{edition_id}"
-      return
-    end
-
-    edition = EditionContext.new(edition_id)
+    edition_id = current_edition_id
+    edition = @edition
     scan_params = DiscoveryScan.normalize(scan_param_hash)
 
     if scan_params.search_selection.empty?
@@ -54,21 +50,15 @@ class DiscoveriesController < ApplicationController
 
   private
 
+  def edition_selection_redirect_path
+    discoveries_path
+  end
+
   def page_status
     return :ready if DiscoveryScan.cached?(@edition, @scan_params)
     return :computing if DiscoveryScan.running?(@edition, @scan_params) || params[:waiting].present?
 
     :pending
-  end
-
-  def set_edition
-    edition_id = params[:edition].presence || "kjv_normalized"
-    unless EditionContext.all_ids.include?(edition_id)
-      redirect_to discoveries_path, alert: "Unknown edition: #{edition_id}"
-      return
-    end
-
-    @edition = EditionContext.new(edition_id)
   end
 
   def set_scan_params

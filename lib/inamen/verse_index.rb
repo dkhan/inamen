@@ -8,6 +8,20 @@ module Inamen
     def self.each_verse(lines)
       return enum_for(:each_verse, lines) unless block_given?
 
+      cached = @verse_map_cache[lines.__id__]
+      if cached
+        cached.each do |(book, chapter, verse), text|
+          yield book, chapter, verse, text
+        end
+        return
+      end
+
+      each_verse_stream(lines) { |book, chapter, verse, text| yield book, chapter, verse, text }
+    end
+
+    def self.each_verse_stream(lines)
+      return enum_for(:each_verse_stream, lines) unless block_given?
+
       labels = BookStatsReport.book_label_at_each_index(lines)
       state = { book: nil, chapter: nil, verse: nil }
       buffers = {}
@@ -71,10 +85,10 @@ module Inamen
 
     def self.build_verse_map(lines)
       map = {}
-      each_verse(lines) { |book, chapter, verse, text| map[[book, chapter, verse]] = text }
+      each_verse_stream(lines) { |book, chapter, verse, text| map[[book, chapter, verse]] = text }
       map
     end
-    private_class_method :build_verse_map
+    private_class_method :build_verse_map, :each_verse_stream
 
     def self.verse_body_from_stripped(stripped)
       s = stripped.to_s

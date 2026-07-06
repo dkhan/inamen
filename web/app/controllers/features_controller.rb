@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class FeaturesController < ApplicationController
-  before_action :set_edition
+  include EditionSelectable
 
   def index
     @catalog = Inamen::Features.catalog
@@ -14,14 +14,9 @@ class FeaturesController < ApplicationController
   end
 
   def verify
-    edition_id = params[:edition].presence || "kjv_normalized"
-    unless EditionContext.all_ids.include?(edition_id)
-      redirect_to features_path, alert: "Unknown edition: #{edition_id}"
-      return
-    end
-
+    edition_id = current_edition_id
     force = params[:refresh] == "1"
-    edition = EditionContext.new(edition_id)
+    edition = @edition
 
     if !force && FeatureCatalog.cached?(edition)
       redirect_to features_path(edition: edition_id)
@@ -29,6 +24,12 @@ class FeaturesController < ApplicationController
     end
 
     FeatureCatalog.clear_cache!(edition) if force
+
+    if edition.corpus_ready?
+      FeatureCatalog.run_all(edition, force: force)
+      redirect_to features_path(edition: edition_id)
+      return
+    end
 
     unless FeatureCatalog.verification_running?(edition)
       FeatureVerificationJob.perform_later(edition_id, force: false)
@@ -54,20 +55,14 @@ class FeaturesController < ApplicationController
 
   private
 
+  def edition_selection_redirect_path
+    features_path
+  end
+
   def page_status
     return :ready if FeatureCatalog.cached?(@edition)
     return :computing if FeatureCatalog.verification_running?(@edition) || params[:waiting].present?
 
     :pending
-  end
-
-  def set_edition
-    edition_id = params[:edition].presence || "kjv_normalized"
-    unless EditionContext.all_ids.include?(edition_id)
-      redirect_to features_path, alert: "Unknown edition: #{edition_id}"
-      return
-    end
-
-    @edition = EditionContext.new(edition_id)
   end
 end

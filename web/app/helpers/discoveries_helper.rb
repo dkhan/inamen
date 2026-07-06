@@ -53,6 +53,31 @@ module DiscoveriesHelper
     discovery_category_indeterminate?(selection, books)
   end
 
+  def discovery_scan_hidden_fields(scan_params)
+    selection = scan_params.search_selection
+    parts = [
+      hidden_field_tag(:mode, scan_params.mode),
+      hidden_field_tag(:divisible_by, scan_params.divisible_by),
+      hidden_field_tag(:min_count, scan_params.min_count),
+      hidden_field_tag(:min_group_size, scan_params.min_group_size),
+      hidden_field_tag(:match_by, scan_params.match_by),
+      hidden_field_tag(:query_terms, scan_params.query_terms)
+    ]
+
+    unless selection.default?
+      parts << hidden_field_tag("search_selection[submitted]", "1")
+      parts << hidden_field_tag("search_selection[colophons]", "1") if selection.colophons
+      parts << hidden_field_tag("search_selection[superscriptions]", "1") if selection.superscriptions
+      if selection.books.sort == Inamen::BookCategories.all_books.sort
+        parts << hidden_field_tag("search_selection[all_books]", "1")
+      else
+        selection.books.each { |book| parts << hidden_field_tag("search_selection[books][]", book) }
+      end
+    end
+
+    safe_join(parts, "\n")
+  end
+
   def discovery_scan_query(edition, scan_params)
     selection = scan_params.search_selection
     query = {

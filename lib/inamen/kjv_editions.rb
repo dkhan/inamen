@@ -10,19 +10,26 @@ module Inamen
       "concord" => File.join(ROOT, "Holy-Bible-King-James-Version-Entire-Bible-Concord.txt")
     }.freeze
 
-    # Text-level variants (capitalization, The*, God*) vs the reference KJV.txt catalog counts.
+    # Edition-specific pass targets when Concord text differs from the reference KJV.txt catalog.
     FEATURE_OVERRIDES = {
       "concord" => {
         "the_amen_nt_concealed" => 981,
-        "god_pure_nt" => 1369,
-        "jesus_boundary_same_verse" => 2398,
-        "file_character_total" => 4_241_503
+        "god_pure_nt" => 1369
       }
+    }.freeze
+
+    # Features that intentionally differ from the reference catalog (shown as MISS, not a regression).
+    CATALOG_DIFFERS = {
+      "concord" => %w[file_character_total].freeze
     }.freeze
 
     def self.expected_feature_count(edition_id, feature_id)
       FEATURE_OVERRIDES.dig(edition_id, feature_id) ||
         Features.catalog.find { |entry| entry.id == feature_id }&.expected_count
+    end
+
+    def self.verify_edition_feature?(edition_id, feature_id)
+      !CATALOG_DIFFERS.fetch(edition_id, []).include?(feature_id)
     end
 
     def self.paths
@@ -31,11 +38,13 @@ module Inamen
 
     def self.lines_for(id)
       path = EDITIONS.fetch(id) { raise ArgumentError, "Unknown KJV edition: #{id.inspect}" }
-      File.readlines(path, chomp: true)
+      read_lines(path)
     end
 
     def self.read_lines(path)
-      File.readlines(path, chomp: true)
+      lines = File.readlines(path, chomp: true)
+      edition_id = EDITIONS.key(path)
+      edition_id == "concord" ? ConcordNormalizer.normalize(lines) : lines
     end
   end
 end

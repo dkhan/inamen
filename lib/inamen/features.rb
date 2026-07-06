@@ -300,9 +300,9 @@ module Inamen
         when "file_character_total"
           file_character_total(path)
         when "peter_verses"
-          name_verse_count(lines, /\APeter\z/i)
+          name_verse_count(lines, :peter)
         when "paul_verses"
-          name_verse_count(lines, /\APaul\z/i)
+          name_verse_count(lines, :paul)
         when "fishermen_gospels"
           fishermen_gospels(lines)
         when "jesus_mentions"
@@ -361,14 +361,25 @@ module Inamen
         ]
       end
 
-      def name_verse_count(lines, token_re)
-        verses = Set.new
-        VerseIndex.each_verse(lines) do |book, chapter, verse, text|
-          next unless Tokenizer.tokenize(text).any? { |tok| tok.match?(token_re) }
+      def name_verse_count(lines, which)
+        count = distinct_name_verse_counts(lines).fetch(which)
+        [count, ["distinct_verses=#{count}"]]
+      end
 
-          verses << [book, chapter, verse]
+      def distinct_name_verse_counts(lines)
+        @name_verse_counts_cache ||= {}
+        @name_verse_counts_cache[lines.__id__] ||= compute_distinct_name_verse_counts(lines)
+      end
+
+      def compute_distinct_name_verse_counts(lines)
+        peter = 0
+        paul = 0
+        VerseIndex.each_verse(lines) do |book, chapter, verse, text|
+          toks = Tokenizer.tokenize(text)
+          peter += 1 if toks.any? { |t| t.match?(/\APeter\z/i) }
+          paul += 1 if toks.any? { |t| t.match?(/\APaul\z/i) }
         end
-        [verses.size, ["distinct_verses=#{verses.size}"]]
+        { peter: peter, paul: paul }
       end
 
       def fishermen_gospels(lines)

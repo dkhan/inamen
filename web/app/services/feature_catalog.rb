@@ -89,7 +89,7 @@ class FeatureCatalog
 
   def self.cache_key_for(edition)
     [
-      "feature_catalog/v3",
+      "feature_catalog/v5",
       edition.edition_id,
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION

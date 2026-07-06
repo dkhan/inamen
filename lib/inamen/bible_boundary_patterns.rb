@@ -117,7 +117,9 @@ module Inamen
       end
 
       def amen_count(lines, db: nil)
-        count_tokens(lines, db: db, bucket: :scannable) { |tok| tok == "Amen" }
+        return count_scannable_raw(db, "Amen") if db
+
+        count_tokens(lines, db: nil, bucket: :scannable) { |tok| tok == "Amen" }
       end
 
       def anchor_verse_mentions(lines)
@@ -150,8 +152,12 @@ module Inamen
       end
 
       def in_amen_genesis_revelation(lines, db: nil)
-        count_tokens(lines, db: db, bucket: :scannable) do |tok, rec|
-          GEN_REV_SET.include?(rec[:book]) && (tok.match?(/\AIn\z/i) || tok == "Amen")
+        if db
+          count_gen_rev_scannable_sql(db, "token_norm = 'in' OR token_raw = 'Amen'")
+        else
+          count_tokens(lines, db: nil, bucket: :scannable) do |tok, rec|
+            GEN_REV_SET.include?(rec[:book]) && (tok.match?(/\AIn\z/i) || tok == "Amen")
+          end
         end
       end
 
@@ -169,13 +175,18 @@ module Inamen
       end
 
       def god_jesus_genesis_revelation(lines, db: nil)
-        god = 0
-        jesus = 0
-        count_tokens(lines, db: db, bucket: :scannable) do |tok, rec|
-          next unless GEN_REV_SET.include?(rec[:book])
+        if db
+          god = count_gen_rev_scannable_sql(db, "token_norm = 'god'")
+          jesus = count_gen_rev_scannable_sql(db, "token_raw IN ('Jesus', 'JESUS')")
+        else
+          god = 0
+          jesus = 0
+          count_tokens(lines, db: nil, bucket: :scannable) do |tok, rec|
+            next unless GEN_REV_SET.include?(rec[:book])
 
-          god += 1 if tok.match?(/\AGod\z/i)
-          jesus += 1 if tok == "Jesus" || tok == "JESUS"
+            god += 1 if tok.match?(/\AGod\z/i)
+            jesus += 1 if tok == "Jesus" || tok == "JESUS"
+          end
         end
         { god: god, jesus: jesus, sum: god + jesus }
       end
@@ -203,26 +214,30 @@ module Inamen
       end
 
       def beginning_end_amen(lines, db: nil)
-        beginning = count_tokens(lines, db: db, bucket: :scannable) { |tok| tok.match?(/\Abeginning\z/i) }
-        ending = count_tokens(lines, db: db, bucket: :scannable) { |tok| tok.match?(/\Aend\z/i) }
-        amen = count_tokens(lines, db: db, bucket: :scannable) { |tok| tok == "Amen" }
+        if db
+          beginning = count_scannable_norm(db, "beginning")
+          ending = count_scannable_norm(db, "end")
+          amen = count_scannable_raw(db, "Amen")
+        else
+          beginning = 0
+          ending = 0
+          amen = 0
+          each_scannable_token(lines, db: nil) do |rec|
+            tok = rec[:token_raw]
+            beginning += 1 if tok.match?(/\Abeginning\z/i)
+            ending += 1 if tok.match?(/\Aend\z/i)
+            amen += 1 if tok == "Amen"
+          end
+        end
         { beginning: beginning, end: ending, amen: amen, sum: beginning + ending + amen }
       end
 
       def jesus_boundary_same_verse(lines, db: nil)
-        if db
-          jesus_boundary_same_verse_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
-        else
-          jesus_boundary_tallies(lines)[:same_verse]
-        end
+        jesus_boundary_tallies(lines)[:same_verse]
       end
 
       def jesus_boundary_first7_nt(lines, db: nil)
-        if db
-          jesus_boundary_first7_nt_from_map(verse_token_map(lines, db: db, bucket: :verse_text), lines)
-        else
-          jesus_boundary_tallies(lines)[:first7_nt]
-        end
+        jesus_boundary_tallies(lines)[:first7_nt]
       end
 
       def god_pure_token?(tok)
@@ -237,21 +252,9 @@ module Inamen
         count_pure_jesus(text, toks).positive?
       end
 
-      # Case-sensitive Jesus only; possessive Jesus' is excluded (use Jesus* to include it).
-      def count_pure_jesus(text, toks)
-        count = 0
-        scan_pos = 0
-        toks.each do |tok|
-          next unless tok == "Jesus"
-
-          idx = text.index("Jesus", scan_pos)
-          break unless idx
-
-          after = text[idx + 5, 1]
-          count += 1 unless after&.match?(JESUS_POSSESSIVE_SUFFIX)
-          scan_pos = idx + 5
-        end
-        count
+      # Case-sensitive Jesus only; possessive Jesus' is a separate token from Tokenizer.
+      def count_pure_jesus(_text, toks)
+        toks.count { |t| t == "Jesus" }
       end
 
       # KJPBS "Jesus" search in first-7 N.T.: Jesus + concealed JESUS; no Joshua/Justus exclusions.
@@ -259,22 +262,8 @@ module Inamen
         count_kjpbs_jesus(text, toks).positive?
       end
 
-      def count_kjpbs_jesus(text, toks)
-        count = 0
-        scan_pos = 0
-        toks.each do |tok|
-          if tok == "JESUS"
-            count += 1
-          elsif tok == "Jesus"
-            idx = text.index("Jesus", scan_pos)
-            break unless idx
-
-            after = text[idx + 5, 1]
-            count += 1 unless after&.match?(JESUS_POSSESSIVE_SUFFIX)
-            scan_pos = idx + 5
-          end
-        end
-        count
+      def count_kjpbs_jesus(_text, toks)
+        toks.count { |t| t == "JESUS" || t == "Jesus" }
       end
 
       def jesus_boundary_same_verse_from_lines(lines)
@@ -500,6 +489,41 @@ module Inamen
           SQL
           tallies[form[:key]] = db.get_first_value(sql, buckets + tokens).to_i
         end
+      end
+
+      def scannable_bucket_params
+        buckets = CorpusStore::SCAN_BUCKETS
+        [(["?"] * buckets.length).join(", "), buckets]
+      end
+
+      def count_scannable_norm(db, norm)
+        placeholders, buckets = scannable_bucket_params
+        sql = <<~SQL
+          SELECT COUNT(*) FROM tokens
+          WHERE bucket IN (#{placeholders}) AND token_norm = ?
+        SQL
+        db.get_first_value(sql, buckets + [norm]).to_i
+      end
+
+      def count_scannable_raw(db, raw)
+        placeholders, buckets = scannable_bucket_params
+        sql = <<~SQL
+          SELECT COUNT(*) FROM tokens
+          WHERE bucket IN (#{placeholders}) AND token_raw = ?
+        SQL
+        db.get_first_value(sql, buckets + [raw]).to_i
+      end
+
+      def count_gen_rev_scannable_sql(db, token_predicate_sql)
+        placeholders, buckets = scannable_bucket_params
+        book_placeholders = (["?"] * GEN_REV.length).join(", ")
+        sql = <<~SQL
+          SELECT COUNT(*) FROM tokens
+          WHERE bucket IN (#{placeholders})
+            AND book IN (#{book_placeholders})
+            AND (#{token_predicate_sql})
+        SQL
+        db.get_first_value(sql, buckets + GEN_REV).to_i
       end
     end
   end

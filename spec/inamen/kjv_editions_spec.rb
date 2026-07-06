@@ -47,11 +47,31 @@ RSpec.describe "KJV editions" do
 
           expect(results.map(&:id)).to eq(Inamen::Features.catalog.map(&:id))
           Inamen::Features.catalog.each do |entry|
+            next unless Inamen::KjvEditions.verify_edition_feature?(edition_id, entry.id)
+
             result = results.find { |r| r.id == entry.id }
             expected = Inamen::KjvEditions.expected_feature_count(edition_id, entry.id)
             expect(result.count).to eq(expected),
                                     "#{edition_id} #{entry.id}: got #{result.count}, expected #{expected}"
           end
+        end
+      end
+
+      if edition_id == "concord"
+        it "differs from the reference catalog on file_character_total" do
+          result = Inamen::Features.run(
+            "file_character_total",
+            lines: @lines,
+            db: nil,
+            path: path
+          )
+          expect(result.count).to eq(4_241_503)
+          expect(Inamen::KjvEditions.expected_feature_count(edition_id, "file_character_total")).to eq(4_233_726)
+        end
+
+        it "matches the reference catalog on jesus_boundary_same_verse after normalization" do
+          result = Inamen::Features.run("jesus_boundary_same_verse", lines: @lines, db: nil, path: path)
+          expect(result.count).to eq(2401)
         end
       end
     end

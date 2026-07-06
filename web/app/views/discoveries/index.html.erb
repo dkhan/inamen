@@ -55,8 +55,23 @@
   <% end %>
 </div>
 
+<section class="panel toolbar">
+  <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form" do %>
+    <%= discovery_scan_hidden_fields(@scan_params) %>
+    <label>
+      Edition
+      <%= select_tag :edition, edition_options(@edition.edition_id), onchange: "this.form.requestSubmit()" %>
+    </label>
+  <% end %>
+
+  <p class="hint">
+    Switch edition to view cached scans for that corpus. Your scan settings are preserved.
+  </p>
+</section>
+
 <section class="panel toolbar discovery-toolbar">
   <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form", class: "discovery-layout" do %>
+    <%= hidden_field_tag :edition, @edition.edition_id %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
 
     <aside class="discovery-search-within">
@@ -68,10 +83,6 @@
         <label>
           Scan type
           <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
-        </label>
-        <label>
-          Edition
-          <%= select_tag :edition, edition_options(@edition.edition_id) %>
         </label>
         <% if word_count_mode %>
           <label class="query-terms-field">
