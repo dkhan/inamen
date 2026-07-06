@@ -61,20 +61,26 @@ class DiscoveriesController < ApplicationController
 
   def scan_param_hash
     {
+      mode: params[:mode],
       divisible_by: params[:divisible_by],
       scope: params[:scope],
       bucket: params[:bucket],
-      min_count: params[:min_count]
+      min_count: params[:min_count],
+      min_group_size: params[:min_group_size],
+      match_by: params[:match_by]
     }
   end
 
   def scan_query(edition_id, scan_params)
     {
       edition: edition_id,
+      mode: scan_params.mode,
       divisible_by: scan_params.divisible_by,
       scope: scan_params.scope,
       bucket: scan_params.bucket,
-      min_count: scan_params.min_count
+      min_count: scan_params.min_count,
+      min_group_size: scan_params.min_group_size,
+      match_by: scan_params.match_by
     }
   end
 end

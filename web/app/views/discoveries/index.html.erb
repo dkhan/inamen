@@ -5,19 +5,30 @@
   <% end %>
 <% end %>
 
+<% equal_count_mode = @scan_params.mode == "equal_count" %>
+
 <div class="page-header">
   <p class="eyebrow">Pattern discovery</p>
-  <h1>Divisibility scan</h1>
+  <h1><%= equal_count_mode ? "Equal count groups" : "Divisibility scan" %></h1>
   <% if @status == :ready %>
-    <p class="lead">
-      <strong><%= @rows.size %></strong> tokens on
-      <code><%= @edition.edition_id %></code>
-      whose counts are divisible by <%= @scan_params.divisible_by %>
-      (<%= @scan_params.scope.tr("_", " ") %>, min <%= @scan_params.min_count %>).
-    </p>
+    <% if equal_count_mode %>
+      <p class="lead">
+        <strong><%= @rows.size %></strong> groups on
+        <code><%= @edition.edition_id %></code>
+        where <%= @scan_params.min_group_size %>+ <%= @scan_params.match_by == "spelling" ? "spellings" : "words" %> share the same count
+        (<%= @scan_params.scope.tr("_", " ") %>, min count <%= @scan_params.min_count %>).
+      </p>
+    <% else %>
+      <p class="lead">
+        <strong><%= @rows.size %></strong> tokens on
+        <code><%= @edition.edition_id %></code>
+        whose counts are divisible by <%= @scan_params.divisible_by %>
+        (<%= @scan_params.scope.tr("_", " ") %>, min <%= @scan_params.min_count %>).
+      </p>
+    <% end %>
   <% else %>
     <p class="lead">
-      Find tokens whose occurrence counts divide evenly by any integer —
+      Hunt for numeric patterns in token counts —
       edition <code><%= @edition.edition_id %></code>.
     </p>
   <% end %>
@@ -26,13 +37,19 @@
 <section class="panel toolbar">
   <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form discovery-filters" do %>
     <label>
-      Edition
-      <%= select_tag :edition, edition_options(@edition.edition_id), onchange: "this.form.requestSubmit()" %>
+      Scan type
+      <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
     </label>
     <label>
-      Divisible by
-      <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
+      Edition
+      <%= select_tag :edition, edition_options(@edition.edition_id) %>
     </label>
+    <% unless equal_count_mode %>
+      <label>
+        Divisible by
+        <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
+      </label>
+    <% end %>
     <label>
       Scope
       <%= select_tag :scope, discovery_scope_options(@scan_params.scope) %>
@@ -45,6 +62,16 @@
       Min count
       <%= number_field_tag :min_count, @scan_params.min_count, min: 1, class: "input-narrow" %>
     </label>
+    <% if equal_count_mode %>
+      <label>
+        Match by
+        <%= select_tag :match_by, discovery_match_by_options(@scan_params.match_by) %>
+      </label>
+      <label>
+        Min words per group
+        <%= number_field_tag :min_group_size, @scan_params.min_group_size, min: 2, class: "input-narrow" %>
+      </label>
+    <% end %>
     <%= button_tag "Apply filters", type: "submit", class: "button button-secondary" %>
   <% end %>
 
@@ -60,6 +87,10 @@
 
   <p class="hint">
     First scan builds the corpus index if needed (about a minute), then queries are fast.
+    <% if equal_count_mode %>
+      <strong>Normalized word</strong> sums all spellings (e.g. seven + Seven = 463).
+      <strong>Spelling</strong> matches the divisibility list row-by-row (e.g. seven = 448).
+    <% end %>
   </p>
 </section>
 
@@ -75,25 +106,46 @@
 
 <% if @status == :ready %>
   <section class="panel">
-    <table class="features-table discovery-table">
-      <thead>
-        <tr>
-          <th>Token (normalized)</th>
-          <th>Token (raw)</th>
-          <th class="num">Count</th>
-          <th class="num">÷ <%= @scan_params.divisible_by %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @rows.each do |row| %>
+    <% if equal_count_mode %>
+      <table class="features-table discovery-table">
+        <thead>
           <tr>
-            <td><code><%= row.token_norm %></code></td>
-            <td><code><%= row.token_raw %></code></td>
-            <td class="num"><%= format_feature_count(row.count) %></td>
-            <td class="num"><%= row.count / @scan_params.divisible_by %></td>
+            <th class="num">Count</th>
+            <th class="num">Words</th>
+            <th>Shared by</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @rows.each do |row| %>
+            <tr>
+              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= row.words.size %></td>
+              <td class="word-group"><%= discovery_equal_count_words_label(row.words, match_by: row.match_by) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <table class="features-table discovery-table">
+        <thead>
+          <tr>
+            <th>Token (normalized)</th>
+            <th>Token (raw)</th>
+            <th class="num">Count</th>
+            <th class="num">÷ <%= @scan_params.divisible_by %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rows.each do |row| %>
+            <tr>
+              <td><code><%= row.token_norm %></code></td>
+              <td><code><%= row.token_raw %></code></td>
+              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= row.count / @scan_params.divisible_by %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
   </section>
 <% end %>

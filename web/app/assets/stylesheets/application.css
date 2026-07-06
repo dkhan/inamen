@@ -82,6 +82,10 @@ body {
   color: var(--accent);
 }
 
+.word-group code {
+  white-space: nowrap;
+}
+
 .discovery-filters {
   margin-bottom: 0.75rem;
 }

@@ -1,25 +1,38 @@
 # frozen_string_literal: true
 
-# Runs and caches divisibility discovery scans for an edition corpus.
+# Runs and caches discovery scans for an edition corpus.
 class DiscoveryScan
-  Params = Struct.new(:divisible_by, :scope, :bucket, :min_count, keyword_init: true)
+  Params = Struct.new(
+    :mode, :divisible_by, :scope, :bucket, :min_count, :min_group_size, :match_by,
+    keyword_init: true
+  )
 
-  ResultRow = Struct.new(:scope, :token_norm, :token_raw, :count, :divisible_by, keyword_init: true)
+  DivisibleRow = Struct.new(:scope, :token_norm, :token_raw, :count, :divisible_by, keyword_init: true)
 
+  EqualCountRow = Struct.new(:scope, :count, :words, :match_by, keyword_init: true)
+  WordEntry = Struct.new(:token_norm, :token_raws, keyword_init: true)
+
+  MODES = %w[divisible equal_count].freeze
+  MATCH_BY = %w[norm spelling].freeze
   SCOPES = %w[whole_bible ot nt].freeze
   BUCKETS = %w[default verse_text psalm_heading colophon].freeze
 
   def self.normalize(raw)
+    mode = raw[:mode].to_s
     divisible_by = raw[:divisible_by].to_i
     min_count = raw[:min_count].to_i
+    min_group_size = raw[:min_group_size].to_i
     scope = raw[:scope].to_s
     bucket = raw[:bucket].to_s
 
     Params.new(
+      mode: MODES.include?(mode) ? mode : "divisible",
       divisible_by: divisible_by.positive? ? divisible_by : 7,
       scope: SCOPES.include?(scope) ? scope : "whole_bible",
       bucket: BUCKETS.include?(bucket) ? bucket : "default",
-      min_count: min_count.positive? ? min_count : 7
+      min_count: min_count.positive? ? min_count : 7,
+      min_group_size: min_group_size >= 2 ? min_group_size : 2,
+      match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm"
     )
   end
 
@@ -33,6 +46,15 @@ class DiscoveryScan
   end
 
   def self.compute(edition, params)
+    case params.mode
+    when "equal_count"
+      compute_equal_count(edition, params)
+    else
+      compute_divisible(edition, params)
+    end
+  end
+
+  def self.compute_divisible(edition, params)
     scope_sym = params.scope.to_sym
     bucket = params.bucket == "default" ? :default : params.bucket
 
@@ -43,12 +65,35 @@ class DiscoveryScan
       bucket: bucket,
       min_count: params.min_count
     ).map do |row|
-      ResultRow.new(
+      DivisibleRow.new(
         scope: row.scope,
         token_norm: row.token_norm,
         token_raw: row.token_raw,
         count: row.count,
         divisible_by: row.divisible_by
+      )
+    end
+  end
+
+  def self.compute_equal_count(edition, params)
+    scope_sym = params.scope.to_sym
+    bucket = params.bucket == "default" ? :default : params.bucket
+
+    Inamen::EqualCountScan.scan(
+      edition.db,
+      scope: scope_sym,
+      bucket: bucket,
+      min_count: params.min_count,
+      min_group_size: params.min_group_size,
+      match_by: params.match_by
+    ).map do |group|
+      EqualCountRow.new(
+        scope: group.scope,
+        count: group.count,
+        match_by: group.match_by.to_s,
+        words: group.words.map do |word|
+          WordEntry.new(token_norm: word.token_norm, token_raws: word.token_raws)
+        end
       )
     end
   end
@@ -86,14 +131,17 @@ class DiscoveryScan
   def self.cache_key_for(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
     [
-      "discovery_scan/v1",
+      "discovery_scan/v3",
+      p.mode,
+      p.match_by,
       edition.edition_id,
       edition.checksum_prefix,
       Inamen::CorpusStore::INDEXER_REVISION,
       p.divisible_by,
       p.scope,
       p.bucket,
-      p.min_count
+      p.min_count,
+      p.min_group_size
     ]
   end
 end

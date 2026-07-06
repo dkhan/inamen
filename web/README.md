@@ -28,7 +28,9 @@ Open http://localhost:3000 — Phase 0 home page lists engine version, catalog f
 
 ### Discovery (Phase 2)
 
-- `/discover` — divisibility scan: tokens whose counts divide evenly by N (filters for scope, bucket, min count)
+- `/discover` — discovery scans with cached results:
+  - **Divisible by N** — tokens whose counts divide evenly
+  - **Equal occurrence count** — groups of words that appear the same number of times
 
 First verification run builds the SQLite corpus and may take several minutes; results cache under `tmp/cache/` for one week.
 

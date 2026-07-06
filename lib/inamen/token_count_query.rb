@@ -1,0 +1,53 @@
+# frozen_string_literal: true
+
+module Inamen
+  # Shared SQL scope/bucket filters for token-count discovery scans.
+  module TokenCountQuery
+    class << self
+      def aggregate(db, scope:, bucket:, group: :norm_raw)
+        buckets = CorpusStore.resolve_buckets(bucket)
+        bucket_sql, bucket_params = bucket_clause(buckets)
+        where_sql, scope_params = scope_clause(scope)
+        params = bucket_params + scope_params
+        group_sql = group == :norm ? "token_norm" : "token_norm, token_raw"
+        select_sql = group == :norm ? "token_norm, NULL AS token_raw" : "token_norm, token_raw"
+
+        sql = <<~SQL
+          SELECT #{select_sql}, COUNT(*) AS count
+          FROM tokens
+          WHERE #{bucket_sql} #{where_sql}
+          GROUP BY #{group_sql}
+        SQL
+
+        db.execute(sql, params).map do |token_norm, token_raw, count|
+          { token_norm: token_norm, token_raw: token_raw, count: count.to_i }
+        end
+      end
+
+      def scope_label(scope)
+        scope.to_s.tr("_", " ")
+      end
+
+      def bucket_clause(buckets)
+        placeholders = (["?"] * buckets.length).join(", ")
+        ["bucket IN (#{placeholders})", buckets]
+      end
+
+      def scope_clause(scope)
+        case scope
+        when :whole_bible, "whole_bible", "whole"
+          ["", []]
+        when :ot, "ot"
+          ["AND testament = 'OT'", []]
+        when :nt, "nt"
+          ["AND testament = 'NT'", []]
+        else
+          book = BookStatsReport::CANON.find { |(name, _, _)| name.casecmp?(scope.to_s) }&.first
+          raise ArgumentError, "Unknown scope: #{scope.inspect}" unless book
+
+          ["AND book = ?", [book]]
+        end
+      end
+    end
+  end
+end
