@@ -1,4 +1,6 @@
 (function () {
+  const STORAGE_KEY = "inamen:search-within-expanded";
+
   function panel() {
     return document.getElementById("search-within-panel");
   }
@@ -19,6 +21,46 @@
 
   function parentBranches(root) {
     return Array.from(root.querySelectorAll(".search-within-branch"));
+  }
+
+  function branchId(branch) {
+    return branch.getAttribute("data-branch-id");
+  }
+
+  function readExpandedState() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeExpandedState(root) {
+    const state = {};
+    parentBranches(root).forEach((branch) => {
+      const id = branchId(branch);
+      if (!id) return;
+      state[id] = branch.getAttribute("aria-expanded") === "true";
+    });
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function setBranchExpanded(branch, expanded) {
+    branch.setAttribute("aria-expanded", expanded ? "true" : "false");
+    branch.classList.toggle("is-expanded", expanded);
+    const button = branch.querySelector(":scope > .search-within-row .search-within-toggle");
+    if (button) button.textContent = expanded ? "▾" : "▸";
+  }
+
+  function applyExpandedState(root, state) {
+    if (!state) return;
+
+    parentBranches(root).forEach((branch) => {
+      const id = branchId(branch);
+      if (!id || !Object.prototype.hasOwnProperty.call(state, id)) return;
+      setBranchExpanded(branch, state[id]);
+    });
   }
 
   function syncParent(parentInput, leaves) {
@@ -66,9 +108,8 @@
     const branch = button.closest(".search-within-branch");
     if (!branch) return;
     const expanded = branch.getAttribute("aria-expanded") === "true";
-    branch.setAttribute("aria-expanded", expanded ? "false" : "true");
-    branch.classList.toggle("is-expanded", !expanded);
-    button.textContent = expanded ? "▸" : "▾";
+    setBranchExpanded(branch, !expanded);
+    writeExpandedState(panel());
   }
 
   function compactBookFields(form, root) {
@@ -91,6 +132,7 @@
     const root = panel();
     if (!root) return;
 
+    applyExpandedState(root, readExpandedState());
     syncAllParents(root);
 
     root.querySelectorAll(".search-within-parent-input").forEach((input) => {
@@ -114,7 +156,10 @@
 
     const form = root.closest("form");
     if (form) {
-      form.addEventListener("submit", () => compactBookFields(form, root));
+      form.addEventListener("submit", () => {
+        writeExpandedState(root);
+        compactBookFields(form, root);
+      });
     }
   }
 

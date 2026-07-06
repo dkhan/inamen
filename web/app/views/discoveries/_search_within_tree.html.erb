@@ -27,7 +27,8 @@
 
     <% Inamen::BookCategories.tree.each do |testament| %>
       <% testament_books = testament.categories.flat_map(&:books) %>
-      <li class="search-within-node search-within-branch is-expanded" role="treeitem" aria-expanded="true">
+      <li class="search-within-node search-within-branch is-expanded" role="treeitem" aria-expanded="true"
+          data-branch-id="<%= testament.id %>">
         <div class="search-within-row">
           <button type="button" class="search-within-toggle" aria-label="Collapse <%= testament.label %>">▾</button>
           <label class="search-within-parent">
@@ -38,7 +39,8 @@
         </div>
         <ul class="search-within-children" role="group">
           <% testament.categories.each do |category| %>
-            <li class="search-within-node search-within-branch" role="treeitem" aria-expanded="false">
+            <li class="search-within-node search-within-branch" role="treeitem" aria-expanded="false"
+                data-branch-id="<%= testament.id %>:<%= category.id %>">
               <div class="search-within-row">
                 <button type="button" class="search-within-toggle" aria-label="Expand <%= category.label %>">▸</button>
                 <label class="search-within-parent">
