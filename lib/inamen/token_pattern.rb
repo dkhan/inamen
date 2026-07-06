@@ -51,6 +51,32 @@ module Inamen
         Regexp.new("\\A#{source}\\z", flags)
       end
 
+      # SQL prefilter for wildcard patterns (refined in Ruby with #matches?).
+      def sql_prefilter(pattern, case_sensitive:)
+        return :full if pattern.gsub("*", "").empty?
+
+        if case_sensitive
+          { op: :glob, column: "token_raw", value: build_glob(pattern) }
+        else
+          parts = CorpusStore.normalize_apostrophes(pattern).split("*", -1).map do |part|
+            escape_like(CorpusStore.normalize_token(part))
+          end
+          { op: :like, column: "token_norm", value: parts.join("%") }
+        end
+      end
+
+      def build_glob(pattern)
+        CorpusStore.normalize_apostrophes(pattern).split("*", -1).map { |part| escape_glob(part) }.join("*")
+      end
+
+      def escape_like(str)
+        str.gsub("\\", "\\\\").gsub("%", "\\%").gsub("_", "\\_")
+      end
+
+      def escape_glob(str)
+        str.gsub(/([\[\]\?*])/, '[\\1]')
+      end
+
       private
 
       def exact_match?(pattern, token_raw:, token_norm:, case_sensitive:)

@@ -21,13 +21,17 @@ module Inamen
 
       def scan(db, terms:, scope: :whole_bible, bucket: :default)
         scope_label = TokenCountQuery.scope_label(scope)
-        terms = Array(terms)
-        wildcard_rows = load_wildcard_rows(db, terms, scope: scope, bucket: bucket)
-
-        terms.map do |term|
+        Array(terms).map do |term|
           count, spellings =
             if TokenPattern.wildcard?(term.pattern)
-              count_wildcard(wildcard_rows, term)
+              rows = TokenCountQuery.wildcard_aggregate(
+                db,
+                pattern: term.pattern,
+                scope: scope,
+                bucket: bucket,
+                case_sensitive: term.case_sensitive
+              )
+              count_wildcard(rows, term)
             else
               count_exact(db, term, scope: scope, bucket: bucket)
             end
@@ -44,12 +48,6 @@ module Inamen
       end
 
       private
-
-      def load_wildcard_rows(db, terms, scope:, bucket:)
-        return nil unless terms.any? { |term| TokenPattern.wildcard?(term.pattern) }
-
-        TokenCountQuery.aggregate(db, scope: scope, bucket: bucket, group: :norm_raw)
-      end
 
       def count_exact(db, term, scope:, bucket:)
         spellings = TokenCountQuery.spellings_for_token(

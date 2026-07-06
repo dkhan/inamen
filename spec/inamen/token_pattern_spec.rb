@@ -44,6 +44,21 @@ RSpec.describe Inamen::TokenPattern do
       expect(described_class.matches?("jesus*", token_raw: "Jesus\u{2019}s", token_norm: "jesus\u{2019}s", case_sensitive: false)).to be(false)
     end
 
+    it "builds SQL prefilters from wildcard patterns" do
+      expect(described_class.sql_prefilter("*jesus*", case_sensitive: false)).to eq(
+        op: :like, column: "token_norm", value: "%jesus%"
+      )
+      expect(described_class.sql_prefilter("jesus*", case_sensitive: false)).to eq(
+        op: :like, column: "token_norm", value: "jesus%"
+      )
+      expect(described_class.sql_prefilter("*jesus", case_sensitive: false)).to eq(
+        op: :like, column: "token_norm", value: "%jesus"
+      )
+      expect(described_class.sql_prefilter("*jesus*", case_sensitive: true)).to eq(
+        op: :glob, column: "token_raw", value: "*jesus*"
+      )
+    end
+
     it "treats ASCII and curly apostrophes as equivalent in exact patterns" do
       curly = "Jesus\u{2019}"
       expect(described_class.matches?("jesus'", token_raw: curly, token_norm: "jesus\u{2019}", case_sensitive: false)).to be(true)

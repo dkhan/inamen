@@ -46,6 +46,33 @@ module Inamen
         db.execute(sql, bucket_params + [value] + scope_params).to_h { |raw, count| [raw, count.to_i] }
       end
 
+      def wildcard_aggregate(db, pattern:, scope:, bucket:, case_sensitive:)
+        prefilter = TokenPattern.sql_prefilter(pattern, case_sensitive: case_sensitive)
+        return aggregate(db, scope: scope, bucket: bucket, group: :norm_raw) if prefilter == :full
+
+        buckets = CorpusStore.resolve_buckets(bucket)
+        bucket_sql, bucket_params = bucket_clause(buckets)
+        where_sql, scope_params = scope_clause(scope)
+        filter_sql, filter_params =
+          case prefilter[:op]
+          when :like
+            ["AND #{prefilter[:column]} LIKE ? ESCAPE '\\'", [prefilter[:value]]]
+          when :glob
+            ["AND #{prefilter[:column]} GLOB ?", [prefilter[:value]]]
+          end
+
+        sql = <<~SQL
+          SELECT token_norm, token_raw, COUNT(*) AS count
+          FROM tokens
+          WHERE #{bucket_sql} #{filter_sql} #{where_sql}
+          GROUP BY token_norm, token_raw
+        SQL
+        params = bucket_params + filter_params + scope_params
+        db.execute(sql, params).map do |token_norm, token_raw, count|
+          { token_norm: token_norm, token_raw: token_raw, count: count.to_i }
+        end
+      end
+
       def scope_label(scope)
         scope.to_s.tr("_", " ")
       end
