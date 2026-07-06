@@ -8,5 +8,6 @@ end
 
 Rails.application.config.inamen = ActiveSupport::OrderedOptions.new
 Rails.application.config.inamen.data_root = data_root
+Rails.application.config.inamen.corpora_root = data_root.join("corpora")
 Rails.application.config.inamen.engine_version = Inamen::VERSION
 Rails.application.config.inamen.indexer_revision = Inamen::CorpusStore::INDEXER_REVISION

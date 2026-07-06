@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "digest"
 require "fileutils"
 
 # Loads a bundled KJV edition and provides cached corpus DB access for feature runs.
@@ -27,7 +26,7 @@ class EditionContext
   end
 
   def checksum_prefix
-    @checksum_prefix ||= Digest::SHA256.file(path).hexdigest[0, 16]
+    @checksum_prefix ||= Inamen::CorpusPublisher.checksum_prefix(path)
   end
 
   def expected_count(feature_id)
@@ -36,10 +35,8 @@ class EditionContext
 
   def db
     @db ||= begin
-      sqlite_path = corpus_db_path
-      FileUtils.mkdir_p(sqlite_path.dirname)
-      Inamen::CorpusStore.build!(lines, path: sqlite_path.to_s) unless sqlite_path.file?
-      Inamen::CorpusStore.open(sqlite_path.to_s)
+      ensure_corpus_file!
+      Inamen::CorpusStore.open(corpus_db_path.to_s)
     end
   end
 
@@ -50,13 +47,26 @@ class EditionContext
   end
 
   def corpus_db_path
-    Rails.root.join(
+    prebuilt = Pathname(Inamen::CorpusPublisher.prebuilt_path(edition_id, text_path: path))
+    return prebuilt if prebuilt.file?
+
+    @runtime_corpus_path ||= Rails.root.join(
       "tmp/corpora",
-      "#{edition_id}-#{checksum_prefix}-#{Inamen::CorpusStore::INDEXER_REVISION}.sqlite"
+      Inamen::CorpusPublisher.corpus_filename(edition_id, checksum_prefix)
     )
   end
 
   def corpus_ready?
     corpus_db_path.file?
+  end
+
+  private
+
+  def ensure_corpus_file!
+    sqlite_path = corpus_db_path
+    return if sqlite_path.file?
+
+    FileUtils.mkdir_p(sqlite_path.dirname)
+    Inamen::CorpusStore.build!(lines, path: sqlite_path.to_s)
   end
 end

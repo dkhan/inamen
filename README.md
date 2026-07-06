@@ -2,88 +2,53 @@
 
 ## Purpose
 
-**Inamen** analyzes plain-text documents for **documented numeric and structural patterns** — features whose definitions are explicit, reproducible, and testable. It reports which patterns match, which miss, and (eventually) what else in the text might be worth studying.
+**Inamen** analyzes plain-text documents for **documented numeric and structural patterns** — features whose definitions are explicit, reproducible, and testable. It reports which patterns match, which miss, and what else in the text might be worth studying.
 
-**Today** the engine is built around the Christian Bible: the bundled King James Version (`data/KJV.txt`) is the reference corpus, with eighteen catalogued features aligned where possible to [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
+**Today** the engine is built around the Christian Bible. The reference corpus is `data/KJV.txt` (`kjv_normalized`), with a second bundled edition (`concord`, Cambridge Concord layout). Eighteen catalogued features align where possible with [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
 
-**Long term**, the same engine should work on **any text, in any tradition** — not only Bibles. Examples:
-
-- Other English or foreign-language scripture (Quran, Bhagavad Gita, Torah editions, etc.)
-- Ancient Greek poetry, classical corpora, or other literary works
-- Any UTF-8 plain text a user uploads, with patterns defined for that corpus
-
-That requires **pluggable parsers** (how lines, stanzas, surahs, or chapters are recognized), **pluggable tokenizers** (script and language rules), and **corpus-specific feature catalogs** (what “correct” looks like for a given work). None of that generalization is implemented yet; the current code is Bible/KJV-specific. The architecture should stay feature-driven so new corpora can plug in behind the same verify-and-discover API.
-
-A parallel goal is **discovery**: surfacing candidate patterns the catalog does not yet describe — divisibility, boundary-word co-occurrence, positional symmetries, repeated n-grams, and so on. The CLI’s divisibility scan is an early step; a fuller discovery pipeline is planned.
-
-## Roadmap: web application
-
-The plan is a **Rails** application that wraps this library:
-
-- **Registered users** (and **super users** for advanced tooling) upload a plain-text file.
-- The user selects a **corpus profile** (e.g. KJV Bible, another Bible edition, or — later — Quran, Bhagavad Gita, Greek poetry, custom).
-- The site runs **verification** against that profile’s feature catalog and shows pass/fail results with diffs.
-- Users can run **discovery scans** on any upload to hunt for new numeric or structural patterns, regardless of domain.
-- Results are stored per upload so users can compare revisions, translations, or editions over time.
-
-### Suggested site functionality (beyond core verify + discover)
-
-| Area | Ideas |
-|------|--------|
-| **Corpus profiles** | Per-tradition parsers and feature sets (Bible, Quran, Vedas, classical Greek, user-defined). |
-| **Comparison** | Side-by-side two uploads; highlight lines or tokens that change pattern counts. |
-| **Reference alignment** | Optional alignment to published reference counts (e.g. KJPBS / kjvcode.com for KJV). |
-| **Feature browser** | Searchable catalog with definitions, formulas, example locations, and source links. |
-| **Custom feature sets** | Curated bundles per corpus (“7⁷ basics”, “Alpha & Omega”, surah-level totals, meter patterns). |
-| **Structure drill-down** | Per-chapter, per-surah, or per-stanza totals; heatmaps for boundary or keyword tokens. |
-| **Upload validation** | Pre-flight report: encoding, structure, missing sections, canon or schema mismatches. |
-| **API access** | JSON API for programmatic verification (publishers, scholars, software integrations). |
-| **Community patterns** | Submit a proposed feature; moderators promote vetted patterns into a corpus catalog. |
-| **Notifications** | Alert when a re-upload fixes or breaks a previously failing feature. |
-| **Export** | PDF/CSV verification report, shareable read-only link for a completed audit. |
-| **Admin** | Corpus management, feature versioning, usage limits for registered and super-user accounts. |
-
-This repository is the **core engine** (parser, indexer, feature catalog, CLI). The Rails app will depend on it as a gem or mounted service.
+**Long term**, the same engine should work on **any text, in any tradition** — not only Bibles. That requires pluggable parsers, tokenizers, and corpus-specific feature catalogs. The current code is Bible/KJV-specific; the architecture is feature-driven so new corpora can plug in behind the same verify-and-discover API.
 
 ---
 
-## What works today (KJV / Bible)
+## What works today
 
-The following is **implemented for the KJV plain-text layout only**. General text or other sacred works are not yet supported.
+### Core engine (`lib/inamen/`)
 
-### Parsing & tokenization
+| Area | Details |
+|------|---------|
+| **Parser** | Deterministic KJV-shaped line parser ([`KjvLineParser`](lib/inamen/kjv_line_parser.rb)); Psalm titles, colophons, implicit verse 1, split verses |
+| **Tokenization** | Unicode words; hyphens; straight and curly apostrophes ([`Tokenizer`](lib/inamen/tokenizer.rb)) |
+| **7⁷ total** | Bucketed counts sum to **823,543 = 7⁷** on the reference file |
+| **Feature catalog** | 18 named features ([`Features::CATALOG`](lib/inamen/features.rb)): boundary words, Jesus/Peter/Paul patterns, KJV Code alignments, file totals, and more |
+| **Editions** | `kjv_normalized` (`KJV.txt`), `concord` (Concord text + normalization for chapter-opening capitalization) |
+| **Corpus index** | SQLite `tokens` table (~790k scannable rows) plus materialized `token_counts` for fast discovery |
+| **Lexicon** | In-memory count cache per Search Within selection ([`Lexicon`](lib/inamen/lexicon.rb)); sub-100ms word-count scans on a warm corpus |
+| **CLI** | [`bin/inamen`](bin/inamen) — summary, features, indexing, divisibility scan, debug tools |
 
-- Deterministic line-by-line parser for the KJV plain-text layout ([`KjvLineParser`](lib/inamen/kjv_line_parser.rb), [`CountingService`](lib/inamen/counting_service.rb)).
-- Unicode word tokenization with hyphens and both apostrophe forms ([`Tokenizer`](lib/inamen/tokenizer.rb)).
-- Psalm-aware logic: titles, superscriptions, implicit verse 1, Psalm 119 stanza labels, split verse lines.
-- Bucketed counts (verse text, headings, colophons, chapter/verse numbers) that sum to **823,543 = 7⁷** on the reference file.
+### Web application (`web/`)
 
-### Indexed corpus
+Rails 8 app mounted on the gem. See **[web/README.md](web/README.md)** for setup and production deployment.
 
-- [`bin/inamen index`](bin/inamen) builds `data/kjv_corpus.sqlite` (~790k scannable tokens) for fast SQL-backed queries.
-- [`bin/inamen scan`](bin/inamen) finds tokens whose counts are divisible by a chosen integer (default 7).
+| Route | Function |
+|-------|----------|
+| `/` | Home — engine version, edition list, checksums |
+| `/features` | Feature catalog — live counts vs expected, edition switcher, KJV Code alignment |
+| `/features/:id` | Single feature definition and detail lines |
+| `/discover` | Pattern discovery with KJPBS-style **Search Within** tree (colophons, superscriptions, OT/NT book groups) |
 
-### Feature catalog
+**Discovery scan types:**
 
-Eighteen named features in [`Features::CATALOG`](lib/inamen/features.rb), including:
+- **Word count** — exact and `*` wildcard terms (`*jesus*`, `six|cs` for case-sensitive)
+- **Divisible by N** — tokens whose counts divide evenly
+- **Equal occurrence count** — groups of words sharing the same count (normalized or per-spelling)
 
-- Combined total **7⁷**
-- Peter / Paul **153** verses; John 21 fishing party **153** (Gospels)
-- Jesus mentions **980**; Bible boundary words **77,777**
-- KJV Code patterns: The\* + Amen N.T. **980**, God\* pure N.T. **1370**, Jesus + boundary same verse **2,401**, first 7 N.T. books **539**
-- And more (see CLI below)
-
-[`bin/inamen kjvcode-align`](bin/inamen) compares corpus counts to kjvcode.com targets.
-
-### Tests
-
-Full-file RSpec suite on `data/KJV.txt` locks parser totals and feature expected counts. Shared test fixture builds the corpus once per run (~4 minutes).
+Edition selection persists across Features and Discover. Scan and verification results cache for one week.
 
 ---
 
-## Installation
+## Installation (engine + CLI)
 
-1. **Ruby** 3.1+ (3.2 or 3.3 recommended).
+1. **Ruby** 3.2+ (see `.ruby-version` in `web/`).
 
 2. **Dependencies**
 
@@ -91,13 +56,21 @@ Full-file RSpec suite on `data/KJV.txt` locks parser totals and feature expected
    bundle install
    ```
 
-3. **Data** — `data/KJV.txt` is the default input.
+3. **Data** — bundled under `data/`:
+   - `KJV.txt` — reference normalized KJV
+   - `Holy-Bible-King-James-Version-Entire-Bible-Concord.txt` — Concord edition
 
-4. **Optional index** (speeds up `feature` and `scan` commands)
+4. **Corpus index** (recommended for CLI `scan` / fast feature runs)
 
    ```bash
+   # All bundled editions → data/corpora/{edition}-{checksum}-{revision}.sqlite
+   bin/inamen corpora prebuild
+
+   # Legacy single-file index for KJV.txt only
    bin/inamen index
    ```
+
+   Prebuilt files are gitignored (~130 MB each). Rebuild after indexer changes (`CorpusStore::INDEXER_REVISION`) or with `--force`.
 
 ---
 
@@ -106,7 +79,7 @@ Full-file RSpec suite on `data/KJV.txt` locks parser totals and feature expected
 ### Summary & features
 
 ```bash
-bin/inamen                          # Public KJV summary + 7⁷ total
+bin/inamen                          # KJV summary + 7⁷ total
 bin/inamen features                 # Table of all catalog features
 bin/inamen feature combined_total   # Run one feature
 bin/inamen feature --all            # Run every feature; report match/miss
@@ -116,29 +89,22 @@ bin/inamen kjvcode-align            # KJV Code alignment report
 ### Corpus & discovery
 
 ```bash
-bin/inamen index [--force]          # Build SQLite corpus
-bin/inamen scan                     # Tokens with counts divisible by 7
-bin/inamen scan -s nt -m 14         # N.T. only, min count 14
+bin/inamen corpora prebuild [--force]   # Build all edition corpora (preferred)
+bin/inamen index [--force]              # Legacy: data/kjv_corpus.sqlite
+bin/inamen scan                         # Tokens with counts divisible by 7
+bin/inamen scan -s nt -m 14             # N.T. only, min count 14
 ```
 
-### Chapter tools
+### Chapter & parser debug
 
 ```bash
 bin/inamen chapter Genesis 1
 bin/inamen chapters-divisible-by-7
+bin/inamen book-stats-debug
+bin/inamen line-samples 5
 ```
 
-### Parser debug
-
-| Command | Purpose |
-|---------|---------|
-| `bin/inamen book-stats-debug` | Per-book chapter/verse counts vs canon (`--all` for every book) |
-| `bin/inamen text-words-debug` | Lines contributing to non-verse `text_words` |
-| `bin/inamen psalm-heading-words-debug` | Psalm superscription lines |
-| `bin/inamen psalms-unclassified-debug` | Unclassified text in Psalms |
-| `bin/inamen numeric-chapters-debug` | Digit-only chapter marker lines |
-| `bin/inamen line-samples [N]` | Sample lines per classifier category |
-| `bin/inamen psalm-debug` | Each `PSALM n` line with following context |
+Run `bin/inamen` with no arguments for the full command list.
 
 ### Tests
 
@@ -146,19 +112,97 @@ bin/inamen chapters-divisible-by-7
 bundle exec rspec
 ```
 
+The suite uses a shared KJV corpus fixture (`spec/support/kjv_fixture.rb`). A full run takes several minutes on first build.
+
+---
+
+## Production deployment
+
+The web app lives in **`web/`** and loads the engine as a path gem (`gem "inamen", path: ".." `).
+
+### Quick checklist
+
+1. Clone the repo (monorepo — engine and web ship together).
+2. Install Ruby 3.2+ and Bundler.
+3. From `web/`:
+
+   ```bash
+   bundle install
+   bin/rails db:prepare
+   bin/rails inamen:corpora:prebuild
+   ```
+
+4. Boot Puma (or your app server):
+
+   ```bash
+   RAILS_ENV=production bin/rails assets:precompile
+   RAILS_ENV=production bundle exec puma -C config/puma.rb
+   ```
+
+5. Optional: run Solid Queue inside Puma for background corpus/verification jobs on first deploy without prebuilt corpora:
+
+   ```bash
+   export SOLID_QUEUE_IN_PUMA=1
+   ```
+
+### Why prebuild matters
+
+Without prebuilt corpora, the first Features verification or Discover scan **builds a SQLite index from plain text** (~1 minute per edition). Prebuilding at deploy time puts ready-made indexes in `data/corpora/` so the app opens them immediately.
+
+Corpus filenames include the text checksum and indexer revision, e.g.:
+
+```
+data/corpora/kjv_normalized-73f86fc083e56c48-7.sqlite
+data/corpora/concord-a67031a2ae4db3bc-7.sqlite
+```
+
+Runtime copies are only created in `web/tmp/corpora/` when no prebuilt file exists.
+
+### Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `RAILS_ENV` | `production` for deploy |
+| `RAILS_MASTER_KEY` | Decrypt credentials (`config/master.key` is not in git) |
+| `PORT` | HTTP port (default 3000) |
+| `RAILS_MAX_THREADS` | Puma thread count |
+| `WEB_CONCURRENCY` | Puma workers (optional) |
+| `SOLID_QUEUE_IN_PUMA` | Run job workers in the Puma process (single-server deploys) |
+| `RAILS_LOG_LEVEL` | Log verbosity (default `info`) |
+| `FORCE=1` | Pass to `inamen:corpora:prebuild` to rebuild existing corpora |
+
+### Health check
+
+Rails exposes `GET /up` for load balancers and uptime monitors.
+
+Full web setup, development workflow, and deploy notes: **[web/README.md](web/README.md)**.
+
 ---
 
 ## Project layout
 
 | Path | Role |
 |------|------|
-| `lib/inamen/` | Parser, tokenizer, verse index, feature definitions |
-| `lib/inamen/features.rb` | Feature catalog and runners |
-| `lib/inamen/bible_boundary_patterns.rb` | Alpha/Omega & KJV Code boundary logic |
-| `lib/inamen/corpus_store.rb` | SQLite token index |
-| `data/KJV.txt` | Reference plain-text KJV |
+| `lib/inamen/` | Engine — parser, tokenizer, features, discovery scans |
+| `lib/inamen/corpus_store.rb` | SQLite schema, `tokens` + `token_counts` tables |
+| `lib/inamen/corpus_publisher.rb` | Prebuilt corpus paths and `corpora prebuild` |
+| `lib/inamen/lexicon.rb` | In-memory discovery count index |
+| `lib/inamen/kjv_editions.rb` | Bundled edition registry and Concord normalization |
+| `lib/inamen/search_selection.rb` | KJPBS-style Search Within scope |
+| `data/KJV.txt` | Reference normalized KJV |
+| `data/corpora/` | Prebuilt SQLite indexes (generated; gitignored) |
 | `bin/inamen` | CLI entry point |
-| `spec/` | RSpec; `spec/support/kjv_fixture.rb` shared corpus |
+| `web/` | Rails 8 application |
+| `spec/` | RSpec; shared `KjvFixture` corpus |
+
+---
+
+## Roadmap (not yet implemented)
+
+- User uploads and corpus profiles beyond bundled KJV editions
+- Registered users, saved results, edition comparison UI
+- Phrase / consecutive-word search
+- JSON API for programmatic verification
 
 ---
 
@@ -170,6 +214,6 @@ New **Bible/KJV** features should include:
 2. An **expected count** on `data/KJV.txt` (and `kjvcode_expected_count` when applicable).
 3. **RSpec** coverage so regressions are caught.
 
-Discovery candidates can start as scan results or alignment diffs before promotion into `Features::CATALOG`.
+Bump `CorpusStore::INDEXER_REVISION` when tokenization or indexing rules change, and rebuild corpora (`bin/inamen corpora prebuild --force`).
 
-For **non-Biblical corpora**, contributions should eventually include a parser profile, tokenizer rules, and a feature catalog appropriate to that text — the same verify-and-discover workflow, different schema.
+Discovery candidates can start as scan results or alignment diffs before promotion into `Features::CATALOG`.
