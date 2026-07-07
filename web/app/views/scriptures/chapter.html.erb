@@ -1,0 +1,73 @@
+<% content_for :title, "#{@title} — Scripture — Inamen" %>
+
+<section class="panel scripture-panel">
+  <nav class="scripture-chapter-nav" aria-label="Chapter navigation">
+  <% if @prev_chapter %>
+    <%= link_to "← Prev", scripture_chapter_link(@prev_chapter, edition_id: @edition.edition_id), class: "scripture-nav-button" %>
+  <% else %>
+    <span class="scripture-nav-button is-disabled" aria-hidden="true">← Prev</span>
+  <% end %>
+
+  <h1 class="scripture-title"><%= @title %></h1>
+
+  <% if @next_chapter %>
+    <%= link_to "Next →", scripture_chapter_link(@next_chapter, edition_id: @edition.edition_id), class: "scripture-nav-button" %>
+  <% else %>
+    <span class="scripture-nav-button is-disabled" aria-hidden="true">Next →</span>
+  <% end %>
+  </nav>
+
+  <div class="scripture-chapter">
+    <% @verses.sort.each do |verse_number, text| %>
+      <p id="v<%= verse_number %>" class="scripture-verse<%= " is-highlighted" if @highlight_verse == verse_number %>">
+        <span class="verse-num"><%= verse_number %></span>
+        <% if @highlight_verse == verse_number && @highlight_indices.any? %>
+          <% if @bucket == Inamen::CorpusStore::BUCKET_VERSE_TEXT %>
+            <%= Inamen::VerseHighlighter.highlight_text(text, @highlight_indices) %>
+          <% else %>
+            <%= Inamen::VerseHighlighter.render_row(
+                  @edition.lines,
+                  @edition.db,
+                  Inamen::VerseMatchQuery::VerseRow.new(
+                    book: @book,
+                    chapter: @chapter,
+                    verse: verse_number,
+                    bucket: @bucket,
+                    occurrence_count: 0,
+                    highlight_indices: @highlight_indices,
+                    first_hit_index: nil
+                  )
+                ) %>
+          <% end %>
+        <% else %>
+          <%= h(text) %>
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+
+  <nav class="scripture-chapter-nav scripture-chapter-nav-footer" aria-label="Chapter navigation">
+  <% if @prev_chapter %>
+    <%= link_to "← Prev", scripture_chapter_link(@prev_chapter, edition_id: @edition.edition_id), class: "scripture-nav-button" %>
+  <% else %>
+    <span class="scripture-nav-button is-disabled" aria-hidden="true">← Prev</span>
+  <% end %>
+
+  <% if @next_chapter %>
+    <%= link_to "Next →", scripture_chapter_link(@next_chapter, edition_id: @edition.edition_id), class: "scripture-nav-button" %>
+  <% else %>
+    <span class="scripture-nav-button is-disabled" aria-hidden="true">Next →</span>
+  <% end %>
+  </nav>
+</section>
+
+<% if @highlight_verse.positive? %>
+  <% content_for :head do %>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const target = document.getElementById("v<%= @highlight_verse %>");
+        if (target) target.scrollIntoView({ block: "center" });
+      });
+    </script>
+  <% end %>
+<% end %>
