@@ -20,10 +20,16 @@ RSpec.describe Inamen::TokenPattern do
   describe ".parse_query_line" do
     it "parses disabled suffix on a phrase line" do
       expect(described_class.parse_query_line("six|seven|cs|disabled")).to eq(
-        pattern: "six|seven", case_sensitive: true, disabled: true
+        pattern: "six|seven", case_sensitive: true, disabled: true, exclude: false
       )
       expect(described_class.parse_query_line("six|seven")).to eq(
-        pattern: "six|seven", case_sensitive: false, disabled: false
+        pattern: "six|seven", case_sensitive: false, disabled: false, exclude: false
+      )
+    end
+
+    it "parses exclude suffix on a phrase line" do
+      expect(described_class.parse_query_line("six|seven|cs|exclude")).to eq(
+        pattern: "six|seven", case_sensitive: true, disabled: false, exclude: true
       )
     end
   end

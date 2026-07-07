@@ -10,6 +10,10 @@
           <span class="search-phrase-option-label">Case Sensitive</span>
         </label>
         <label class="search-phrase-option">
+          <%= check_box_tag "search_phrases[#{index}][exclude]", "1", phrase.exclude %>
+          <span class="search-phrase-option-label">Exclude</span>
+        </label>
+        <label class="search-phrase-option">
           <%= check_box_tag "search_phrases[#{index}][disabled]", "1", phrase.disabled,
               data: { search_phrase_disable: true } %>
           <span class="search-phrase-option-label">Disable</span>

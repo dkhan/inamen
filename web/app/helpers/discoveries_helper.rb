@@ -114,7 +114,7 @@ module DiscoveriesHelper
   end
 
   def discovery_word_count_total(rows)
-    rows.sum(&:count)
+    rows.sum { |row| row.exclude ? -row.count : row.count }
   end
 
   def discovery_word_count_spellings_label(spellings, limit: 8)

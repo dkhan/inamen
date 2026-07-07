@@ -31,6 +31,18 @@ RSpec.describe Inamen::TokenQuery do
       terms = described_class.parse_terms("six|disabled\nseven\n")
       expect(terms.map(&:pattern)).to eq(%w[seven])
     end
+
+    it "marks excluded phrase lines" do
+      terms = described_class.parse_terms("six|exclude\nseven\n")
+      expect(terms.map(&:pattern)).to eq(%w[six seven])
+      expect(terms.map(&:exclude)).to eq([true, false])
+    end
+
+    it "applies exclude to all pipe-separated terms in a line" do
+      terms = described_class.parse_terms("six|seven|exclude\n")
+      expect(terms.map(&:pattern)).to eq(%w[six seven])
+      expect(terms.map(&:exclude)).to eq([true, true])
+    end
   end
 
   describe ".scan" do
@@ -134,6 +146,20 @@ RSpec.describe Inamen::TokenQuery do
       )
       expect(rows.map(&:pattern)).to eq(%w[six seven])
       expect(rows.map(&:count)).to eq([202, 463])
+    end
+
+    it "subtracts excluded terms in scan results" do
+      rows = described_class.scan(
+        db,
+        terms: described_class.parse_terms("seven\nsix|exclude\n"),
+        scope: :whole_bible,
+        bucket: :default
+      )
+      included, excluded = rows
+      expect(included.pattern).to eq("seven")
+      expect(excluded.pattern).to eq("six")
+      expect(excluded.exclude).to be(true)
+      expect(rows.sum { |row| row.exclude ? -row.count : row.count }).to eq(463 - 202)
     end
 
     it "returns independent counts for multiple terms" do

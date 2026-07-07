@@ -14,12 +14,12 @@ class DiscoveryScan
   EqualCountRow = Struct.new(:scope, :count, :words, :match_by, keyword_init: true)
   WordEntry = Struct.new(:token_norm, :token_raws, keyword_init: true)
 
-  WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, keyword_init: true)
+  WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, keyword_init: true)
 
   MODES = %w[divisible equal_count word_count].freeze
   MATCH_BY = %w[norm spelling].freeze
 
-  PhraseEntry = Struct.new(:phrase, :case_sensitive, :disabled, keyword_init: true)
+  PhraseEntry = Struct.new(:phrase, :case_sensitive, :exclude, :disabled, keyword_init: true)
 
   def self.normalize(raw)
     mode = raw[:mode].to_s
@@ -65,10 +65,11 @@ class DiscoveryScan
       PhraseEntry.new(
         phrase: entry[:phrase].to_s,
         case_sensitive: ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive]),
+        exclude: ActiveModel::Type::Boolean.new.cast(entry[:exclude]),
         disabled: ActiveModel::Type::Boolean.new.cast(entry[:disabled])
       )
     end
-    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, disabled: false)]
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, exclude: false, disabled: false)]
   end
 
   def self.phrase_entries_from_query_terms(text)
@@ -79,10 +80,11 @@ class DiscoveryScan
       PhraseEntry.new(
         phrase: attrs[:pattern],
         case_sensitive: attrs[:case_sensitive],
+        exclude: attrs[:exclude],
         disabled: attrs[:disabled]
       )
     end
-    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, disabled: false)]
+    entries.presence || [PhraseEntry.new(phrase: "", case_sensitive: false, exclude: false, disabled: false)]
   end
 
   def self.query_terms_from_phrases(raw_phrases)
@@ -91,9 +93,11 @@ class DiscoveryScan
       next if phrase.empty?
 
       case_sensitive = ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive])
+      exclude = ActiveModel::Type::Boolean.new.cast(entry[:exclude])
       disabled = ActiveModel::Type::Boolean.new.cast(entry[:disabled])
       line = phrase
       line += "|cs" if case_sensitive
+      line += "|exclude" if exclude
       line += "|disabled" if disabled
       line
     end.join("\n")
@@ -199,7 +203,8 @@ class DiscoveryScan
         count: row.count,
         wildcard: row.wildcard,
         scope: row.scope,
-        spellings: row.spellings
+        spellings: row.spellings,
+        exclude: row.exclude
       )
     end
   end
@@ -257,7 +262,7 @@ class DiscoveryScan
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v11",
+      "discovery_scan/v12",
       p.mode,
       p.match_by,
       terms_digest,

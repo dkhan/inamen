@@ -107,9 +107,12 @@
         <tbody>
           <% @rows.each do |row| %>
             <tr>
-              <td><code><%= row.pattern %></code><% if row.wildcard %> <span class="badge badge-muted">wildcard</span><% end %></td>
+              <td><code><%= row.pattern %></code>
+                <% if row.wildcard %> <span class="badge badge-muted">wildcard</span><% end %>
+                <% if row.exclude %> <span class="badge badge-muted">exclude</span><% end %>
+              </td>
               <td><%= row.case_sensitive ? "sensitive" : "insensitive" %></td>
-              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= row.exclude ? "−" : "" %><%= format_feature_count(row.count) %></td>
               <td class="word-group"><%= discovery_word_count_spellings_label(row.spellings) %></td>
             </tr>
           <% end %>

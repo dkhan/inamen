@@ -3,8 +3,8 @@
 module Inamen
   # Count token occurrences for one or more search patterns (exact or * wildcard).
   module TokenQuery
-    QueryTerm = Struct.new(:pattern, :case_sensitive, keyword_init: true)
-    ResultRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, keyword_init: true)
+    QueryTerm = Struct.new(:pattern, :case_sensitive, :exclude, keyword_init: true)
+    ResultRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, keyword_init: true)
 
     MAX_TERMS = 100
 
@@ -16,7 +16,11 @@ module Inamen
           next [] if attrs[:disabled]
 
           TokenPattern.split_phrase_patterns(attrs[:pattern]).map do |pattern|
-            QueryTerm.new(pattern: pattern, case_sensitive: attrs[:case_sensitive])
+            QueryTerm.new(
+              pattern: pattern,
+              case_sensitive: attrs[:case_sensitive],
+              exclude: attrs[:exclude]
+            )
           end
         end
         raise ArgumentError, "at least one search term required" if terms.empty?
@@ -55,7 +59,8 @@ module Inamen
             count: count,
             wildcard: TokenPattern.wildcard?(term.pattern),
             scope: scope_label,
-            spellings: spellings
+            spellings: spellings,
+            exclude: term.exclude
           )
         end
       end
