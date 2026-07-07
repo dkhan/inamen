@@ -4,13 +4,33 @@ class DiscoveriesController < ApplicationController
   include EditionSelectable
 
   before_action :set_scan_params
+  after_action :persist_discover_query, only: %i[index scan verses]
 
   def index
     @status = page_status
 
     return unless @status == :ready
 
-    @rows = DiscoveryScan.read_cached(@edition, @scan_params)
+    @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
+    @edition.warm! if @scan_params.mode == "word_count"
+  end
+
+  def verses
+    unless DiscoveryScan.counts_cached?(@edition, @scan_params)
+      head :no_content
+      return
+    end
+
+    if DiscoveryScan.verses_cached?(@edition, @scan_params)
+      @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
+      @edition.warm!
+      render partial: "verse_results", locals: { edition: @edition, verse_result: @verse_result },
+             layout: false
+      return
+    end
+
+    DiscoveryScan.enqueue_verses!(@edition, @scan_params)
+    render partial: "verse_loading", layout: false, status: :accepted
   end
 
   def scan
@@ -28,15 +48,20 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if params[:refresh] != "1" && DiscoveryScan.cached?(edition, scan_params)
+    if params[:refresh] != "1" && DiscoveryScan.counts_cached?(edition, scan_params)
+      DiscoveryScan.enqueue_verses!(edition, scan_params)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
 
-    DiscoveryScan.clear_cache!(edition, scan_params) if params[:refresh] == "1"
+    if params[:refresh] == "1"
+      DiscoveryScan.clear_counts_cache!(edition, scan_params)
+      DiscoveryScan.clear_verses_cache!(edition, scan_params)
+    end
 
     if scan_params.mode == "word_count" && edition.corpus_ready?
-      DiscoveryScan.run(edition, scan_params, force: params[:refresh] == "1")
+      DiscoveryScan.run_counts(edition, scan_params, force: params[:refresh] == "1")
+      DiscoveryScan.enqueue_verses!(edition, scan_params, force: params[:refresh] == "1")
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -51,11 +76,11 @@ class DiscoveriesController < ApplicationController
   private
 
   def edition_selection_redirect_path
-    discoveries_path
+    discoveries_path(discover_query_params)
   end
 
   def page_status
-    return :ready if DiscoveryScan.cached?(@edition, @scan_params)
+    return :ready if DiscoveryScan.counts_cached?(@edition, @scan_params)
     return :computing if DiscoveryScan.running?(@edition, @scan_params) || params[:waiting].present?
 
     :pending
@@ -63,6 +88,22 @@ class DiscoveriesController < ApplicationController
 
   def set_scan_params
     @scan_params = DiscoveryScan.normalize(scan_param_hash)
+  end
+
+  def persist_discover_query
+    return unless @scan_params
+
+    store_discover_query!(current_discover_query)
+  end
+
+  def current_discover_query
+    query = scan_query(current_edition_id, @scan_params)
+    if params[:search_phrases].present?
+      query[:search_phrases] = search_phrases_param_hash(params[:search_phrases])
+    elsif session.dig(:discover_query, "search_phrases").present?
+      query[:search_phrases] = session[:discover_query]["search_phrases"]
+    end
+    query
   end
 
   def scan_param_hash
@@ -105,6 +146,14 @@ class DiscoveriesController < ApplicationController
       query_terms: scan_params.query_terms
     }
 
+    if scan_params.mode == "word_count"
+      if params[:search_phrases].present?
+        query[:search_phrases] = search_phrases_param_hash(params[:search_phrases])
+      elsif session.dig(:discover_query, "search_phrases").present?
+        query[:search_phrases] = session[:discover_query]["search_phrases"]
+      end
+    end
+
     return query if selection.default?
 
     selection_query = {
@@ -119,5 +168,13 @@ class DiscoveriesController < ApplicationController
     end
     query[:search_selection] = selection_query
     query
+  end
+
+  def search_phrases_param_hash(raw_phrases)
+    if raw_phrases.is_a?(ActionController::Parameters)
+      raw_phrases.permit!.to_h
+    else
+      raw_phrases.to_h
+    end
   end
 end

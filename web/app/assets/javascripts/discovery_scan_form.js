@@ -53,6 +53,18 @@
     );
   }
 
+  function focusMovedWithinPhrases(related) {
+    if (!(related instanceof HTMLElement)) return false;
+    const panel = document.getElementById("search-phrases-panel");
+    return panel ? panel.contains(related) : false;
+  }
+
+  function cancelScheduledScan() {
+    clearTimeout(scanTimer);
+    scanTimer = null;
+    pendingFocusInput = null;
+  }
+
   function rememberPhraseFocus(input) {
     if (!(input instanceof HTMLInputElement) || !input.classList.contains("search-phrase-input")) {
       return;
@@ -113,6 +125,7 @@
       "focusout",
       (event) => {
         if (!isScanField(event.target)) return;
+        if (focusMovedWithinPhrases(event.relatedTarget)) return;
         scheduleScan(discoveryForm);
       },
       true
@@ -125,6 +138,10 @@
 
     document.addEventListener("discovery:schedule-scan", () => {
       scheduleScan(discoveryForm);
+    });
+
+    document.addEventListener("discovery:cancel-scan", () => {
+      cancelScheduledScan();
     });
   }
 

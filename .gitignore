@@ -6,6 +6,7 @@ data/*.sqlite
 data/*.sqlite-*
 data/corpora/*.sqlite
 data/corpora/*.sqlite-*
+data/verse_indices/*.marshal
 
 # Rails web app
 /web/tmp/

@@ -25,8 +25,41 @@ class EditionContext
     @lines ||= Inamen::KjvEditions.read_lines(path)
   end
 
+  def cache_key
+    "#{edition_id}:#{checksum_prefix}"
+  end
+
+  def chapter_index
+    @chapter_index ||= Inamen::VerseIndex.chapter_index_for(
+      cache_key,
+      lines: lines,
+      prebuilt_path: verse_index_prebuilt_path
+    )
+  end
+
+  def verse_map
+    @verse_map ||= Inamen::VerseIndex.flatten_chapter_index(chapter_index)
+  end
+
+  def chapter_verses(book:, chapter:)
+    Inamen::VerseIndex.chapter_verses_from_index(chapter_index, book: book, chapter: chapter)
+  end
+
+  def verse_text(book:, chapter:, verse:)
+    Inamen::VerseIndex.verse_text_from_index(chapter_index, book: book, chapter: chapter, verse: verse)
+  end
+
+  def warm!
+    chapter_index
+    self
+  end
+
   def checksum_prefix
     @checksum_prefix ||= Inamen::CorpusPublisher.checksum_prefix(path)
+  end
+
+  def verse_index_prebuilt_path
+    Inamen::VerseIndexPublisher.prebuilt_path(edition_id, text_path: path)
   end
 
   def expected_count(feature_id)

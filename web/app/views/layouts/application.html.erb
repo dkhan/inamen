@@ -22,12 +22,13 @@
         <a href="/" class="site-logo">Inamen</a>
         <nav class="site-nav">
           <%= link_to "Features", features_path(edition: current_edition_id) %>
-          <%= link_to "Discover", discoveries_path(edition: current_edition_id) %>
+          <%= link_to "Discover", discover_path_with_state %>
+          <%= link_to "Scripture", scripture_path_with_state %>
         </nav>
       </div>
       <p class="site-tagline">Discover mathematical patterns in text</p>
     </header>
-    <main class="site-main">
+    <main class="<%= content_for?(:main_class) ? yield(:main_class) : "site-main" %>">
       <%= yield %>
     </main>
   </body>

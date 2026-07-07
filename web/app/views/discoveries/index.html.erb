@@ -1,4 +1,9 @@
 <% content_for :title, "Discover — Inamen" %>
+<% content_for :main_class, "site-main site-main-wide" %>
+<% word_count_mode = @scan_params.mode == "word_count" %>
+<% equal_count_mode = @scan_params.mode == "equal_count" %>
+<% filter_scan_mode = !word_count_mode %>
+<% selection = @scan_params.search_selection %>
 <% if @status == :computing %>
   <% content_for :head do %>
     <meta http-equiv="refresh" content="3">
@@ -8,12 +13,9 @@
   <%= javascript_include_tag "search_within_tree", defer: true %>
   <%= javascript_include_tag "search_phrases", defer: true %>
   <%= javascript_include_tag "discovery_scan_form", defer: true %>
+  <%= javascript_include_tag "discovery_verse_loader", defer: true if word_count_mode %>
+  <%= javascript_include_tag "discovery_verse_details", defer: true if word_count_mode %>
 <% end %>
-
-<% word_count_mode = @scan_params.mode == "word_count" %>
-<% equal_count_mode = @scan_params.mode == "equal_count" %>
-<% filter_scan_mode = !word_count_mode %>
-<% selection = @scan_params.search_selection %>
 
 <section class="panel toolbar">
   <%= form_with url: discoveries_path, method: :get, local: true, class: "toolbar-form" do %>
@@ -127,6 +129,12 @@
           </tfoot>
         <% end %>
       </table>
+      <% if word_count_mode %>
+        <div id="discovery-verse-results" data-verses-url="<%= verses_discoveries_path(discovery_verses_query(@edition, @scan_params)) %>">
+          <%= render "verse_loading" %>
+        </div>
+        <%= render "verse_details_dialog" %>
+      <% end %>
     <% elsif equal_count_mode %>
       <table class="features-table discovery-table">
         <thead>

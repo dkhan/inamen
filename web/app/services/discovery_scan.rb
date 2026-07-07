@@ -130,14 +130,48 @@ class DiscoveryScan
   private_class_method :phrase_hashes
 
   def self.run(edition, params, force: false)
-    return [] if params.mode == "word_count" && !enabled_search_terms?(params.query_terms)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return run_counts(edition, p, force: force) if p.mode == "word_count"
 
-    key = cache_key_for(edition, params)
+    key = cache_key_for(edition, p)
     Rails.cache.delete(key) if force
 
     Rails.cache.fetch(key, expires_in: 7.days) do
-      compute(edition, params)
+      compute(edition, p)
     end
+  end
+
+  def self.run_counts(edition, params, force: false)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return [] if p.mode == "word_count" && !enabled_search_terms?(p.query_terms)
+
+    key = counts_cache_key_for(edition, p)
+    Rails.cache.delete(key) if force
+
+    Rails.cache.fetch(key, expires_in: 7.days) do
+      compute_word_count_rows(edition, p)
+    end
+  end
+
+  def self.run_verses(edition, params, force: false)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return nil if p.mode != "word_count" || !enabled_search_terms?(p.query_terms)
+
+    key = verses_cache_key_for(edition, p)
+    Rails.cache.delete(key) if force
+
+    Rails.cache.fetch(key, expires_in: 7.days) do
+      compute_verse_result(edition, p)
+    end
+  end
+
+  def self.enqueue_verses!(edition, params, force: false)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return unless p.mode == "word_count" && enabled_search_terms?(p.query_terms)
+    return if verses_cached?(edition, p) && !force
+    return if verses_running?(edition, p)
+
+    DiscoveryVerseScanJob.perform_later(edition.edition_id, job_payload(p), force: force)
   end
 
   def self.compute(edition, params)
@@ -145,7 +179,7 @@ class DiscoveryScan
     when "equal_count"
       compute_equal_count(edition, params)
     when "word_count"
-      compute_word_count(edition, params)
+      compute_word_count_rows(edition, params)
     else
       compute_divisible(edition, params)
     end
@@ -187,7 +221,7 @@ class DiscoveryScan
     end
   end
 
-  def self.compute_word_count(edition, params)
+  def self.compute_word_count_rows(edition, params)
     return [] unless enabled_search_terms?(params.query_terms)
 
     terms = Inamen::TokenQuery.parse_terms(params.query_terms)
@@ -209,37 +243,114 @@ class DiscoveryScan
     end
   end
 
+  def self.compute_verse_result(edition, params)
+    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+    rows = read_counts_cached(edition, params) || compute_word_count_rows(edition, params)
+
+    verse_result = Inamen::VerseMatchQuery.scan(
+      edition.db,
+      terms: terms,
+      search_selection: params.search_selection
+    )
+    verse_result.summary.occurrences = rows.sum { |row| row.exclude ? -row.count : row.count }
+    Inamen::VerseMatchQuery.prepare_display!(edition, verse_result)
+  end
+
   def self.cached?(edition, params)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return counts_cached?(edition, p) if p.mode == "word_count"
+
+    key = cache_key_for(edition, p)
+    return false unless Rails.cache.exist?(key)
+
+    !Rails.cache.read(key).nil?
+  rescue TypeError
+    Rails.cache.delete(key)
+    false
+  end
+
+  def self.counts_cached?(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
     return false if p.mode == "word_count" && !enabled_search_terms?(p.query_terms)
 
-    key = cache_key_for(edition, params)
+    key = counts_cache_key_for(edition, p)
     return false unless Rails.cache.exist?(key)
 
-    value = Rails.cache.read(key)
-    !value.nil?
+    !Rails.cache.read(key).nil?
+  rescue TypeError
+    Rails.cache.delete(key)
+    false
+  end
+
+  def self.verses_cached?(edition, params)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return false if p.mode != "word_count" || !enabled_search_terms?(p.query_terms)
+
+    key = verses_cache_key_for(edition, p)
+    return false unless Rails.cache.exist?(key)
+
+    !Rails.cache.read(key).nil?
   rescue TypeError
     Rails.cache.delete(key)
     false
   end
 
   def self.read_cached(edition, params)
-    Rails.cache.read(cache_key_for(edition, params))
+    p = params.is_a?(Params) ? params : normalize(params)
+    return read_counts_cached(edition, p) if p.mode == "word_count"
+
+    Rails.cache.read(cache_key_for(edition, p))
   rescue TypeError
-    clear_cache!(edition, params)
+    clear_cache!(edition, p)
+    nil
+  end
+
+  def self.read_counts_cached(edition, params)
+    Rails.cache.read(counts_cache_key_for(edition, params))
+  rescue TypeError
+    clear_counts_cache!(edition, params)
+    nil
+  end
+
+  def self.read_verses_cached(edition, params)
+    Rails.cache.read(verses_cache_key_for(edition, params))
+  rescue TypeError
+    clear_verses_cache!(edition, params)
     nil
   end
 
   def self.clear_cache!(edition, params)
-    Rails.cache.delete(cache_key_for(edition, params))
+    p = params.is_a?(Params) ? params : normalize(params)
+    if p.mode == "word_count"
+      clear_counts_cache!(edition, p)
+      clear_verses_cache!(edition, p)
+    else
+      Rails.cache.delete(cache_key_for(edition, p))
+    end
+  end
+
+  def self.clear_counts_cache!(edition, params)
+    Rails.cache.delete(counts_cache_key_for(edition, params))
+  end
+
+  def self.clear_verses_cache!(edition, params)
+    Rails.cache.delete(verses_cache_key_for(edition, params))
   end
 
   def self.running?(edition, params)
     Rails.cache.exist?(running_key_for(edition, params))
   end
 
+  def self.verses_running?(edition, params)
+    Rails.cache.exist?(verses_running_key_for(edition, params))
+  end
+
   def self.running_key_for(edition, params)
     "#{cache_key_for(edition, params)}/running"
+  end
+
+  def self.verses_running_key_for(edition, params)
+    "#{verses_cache_key_for(edition, params)}/running"
   end
 
   def self.job_payload(params)
@@ -257,12 +368,24 @@ class DiscoveryScan
 
   def self.cache_key_for(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
+    shared_cache_components(p, edition)
+  end
+
+  def self.counts_cache_key_for(edition, params)
+    ["discovery_counts/v15", *shared_cache_components(params, edition)]
+  end
+
+  def self.verses_cache_key_for(edition, params)
+    ["discovery_verses/v15", *shared_cache_components(params, edition)]
+  end
+
+  def self.shared_cache_components(params, edition)
+    p = params.is_a?(Params) ? params : normalize(params)
     terms_digest =
       if p.mode == "word_count" && p.query_terms.present?
         Digest::SHA256.hexdigest(p.query_terms)[0, 16]
       end
     [
-      "discovery_scan/v12",
       p.mode,
       p.match_by,
       terms_digest,

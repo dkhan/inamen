@@ -10,8 +10,12 @@ Rails.application.routes.draw do
   resources :discoveries, only: [:index], path: "discover" do
     collection do
       post :scan
+      get :verses
     end
   end
+
+  get "scripture", to: "scriptures#show", as: :scripture
+  get "scripture/:book/chapters/:chapter", to: "scriptures#chapter", as: :scripture_chapter
 
   root "pages#home"
 end

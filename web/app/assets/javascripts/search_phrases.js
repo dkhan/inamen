@@ -132,7 +132,11 @@
 
     const addButton = document.getElementById("add-search-phrase");
     if (addButton) {
-      addButton.addEventListener("click", () => addRow(root));
+      addButton.addEventListener("mousedown", (event) => event.preventDefault());
+      addButton.addEventListener("click", () => {
+        document.dispatchEvent(new CustomEvent("discovery:cancel-scan"));
+        addRow(root);
+      });
     }
 
     restorePhraseFocus(root);

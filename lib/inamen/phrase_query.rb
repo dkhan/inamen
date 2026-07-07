@@ -23,6 +23,23 @@ module Inamen
         [spellings.values.sum, spellings]
       end
 
+      def positions(db, pattern:, search_selection:, case_sensitive:)
+        words = phrase_words(pattern)
+        raise ArgumentError, "phrase too long (max #{MAX_WORDS} words)" if words.length > MAX_WORDS
+
+        selection = resolve_selection(search_selection)
+        rows_for_phrase(db, words:, selection:, case_sensitive:).map do |row|
+          {
+            book: row[:book],
+            chapter: row[:chapter],
+            verse: row[:verse],
+            bucket: row[:bucket],
+            word_index: row[:word_index],
+            word_count: words.length
+          }
+        end
+      end
+
       def phrase_words(pattern)
         CorpusStore.normalize_apostrophes(pattern.to_s.strip).split(/\s+/).reject(&:empty?)
       end
@@ -36,6 +53,13 @@ module Inamen
       end
 
       def spellings_for_phrase(db, words:, selection:, case_sensitive:)
+        grouped = rows_for_phrase(db, words:, selection:, case_sensitive:)
+        spellings = Hash.new(0)
+        grouped.each { |row| spellings[row[:phrase_raw]] += 1 }
+        spellings.sort_by { |phrase, phrase_count| [-phrase_count, phrase] }.to_h
+      end
+
+      def rows_for_phrase(db, words:, selection:, case_sensitive:)
         where_sql, where_params = selection.where_clause
         qualified_where = qualify_where_clause(where_sql)
 
@@ -50,32 +74,39 @@ module Inamen
         end
 
         select_cols = (0...words.length).flat_map { |index| ["t#{index}.token_raw", "t#{index}.token_norm"] }
-        group_cols = select_cols.join(", ")
+        select_cols.concat(%w[t0.book t0.chapter t0.verse t0.bucket t0.word_index])
 
         sql = <<~SQL
-          SELECT #{group_cols}, COUNT(*) AS count
+          SELECT #{select_cols.join(", ")}
           FROM tokens t0
           #{joins_sql}
           WHERE 1=1 #{qualified_where}
             AND #{word_sql.map(&:first).join(' AND ')}
-          GROUP BY #{group_cols}
+          ORDER BY t0.book, t0.chapter, t0.verse, t0.bucket, t0.word_index
         SQL
 
         params = where_params + word_sql.flat_map(&:last)
-        spellings = {}
+        rows = []
 
         db.execute(sql, params).each do |row|
           values = row.dup
-          count = values.pop.to_i
+          location = values.pop(5)
+          book, chapter, verse, bucket, word_index = location
           raws = words.length.times.map { |index| values[index * 2] }
           norms = words.length.times.map { |index| values[(index * 2) + 1] }
           next unless phrase_matches?(words, raws, norms, case_sensitive: case_sensitive)
 
-          phrase_raw = raws.join(" ")
-          spellings[phrase_raw] = (spellings[phrase_raw] || 0) + count
+          rows << {
+            book: book,
+            chapter: chapter.to_i,
+            verse: verse.to_i,
+            bucket: bucket,
+            word_index: word_index.to_i,
+            phrase_raw: raws.join(" ")
+          }
         end
 
-        spellings.sort_by { |phrase, phrase_count| [-phrase_count, phrase] }.to_h
+        rows
       end
 
       def word_condition(word, index, case_sensitive:)

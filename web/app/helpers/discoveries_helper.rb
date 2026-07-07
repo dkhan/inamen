@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module DiscoveriesHelper
+  VERSE_RESULTS_DISPLAY_LIMIT = Inamen::VerseMatchQuery::DISPLAY_LIMIT
   def discovery_mode_options(selected)
     options_for_select(
       [
@@ -56,6 +57,8 @@ module DiscoveriesHelper
   def discovery_search_phrases(scan_params)
     if params[:search_phrases].present?
       DiscoveryScan.phrase_entries_from_params(params[:search_phrases])
+    elsif session.dig(:discover_query, "search_phrases").present?
+      DiscoveryScan.phrase_entries_from_params(session[:discover_query]["search_phrases"])
     else
       DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms)
     end
@@ -72,6 +75,13 @@ module DiscoveriesHelper
       hidden_field_tag(:query_terms, scan_params.query_terms)
     ]
 
+    discovery_search_phrases(scan_params).each_with_index do |phrase, index|
+      parts << hidden_field_tag("search_phrases[#{index}][phrase]", phrase.phrase)
+      parts << hidden_field_tag("search_phrases[#{index}][case_sensitive]", "1") if phrase.case_sensitive
+      parts << hidden_field_tag("search_phrases[#{index}][exclude]", "1") if phrase.exclude
+      parts << hidden_field_tag("search_phrases[#{index}][disabled]", "1") if phrase.disabled
+    end
+
     unless selection.default?
       parts << hidden_field_tag("search_selection[submitted]", "1")
       parts << hidden_field_tag("search_selection[colophons]", "1") if selection.colophons
@@ -84,6 +94,33 @@ module DiscoveriesHelper
     end
 
     safe_join(parts, "\n")
+  end
+
+  def discovery_verses_query(edition, scan_params)
+    query = discovery_scan_query(edition, scan_params)
+    phrases = discovery_search_phrases_param_hash(scan_params)
+    query[:search_phrases] = phrases if phrases.present?
+    query
+  end
+
+  def discovery_search_phrases_param_hash(scan_params)
+    if params[:search_phrases].present?
+      params[:search_phrases].permit!.to_h
+    elsif session.dig(:discover_query, "search_phrases").present?
+      session[:discover_query]["search_phrases"]
+    else
+      DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms).map.with_index.to_h do |phrase, index|
+        [
+          index.to_s,
+          {
+            "phrase" => phrase.phrase,
+            "case_sensitive" => phrase.case_sensitive ? "1" : "0",
+            "exclude" => phrase.exclude ? "1" : "0",
+            "disabled" => phrase.disabled ? "1" : "0"
+          }.compact
+        ]
+      end
+    end
   end
 
   def discovery_scan_query(edition, scan_params)
@@ -144,6 +181,64 @@ module DiscoveriesHelper
     else
       preview = labels.first(limit).map { |w| "<code>#{h(w)}</code>" }.join(", ")
       "#{preview}, … (+#{labels.size - limit} more)".html_safe
+    end
+  end
+
+  def discovery_verse_match_summary(summary)
+    scope_label = format_discovery_scope_label(summary.scope_label)
+    "Found #{number_with_delimiter(summary.occurrences)} Occurrence(s) in " \
+      "#{number_with_delimiter(summary.verses)} Verse(s) in " \
+      "#{number_with_delimiter(summary.chapters)} Chapter(s) in " \
+      "#{number_with_delimiter(summary.books)} Book(s) within #{scope_label}"
+  end
+
+  def discovery_verse_reference(row)
+    Inamen::VerseMatchQuery.format_reference(row.book, row.chapter, row.verse, row.bucket)
+  end
+
+  def discovery_scripture_chapter_path(edition, row)
+    scripture_chapter_path(
+      book: row.book,
+      chapter: row.chapter,
+      edition: edition.edition_id,
+      highlight: row.verse,
+      hi: row.highlight_indices.join(","),
+      bucket: row.bucket
+    )
+  end
+
+  def discovery_verse_row_html(row)
+    row.html_excerpt.presence || ""
+  end
+
+  def discovery_verse_row_details(row)
+    row.details || {}
+  end
+
+  def discovery_verse_results_rows(verse_result)
+    verse_result.verses.first(VERSE_RESULTS_DISPLAY_LIMIT)
+  end
+
+  def discovery_verse_results_truncated?(verse_result)
+    verse_result.verses.length > VERSE_RESULTS_DISPLAY_LIMIT
+  end
+
+  def discovery_verse_results_display_limit
+    VERSE_RESULTS_DISPLAY_LIMIT
+  end
+
+  private
+
+  def format_discovery_scope_label(label)
+    case label.to_s
+    when "whole Bible"
+      "Entire Bible"
+    when "New Testament"
+      "New Testament"
+    when "Old Testament"
+      "Old Testament"
+    else
+      label
     end
   end
 end
