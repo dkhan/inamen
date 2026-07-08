@@ -89,6 +89,10 @@
     syncAllParents(root);
   }
 
+  function scheduleScopeScan() {
+    document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
+  }
+
   function onParentChange(event) {
     const parentInput = event.target;
     const branch = parentInput.closest(".search-within-branch");
@@ -98,10 +102,12 @@
     });
     parentInput.indeterminate = false;
     syncAllParents(panel());
+    scheduleScopeScan();
   }
 
   function onLeafChange() {
     syncAllParents(panel());
+    scheduleScopeScan();
   }
 
   function toggleBranch(button) {
@@ -151,6 +157,7 @@
       button.addEventListener("click", () => {
         const action = button.getAttribute("data-search-within-action");
         setLeaves(root, action === "all");
+        scheduleScopeScan();
       });
     });
 

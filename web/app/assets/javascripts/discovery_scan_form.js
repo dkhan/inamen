@@ -84,6 +84,26 @@
     );
   }
 
+  function scopeFingerprint(discoveryForm) {
+    const panel = discoveryForm.querySelector("#search-within-panel");
+    if (!panel) return "";
+
+    const books = [];
+    panel.querySelectorAll(".search-within-book-leaf").forEach((input) => {
+      if (input.checked) books.push(input.value);
+    });
+    books.sort();
+
+    const colophons = panel.querySelector("#search_selection_colophons");
+    const superscriptions = panel.querySelector("#search_selection_superscriptions");
+
+    return JSON.stringify({
+      colophons: colophons ? colophons.checked : false,
+      superscriptions: superscriptions ? superscriptions.checked : false,
+      books
+    });
+  }
+
   function phraseFingerprint(discoveryForm) {
     const parts = [];
     discoveryForm.querySelectorAll("[data-search-phrase-row]").forEach((row) => {
@@ -96,14 +116,17 @@
     return parts.join("\n");
   }
 
+  function scanFingerprint(discoveryForm) {
+    return `${phraseFingerprint(discoveryForm)}\n${scopeFingerprint(discoveryForm)}`;
+  }
+
   function markScanned(discoveryForm) {
-    discoveryForm.dataset.lastScannedPhrase = phraseFingerprint(discoveryForm);
+    discoveryForm.dataset.lastScannedPhrase = scanFingerprint(discoveryForm);
   }
 
   function shouldScan(discoveryForm) {
     if (!canScan(discoveryForm)) return false;
-    const fingerprint = phraseFingerprint(discoveryForm);
-    return fingerprint !== discoveryForm.dataset.lastScannedPhrase;
+    return scanFingerprint(discoveryForm) !== discoveryForm.dataset.lastScannedPhrase;
   }
 
   function runScan(discoveryForm) {
