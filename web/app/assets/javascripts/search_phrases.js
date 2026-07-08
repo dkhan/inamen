@@ -120,6 +120,7 @@
     const row = rowFromTemplate(root, nextIndex(root));
     list(root).appendChild(row);
     bindRow(root, row);
+    document.dispatchEvent(new CustomEvent("discovery:search-phrase-row-added", { detail: { row } }));
     const input = row.querySelector(".search-phrase-input");
     if (input) input.focus();
   }

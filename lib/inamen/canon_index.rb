@@ -55,7 +55,19 @@ module Inamen
 
       def verse_ordinals_for(db)
         cache = @verse_ordinals_cache ||= {}
+        path = db_path_key(db)
+        prebuilt = @prebuilt_ordinals_cache ||= {}
+        return prebuilt[path][:ordinals] if prebuilt.key?(path)
+
         cache[db.object_id] ||= build_verse_ordinals(db)
+      end
+
+      def install_prebuilt!(db, ordinals:, nt_first:)
+        path = db_path_key(db)
+        @prebuilt_ordinals_cache ||= {}
+        @prebuilt_ordinals_cache[path] = { ordinals: ordinals, nt_first: nt_first }
+        @nt_first_verse_ordinal ||= {}
+        @nt_first_verse_ordinal[path] = nt_first
       end
 
       def build_verse_ordinals(db)
@@ -68,8 +80,16 @@ module Inamen
       end
 
       def nt_first_verse_ordinal(db)
+        path = db_path_key(db)
+        prebuilt = @prebuilt_ordinals_cache ||= {}
+        return prebuilt[path][:nt_first] if prebuilt.key?(path)
+
         cache = @nt_first_verse_ordinal ||= {}
         cache[db.object_id] ||= verse_ordinals_for(db).fetch(["Matthew", 1, 1])
+      end
+
+      def db_path_key(db)
+        db.respond_to?(:filename) ? db.filename.to_s : db.object_id.to_s
       end
 
       def chapter_number(book, chapter)

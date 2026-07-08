@@ -265,6 +265,65 @@ body {
   min-width: 0;
 }
 
+.search-phrase-preview {
+  min-height: 1.35rem;
+  margin-bottom: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.search-phrase-preview-token.is-invalid {
+  text-decoration: line-through;
+  text-decoration-color: #c44;
+  color: #c44;
+}
+
+.search-phrase-preview-space,
+.search-phrase-preview-pipe {
+  color: var(--muted);
+}
+
+.search-phrase-input-wrap {
+  position: relative;
+}
+
+.search-phrase-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.2rem);
+  left: 0;
+  right: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.search-phrase-suggestion {
+  display: block;
+  width: 100%;
+  padding: 0.35rem 0.65rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.search-phrase-suggestion:hover,
+.search-phrase-suggestion:focus {
+  background: rgba(0, 0, 0, 0.05);
+  outline: none;
+}
+
 .search-phrase-input {
   display: block;
   width: 100%;

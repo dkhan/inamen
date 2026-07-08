@@ -40,13 +40,18 @@ module Inamen
     end
 
     class << self
-      def scan(db, terms:, search_selection:)
+      def scan(db, terms:, search_selection:, word_stream: nil)
         selection = resolve_selection(search_selection)
         include_terms = Array(terms).reject(&:exclude)
 
         merged = Hash.new { |hash, key| hash[key] = [] }
         include_terms.each do |term|
-          verse_groups_for_term(db, term, selection).each do |group|
+          groups = if word_stream
+            word_stream.verse_groups_for_term(term, selection: selection)
+          else
+            verse_groups_for_term(db, term, selection)
+          end
+          groups.each do |group|
             merged[group.verse_key].concat(group.indices)
           end
         end
@@ -61,11 +66,10 @@ module Inamen
         return result unless result&.verses&.any?
 
         db = edition.db
-        lines = edition.lines
         canon_verse_total = CanonIndex.verse_ordinals_for(db).length
 
         result.verses.first(DISPLAY_LIMIT).each_with_index do |row, index|
-          row.html_excerpt = VerseHighlighter.render_row(lines, db, row)
+          row.html_excerpt = VerseHighlighter.render_edition_row(edition, row)
           hit = Hit.new(
             book: row.book,
             chapter: row.chapter,

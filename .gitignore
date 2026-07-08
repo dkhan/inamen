@@ -7,6 +7,9 @@ data/*.sqlite-*
 data/corpora/*.sqlite
 data/corpora/*.sqlite-*
 data/verse_indices/*.marshal
+data/word_streams/*.marshal
+data/lexicons/*.marshal
+data/canon_ordinals/*.marshal
 
 # Rails web app
 /web/tmp/

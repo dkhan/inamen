@@ -1,9 +1,13 @@
-<div class="search-phrase-row" data-search-phrase-row<%= " data-disabled" if phrase.disabled %>>
+<div class="search-phrase-row" data-search-phrase-row<%= " data-disabled" if phrase.disabled %> data-can-search="false">
+  <div class="search-phrase-preview" data-phrase-preview hidden aria-live="polite"></div>
   <div class="search-phrase-input-row">
     <div class="search-phrase-field">
-      <%= text_field_tag "search_phrases[#{index}][phrase]", phrase.phrase,
-          class: "search-phrase-input", autocomplete: "off", spellcheck: false,
-          placeholder: "six|seven|*jesus*" %>
+      <div class="search-phrase-input-wrap">
+        <%= text_field_tag "search_phrases[#{index}][phrase]", phrase.phrase,
+            class: "search-phrase-input", autocomplete: "off", spellcheck: false,
+            placeholder: "six|seven|*jesus*" %>
+        <ul class="search-phrase-suggestions" data-phrase-suggestions hidden></ul>
+      </div>
       <div class="search-phrase-options">
         <label class="search-phrase-option">
           <%= check_box_tag "search_phrases[#{index}][case_sensitive]", "1", phrase.case_sensitive %>

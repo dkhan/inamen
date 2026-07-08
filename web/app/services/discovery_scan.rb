@@ -110,6 +110,30 @@ class DiscoveryScan
     end
   end
 
+  def self.valid_search_terms?(edition, query_terms, raw_phrases: nil)
+    entries = phrase_entries_for_validation(query_terms, raw_phrases: raw_phrases)
+    return false if entries.empty?
+
+    stream = edition.word_stream_index
+    return entries.any? unless stream
+
+    entries.any? do |entry|
+      completer = Inamen::PhraseCompleter.from_word_stream(stream, case_sensitive: entry.case_sensitive)
+      completer.can_search?(entry.phrase)
+    end
+  end
+
+  def self.phrase_entries_for_validation(query_terms, raw_phrases: nil)
+    entries =
+      if raw_phrases.present?
+        phrase_entries_from_params(raw_phrases)
+      else
+        phrase_entries_from_query_terms(query_terms)
+      end
+
+    entries.reject(&:disabled).select { |entry| entry.phrase.to_s.strip.present? }
+  end
+
   def self.phrase_hashes(raw_phrases)
     return [] if raw_phrases.blank?
 
@@ -143,7 +167,7 @@ class DiscoveryScan
 
   def self.run_counts(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
-    return [] if p.mode == "word_count" && !enabled_search_terms?(p.query_terms)
+    return [] if p.mode == "word_count" && !valid_search_terms?(edition, p.query_terms)
 
     key = counts_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -155,7 +179,7 @@ class DiscoveryScan
 
   def self.run_verses(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
-    return nil if p.mode != "word_count" || !enabled_search_terms?(p.query_terms)
+    return nil if p.mode != "word_count" || !valid_search_terms?(edition, p.query_terms)
 
     key = verses_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -167,7 +191,7 @@ class DiscoveryScan
 
   def self.enqueue_verses!(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
-    return unless p.mode == "word_count" && enabled_search_terms?(p.query_terms)
+    return unless p.mode == "word_count" && valid_search_terms?(edition, p.query_terms)
     return if verses_cached?(edition, p) && !force
     return if verses_running?(edition, p)
 
@@ -250,7 +274,8 @@ class DiscoveryScan
     verse_result = Inamen::VerseMatchQuery.scan(
       edition.db,
       terms: terms,
-      search_selection: params.search_selection
+      search_selection: params.search_selection,
+      word_stream: edition.word_stream_index
     )
     verse_result.summary.occurrences = rows.sum { |row| row.exclude ? -row.count : row.count }
     Inamen::VerseMatchQuery.prepare_display!(edition, verse_result)

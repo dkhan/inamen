@@ -11,6 +11,15 @@ namespace :inamen do
       Inamen::VerseIndexPublisher.build_all_prebuilt!(force: force).each do |built_path|
         puts built_path
       end
+      Inamen::WordStreamPublisher.build_all_prebuilt!(force: force).each do |built_path|
+        puts built_path
+      end
+      Inamen::LexiconPublisher.build_all_prebuilt!(force: force).each do |built_path|
+        puts built_path
+      end
+      Inamen::CanonOrdinalsPublisher.build_all_prebuilt!(force: force).each do |built_path|
+        puts built_path
+      end
     end
   end
 

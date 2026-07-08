@@ -18,6 +18,21 @@ module Inamen
         @cache[key] ||= new(db, search_selection)
       end
 
+      def install_prebuilt!(db, search_selection, dump)
+        key = cache_key(db, search_selection)
+        @cache[key] = from_dump(dump, search_selection: search_selection)
+      end
+
+      def from_dump(dump, search_selection:)
+        lexicon = allocate
+        lexicon.send(:initialize_from_dump, dump, search_selection)
+        lexicon
+      end
+
+      def load_dump(dump)
+        dump
+      end
+
       def clear_cache!
         @cache = {}
       end
@@ -34,6 +49,10 @@ module Inamen
       @selection = selection
       @rows_norm_raw = load_rows(db, selection)
       @by_norm = build_by_norm(@rows_norm_raw)
+    end
+
+    def dump
+      { rows_norm_raw: @rows_norm_raw.map(&:to_h) }
     end
 
     def aggregate(group: :norm_raw)
@@ -65,6 +84,12 @@ module Inamen
     end
 
     private
+
+    def initialize_from_dump(dump, selection)
+      @selection = selection
+      @rows_norm_raw = dump.fetch(:rows_norm_raw).map { |row| Row.new(**row) }
+      @by_norm = build_by_norm(@rows_norm_raw)
+    end
 
     def prefilter_rows(pattern, case_sensitive:)
       prefilter = TokenPattern.sql_prefilter(pattern, case_sensitive: case_sensitive)

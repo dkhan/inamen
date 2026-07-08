@@ -1,5 +1,5 @@
 (function () {
-  const POLL_MS = 1200;
+  const POLL_MS = 400;
 
   function container() {
     return document.getElementById("discovery-verse-results");

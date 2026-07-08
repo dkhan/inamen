@@ -19,17 +19,18 @@
     return checkbox ? checkbox.checked : false;
   }
 
-  function hasSearchTerms(discoveryForm) {
+  function hasValidSearchTerms(discoveryForm) {
     const inputs = discoveryForm.querySelectorAll(".search-phrase-input");
     return Array.from(inputs).some((input) => {
       const row = input.closest("[data-search-phrase-row]");
       if (rowDisabled(row)) return false;
-      return input.value.trim() !== "";
+      if (input.value.trim() === "") return false;
+      return row.dataset.canSearch === "true";
     });
   }
 
   function canScan(discoveryForm) {
-    if (isWordCountMode(discoveryForm)) return hasSearchTerms(discoveryForm);
+    if (isWordCountMode(discoveryForm)) return hasValidSearchTerms(discoveryForm);
     return true;
   }
 
@@ -83,9 +84,31 @@
     );
   }
 
+  function phraseFingerprint(discoveryForm) {
+    const parts = [];
+    discoveryForm.querySelectorAll("[data-search-phrase-row]").forEach((row) => {
+      if (rowDisabled(row)) return;
+      const input = row.querySelector(".search-phrase-input");
+      const caseSensitive = row.querySelector('input[name$="[case_sensitive]"]');
+      if (!input) return;
+      parts.push(`${caseSensitive && caseSensitive.checked ? "cs:" : "ci:"}${input.value}`);
+    });
+    return parts.join("\n");
+  }
+
+  function markScanned(discoveryForm) {
+    discoveryForm.dataset.lastScannedPhrase = phraseFingerprint(discoveryForm);
+  }
+
+  function shouldScan(discoveryForm) {
+    if (!canScan(discoveryForm)) return false;
+    const fingerprint = phraseFingerprint(discoveryForm);
+    return fingerprint !== discoveryForm.dataset.lastScannedPhrase;
+  }
+
   function runScan(discoveryForm) {
     const scanAction = discoveryForm.getAttribute("data-scan-action");
-    if (!scanAction || !canScan(discoveryForm)) return;
+    if (!scanAction || !shouldScan(discoveryForm)) return;
 
     if (pendingFocusInput) {
       rememberPhraseFocus(pendingFocusInput);
@@ -95,6 +118,7 @@
     discoveryForm.action = scanAction;
     discoveryForm.method = "post";
     discoveryForm.requestSubmit();
+    markScanned(discoveryForm);
   }
 
   function scheduleScan(discoveryForm, options = {}) {
@@ -136,6 +160,12 @@
       scheduleScan(discoveryForm);
     });
 
+    document.addEventListener("discovery:phrase-validity-changed", () => {
+      const results = document.querySelector("[data-discovery-results]");
+      if (!results) return;
+      results.hidden = !canScan(discoveryForm);
+    });
+
     document.addEventListener("discovery:schedule-scan", () => {
       scheduleScan(discoveryForm);
     });
@@ -143,6 +173,10 @@
     document.addEventListener("discovery:cancel-scan", () => {
       cancelScheduledScan();
     });
+
+    if (discoveryForm.dataset.resultsReady === "true") {
+      markScanned(discoveryForm);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);

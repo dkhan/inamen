@@ -46,18 +46,37 @@ module Inamen
         highlight_tokens(tokens, highlight_indices)
       end
 
-      def render_row(lines, db, row)
+      def render_row(lines, db, row, edition: nil)
+        if edition && row.bucket == CorpusStore::BUCKET_VERSE_TEXT
+          return render_edition_row(edition, row)
+        end
+
         if row.bucket == CorpusStore::BUCKET_VERSE_TEXT
           text = VerseIndex.verse_text(lines, book: row.book, chapter: row.chapter, verse: row.verse)
           return "" if text.nil? || text.empty?
 
-          tokens = Tokenizer.tokenize(text).each_with_index.map do |raw, index|
-            { word_index: index + 1, token_raw: raw }
-          end
-          highlight_tokens(tokens, row.highlight_indices)
+          highlight_text(text, row.highlight_indices)
         else
           highlight_verse(
             db,
+            book: row.book,
+            chapter: row.chapter,
+            verse: row.verse,
+            bucket: row.bucket,
+            highlight_indices: row.highlight_indices
+          )
+        end
+      end
+
+      def render_edition_row(edition, row)
+        if row.bucket == CorpusStore::BUCKET_VERSE_TEXT
+          text = edition.verse_text(book: row.book, chapter: row.chapter, verse: row.verse)
+          return "" if text.nil? || text.empty?
+
+          highlight_text(text, row.highlight_indices)
+        else
+          highlight_verse(
+            edition.db,
             book: row.book,
             chapter: row.chapter,
             verse: row.verse,

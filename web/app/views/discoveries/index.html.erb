@@ -13,7 +13,8 @@
   <%= javascript_include_tag "search_within_tree", defer: true %>
   <%= javascript_include_tag "search_phrases", defer: true %>
   <%= javascript_include_tag "discovery_scan_form", defer: true %>
-  <%= javascript_include_tag "discovery_verse_loader", defer: true if word_count_mode %>
+  <%= javascript_include_tag "discovery_phrase_complete", defer: true if word_count_mode %>
+  <%= javascript_include_tag "discovery_verse_loader", defer: true if word_count_mode && @verse_result.nil? %>
   <%= javascript_include_tag "discovery_verse_details", defer: true if word_count_mode %>
 <% end %>
 
@@ -33,7 +34,11 @@
 
 <section class="panel toolbar discovery-toolbar">
   <%= form_with url: discoveries_path, method: :get, local: true, id: "discovery-filters-form",
-      class: "discovery-layout", data: { scan_action: scan_discoveries_path } do %>
+      class: "discovery-layout",
+      data: {
+        scan_action: scan_discoveries_path,
+        results_ready: (@status == :ready ? "true" : nil)
+      }.compact do %>
     <%= hidden_field_tag :edition, @edition.edition_id %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
 
@@ -95,7 +100,7 @@
 <% end %>
 
 <% if @status == :ready %>
-  <section class="panel">
+  <section class="panel" data-discovery-results>
     <% if word_count_mode %>
       <table class="features-table discovery-table">
         <thead>
@@ -130,9 +135,13 @@
         <% end %>
       </table>
       <% if word_count_mode %>
-        <div id="discovery-verse-results" data-verses-url="<%= verses_discoveries_path(discovery_verses_query(@edition, @scan_params)) %>">
-          <%= render "verse_loading" %>
-        </div>
+        <% if @verse_result %>
+          <%= render "verse_results", edition: @edition, verse_result: @verse_result %>
+        <% else %>
+          <div id="discovery-verse-results" data-verses-url="<%= verses_discoveries_path(discovery_verses_query(@edition, @scan_params)) %>">
+            <%= render "verse_loading" %>
+          </div>
+        <% end %>
         <%= render "verse_details_dialog" %>
       <% end %>
     <% elsif equal_count_mode %>

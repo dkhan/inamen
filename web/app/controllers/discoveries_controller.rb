@@ -7,12 +7,19 @@ class DiscoveriesController < ApplicationController
   after_action :persist_discover_query, only: %i[index scan verses]
 
   def index
+    @edition.warm! if @scan_params.mode == "word_count"
     @status = page_status
 
     return unless @status == :ready
 
     @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
-    @edition.warm! if @scan_params.mode == "word_count"
+    @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params) if @scan_params.mode == "word_count"
+  end
+
+  def dictionary
+    @edition.warm!
+    expires_in 7.days, public: false
+    render json: { words: @edition.dictionary_words }
   end
 
   def verses
@@ -48,8 +55,13 @@ class DiscoveriesController < ApplicationController
       return
     end
 
+    if scan_params.mode == "word_count" && !DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms, raw_phrases: params[:search_phrases])
+      redirect_to discoveries_path(scan_query(edition_id, scan_params))
+      return
+    end
+
     if params[:refresh] != "1" && DiscoveryScan.counts_cached?(edition, scan_params)
-      DiscoveryScan.enqueue_verses!(edition, scan_params)
+      run_or_enqueue_verses!(edition, scan_params)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -61,7 +73,7 @@ class DiscoveriesController < ApplicationController
 
     if scan_params.mode == "word_count" && edition.corpus_ready?
       DiscoveryScan.run_counts(edition, scan_params, force: params[:refresh] == "1")
-      DiscoveryScan.enqueue_verses!(edition, scan_params, force: params[:refresh] == "1")
+      run_or_enqueue_verses!(edition, scan_params, force: params[:refresh] == "1")
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -80,6 +92,10 @@ class DiscoveriesController < ApplicationController
   end
 
   def page_status
+    if @scan_params.mode == "word_count" && invalid_word_count_phrases?
+      return :pending
+    end
+
     return :ready if DiscoveryScan.counts_cached?(@edition, @scan_params)
     return :computing if DiscoveryScan.running?(@edition, @scan_params) || params[:waiting].present?
 
@@ -175,6 +191,29 @@ class DiscoveriesController < ApplicationController
       raw_phrases.permit!.to_h
     else
       raw_phrases.to_h
+    end
+  end
+
+  def run_or_enqueue_verses!(edition, scan_params, force: false)
+    if edition.word_stream_index
+      DiscoveryScan.run_verses(edition, scan_params, force: force)
+    else
+      DiscoveryScan.enqueue_verses!(edition, scan_params, force: force)
+    end
+  end
+
+  def invalid_word_count_phrases?
+    phrases = current_search_phrases_hash
+    return false unless DiscoveryScan.phrase_entries_for_validation(@scan_params.query_terms, raw_phrases: phrases).any?
+
+    !DiscoveryScan.valid_search_terms?(@edition, @scan_params.query_terms, raw_phrases: phrases)
+  end
+
+  def current_search_phrases_hash
+    if params[:search_phrases].present?
+      search_phrases_param_hash(params[:search_phrases])
+    elsif session.dig(:discover_query, "search_phrases").present?
+      session[:discover_query]["search_phrases"]
     end
   end
 end

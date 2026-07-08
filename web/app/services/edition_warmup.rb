@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Loads prebuilt verse indices for every bundled edition at boot so Scripture and
-# Discover verse links never pay a full-text parse on the request path.
+# Loads prebuilt verse and word-stream indexes for every bundled edition at boot so
+# Discover scans and Scripture links never pay a full-text parse or SQL verse scan.
 class EditionWarmup
   class << self
     def warm_all!(build_if_missing: !Rails.env.production?)
@@ -11,17 +11,51 @@ class EditionWarmup
     end
 
     def warm_edition!(edition_id, build_if_missing: !Rails.env.production?)
-      path = Inamen::VerseIndexPublisher.prebuilt_path(edition_id)
-      unless File.file?(path)
-        if build_if_missing
-          Rails.logger.info("[EditionWarmup] Building verse index for #{edition_id}")
-          Inamen::VerseIndexPublisher.build_prebuilt!(edition_id)
-        else
-          Rails.logger.warn("[EditionWarmup] Missing prebuilt verse index for #{edition_id} at #{path}")
-        end
-      end
+      ensure_verse_index!(edition_id, build_if_missing: build_if_missing)
+      ensure_word_stream!(edition_id, build_if_missing: build_if_missing)
+      ensure_lexicon!(edition_id, build_if_missing: build_if_missing)
+      ensure_canon_ordinals!(edition_id, build_if_missing: build_if_missing)
 
-      EditionContext.new(edition_id).warm!
+      edition = EditionContext.new(edition_id)
+      edition.warm!
+    end
+
+    private
+
+    def ensure_lexicon!(edition_id, build_if_missing:)
+      path = Inamen::LexiconPublisher.prebuilt_path(edition_id)
+      return if File.file?(path)
+      return unless build_if_missing
+
+      Rails.logger.info("[EditionWarmup] Building lexicon for #{edition_id}")
+      Inamen::LexiconPublisher.build_prebuilt!(edition_id)
+    end
+
+    def ensure_canon_ordinals!(edition_id, build_if_missing:)
+      path = Inamen::CanonOrdinalsPublisher.prebuilt_path(edition_id)
+      return if File.file?(path)
+      return unless build_if_missing
+
+      Rails.logger.info("[EditionWarmup] Building canon ordinals for #{edition_id}")
+      Inamen::CanonOrdinalsPublisher.build_prebuilt!(edition_id)
+    end
+
+    def ensure_verse_index!(edition_id, build_if_missing:)
+      path = Inamen::VerseIndexPublisher.prebuilt_path(edition_id)
+      return if File.file?(path)
+      return unless build_if_missing
+
+      Rails.logger.info("[EditionWarmup] Building verse index for #{edition_id}")
+      Inamen::VerseIndexPublisher.build_prebuilt!(edition_id)
+    end
+
+    def ensure_word_stream!(edition_id, build_if_missing:)
+      path = Inamen::WordStreamPublisher.prebuilt_path(edition_id)
+      return if File.file?(path)
+      return unless build_if_missing
+
+      Rails.logger.info("[EditionWarmup] Building word stream for #{edition_id}")
+      Inamen::WordStreamPublisher.build_prebuilt!(edition_id)
     end
   end
 end

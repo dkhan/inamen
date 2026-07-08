@@ -11,6 +11,7 @@ Rails.application.routes.draw do
     collection do
       post :scan
       get :verses
+      get :dictionary
     end
   end
 

@@ -11,6 +11,7 @@ module Inamen
       @colophons = colophons
       @superscriptions = superscriptions
       @books = normalize_books(books)
+      @book_set = @books.to_set
       freeze
     end
 
@@ -127,6 +128,23 @@ module Inamen
     def cache_key
       digest = Digest::SHA256.hexdigest(books.sort.join("\0"))[0, 16]
       "c#{colophons ? 1 : 0}s#{superscriptions ? 1 : 0}:#{digest}"
+    end
+
+    def matches_token?(token)
+      matches_token_fields?(book: token.book, bucket: token.bucket)
+    end
+
+    def matches_token_fields?(book:, bucket:)
+      case bucket
+      when CorpusStore::BUCKET_COLOPHON
+        colophons
+      when CorpusStore::BUCKET_PSALM_HEADING
+        superscriptions
+      when CorpusStore::BUCKET_VERSE_TEXT
+        @book_set.include?(book)
+      else
+        false
+      end
     end
 
     def where_clause
