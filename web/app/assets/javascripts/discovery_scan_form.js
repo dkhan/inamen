@@ -4,6 +4,11 @@
 
   let scanTimer = null;
   let pendingFocusInput = null;
+  let mouseDownTarget = null;
+
+  document.addEventListener("mousedown", (event) => {
+    mouseDownTarget = event.target;
+  });
 
   function form() {
     return document.getElementById("discovery-filters-form");
@@ -50,14 +55,24 @@
     return (
       target instanceof HTMLInputElement &&
       target.type === "checkbox" &&
-      target.closest(".search-phrases-field") !== null
+      (target.closest(".search-phrases-field") !== null ||
+        target.closest(".search-phrase-options") !== null ||
+        target.dataset.searchPhraseOption !== undefined)
     );
   }
 
-  function focusMovedWithinPhrases(related) {
-    if (!(related instanceof HTMLElement)) return false;
+  function focusTarget(element) {
+    if (!(element instanceof HTMLElement)) return false;
     const panel = document.getElementById("search-phrases-panel");
-    return panel ? panel.contains(related) : false;
+    if (!panel || !panel.contains(element)) return false;
+    if (element.closest(".search-phrase-options")) return true;
+    if (element.classList.contains("search-phrase-input")) return true;
+    if (element.closest("[data-search-phrase-row]")) return true;
+    return false;
+  }
+
+  function focusMovedWithinPhrases(related) {
+    return focusTarget(related);
   }
 
   function cancelScheduledScan() {
@@ -110,8 +125,15 @@
       if (rowDisabled(row)) return;
       const input = row.querySelector(".search-phrase-input");
       const caseSensitive = row.querySelector('input[name$="[case_sensitive]"]');
+      const exclude = row.querySelector('input[name$="[exclude]"]');
       if (!input) return;
-      parts.push(`${caseSensitive && caseSensitive.checked ? "cs:" : "ci:"}${input.value}`);
+      const flags = [
+        caseSensitive && caseSensitive.checked ? "cs" : "ci",
+        exclude && exclude.checked ? "ex" : null
+      ]
+        .filter(Boolean)
+        .join(":");
+      parts.push(`${flags}:${input.value}`);
     });
     return parts.join("\n");
   }
@@ -140,8 +162,8 @@
 
     discoveryForm.action = scanAction;
     discoveryForm.method = "post";
+    discoveryForm.dataset.scanPending = "true";
     discoveryForm.requestSubmit();
-    markScanned(discoveryForm);
   }
 
   function scheduleScan(discoveryForm, options = {}) {
@@ -172,15 +194,30 @@
       "focusout",
       (event) => {
         if (!isScanField(event.target)) return;
-        if (focusMovedWithinPhrases(event.relatedTarget)) return;
-        scheduleScan(discoveryForm);
+
+        const input = event.target;
+        window.setTimeout(() => {
+          const nextFocus = document.activeElement;
+          const related = event.relatedTarget || mouseDownTarget;
+          if (focusMovedWithinPhrases(related) || focusMovedWithinPhrases(nextFocus)) return;
+          if (input instanceof HTMLInputElement && input.classList.contains("search-phrase-input")) {
+            scheduleScan(discoveryForm);
+          }
+        }, 0);
       },
       true
     );
 
     discoveryForm.addEventListener("change", (event) => {
       if (!isPhraseCheckbox(event.target)) return;
+      cancelScheduledScan();
       scheduleScan(discoveryForm);
+    });
+
+    discoveryForm.addEventListener("submit", () => {
+      if (discoveryForm.dataset.scanPending !== "true") return;
+      delete discoveryForm.dataset.scanPending;
+      markScanned(discoveryForm);
     });
 
     document.addEventListener("discovery:phrase-validity-changed", () => {
