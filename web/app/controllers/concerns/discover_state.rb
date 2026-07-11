@@ -92,12 +92,12 @@ module DiscoverState
     raw = fishermen_merge_raw_search_phrases
     return true if raw.blank?
 
-    return false if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+    return false if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
 
     return true unless request.post? && action_name == "scan"
     return true if params[:search_phrases].blank?
 
-    Inamen::FeatureDiscoverPresets.fishermen_preset_includes?(raw)
+    Inamen::FeatureDiscoverPresets.bulky_preset_includes?(from_feature, raw)
   end
 
   private

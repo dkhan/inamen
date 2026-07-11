@@ -4,7 +4,8 @@ module Inamen
   # Count token occurrences for one or more search patterns (exact or * wildcard).
   module TokenQuery
     QueryTerm = Struct.new(:pattern, :case_sensitive, :exclude, keyword_init: true)
-    ResultRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, keyword_init: true)
+    ResultRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, :overlap,
+                           keyword_init: true)
 
     MAX_TERMS = 100
 
@@ -85,7 +86,7 @@ module Inamen
       end
 
       def bulk_antimention_exclude?(pattern)
-        pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN)/i)
+        pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN|JESUS)/i)
       end
 
       def scan_with_word_stream(word_stream, terms, selection, scope_label)

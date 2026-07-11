@@ -140,9 +140,11 @@ module Inamen
         scope: :new_testament
       ),
       "jesus_mentions" => Preset.new(
-        phrases: [Phrase.new(phrase: JESUS_PHRASE, case_sensitive: true)],
-        scope: :scannable,
-        exclude_verses: BibleBoundaryPatterns::JESUS_NON_CHRIST_VERSES
+        phrases: [
+          Phrase.new(phrase: JESUS_PHRASE, case_sensitive: true),
+          Phrase.new(phrase: JesusMentionsAntimentions.exclude_phrase, exclude: true, case_sensitive: true)
+        ],
+        scope: :scannable
       ),
       "jesus_boundary_same_verse" => Preset.new(
         phrases: BIBLE_BOUNDARY_PHRASES + [Phrase.new(phrase: JESUS_PHRASE, case_sensitive: true)],
@@ -176,7 +178,7 @@ module Inamen
     class << self
       FILE_STATS_FEATURES = %w[combined_total file_character_total].freeze
       # Presets whose exclude rows are loaded from bundled KJS/data files — keep out of session URLs.
-      BULKY_PHRASE_FEATURES = %w[fishermen_gospels].freeze
+      BULKY_PHRASE_FEATURES = %w[fishermen_gospels jesus_mentions].freeze
 
       def discoverable?(feature_id)
         PRESETS.key?(feature_id.to_s) || FILE_STATS_FEATURES.include?(feature_id.to_s)
@@ -222,17 +224,43 @@ module Inamen
       FISHERMEN_INCLUDE_PHRASES = %w[Peter* Thomas* Nathanael* James* John*].freeze
 
       def fishermen_preset_includes?(raw)
-        phrases = fisherman_include_phrases_from_raw(raw)
+        phrases = include_phrases_from_raw(raw)
         FISHERMEN_INCLUDE_PHRASES.all? { |pattern| phrases.include?(pattern) }
+      end
+
+      def jesus_preset_includes?(raw)
+        include_phrases_from_raw(raw).include?(JESUS_PHRASE)
+      end
+
+      def bulky_preset_includes?(feature_id, raw)
+        case feature_id.to_s
+        when "fishermen_gospels" then fishermen_preset_includes?(raw)
+        when "jesus_mentions" then jesus_preset_includes?(raw)
+        else false
+        end
       end
 
       def fishermen_query_simplified?(raw)
         return false if raw.nil? || raw.empty?
 
-        fisherman_include_phrases_from_raw(raw).sort != FISHERMEN_INCLUDE_PHRASES.sort
+        include_phrases_from_raw(raw).sort != FISHERMEN_INCLUDE_PHRASES.sort
       end
 
-      def fisherman_include_phrases_from_raw(raw)
+      def jesus_query_simplified?(raw)
+        return false if raw.nil? || raw.empty?
+
+        include_phrases_from_raw(raw) != [JESUS_PHRASE]
+      end
+
+      def bulky_query_simplified?(feature_id, raw)
+        case feature_id.to_s
+        when "fishermen_gospels" then fishermen_query_simplified?(raw)
+        when "jesus_mentions" then jesus_query_simplified?(raw)
+        else false
+        end
+      end
+
+      def include_phrases_from_raw(raw)
         normalize_raw_phrases_hash(raw).values.filter_map do |row|
           next if boolean_param(row["exclude"])
           next if boolean_param(row["disabled"])
@@ -250,7 +278,7 @@ module Inamen
 
         normalized = normalize_raw_phrases_hash(raw)
         return normalized if raw_has_exclude_phrases?(raw)
-        return normalized if fishermen_query_simplified?(normalized)
+        return normalized if bulky_query_simplified?(feature_id, normalized)
         return normalized unless merge_preset_excludes
 
         merged = preset.dup
@@ -265,15 +293,47 @@ module Inamen
       def resolve_from_feature(feature_id, query_terms:)
         id = feature_id.to_s
         id = nil if id.empty?
-        id = "fishermen_gospels" if id.nil? && fishermen_gospels_query?(query_terms)
+        id = infer_bulk_feature_from_query(query_terms) if id.nil?
         return nil unless id
 
         case id
         when "fishermen_gospels"
           fishermen_gospels_query?(query_terms) ? id : nil
+        when "jesus_mentions"
+          jesus_mentions_query?(query_terms) ? id : nil
         else
           preset_for(id) ? id : nil
         end
+      end
+
+      def infer_bulk_feature_from_query(query_terms)
+        return "fishermen_gospels" if fishermen_gospels_query?(query_terms)
+        return "jesus_mentions" if jesus_mentions_query?(query_terms)
+
+        nil
+      end
+
+      def jesus_mentions_query?(query_terms)
+        jesus_antimentions_in_query?(query_terms) ||
+          query_terms.to_s.each_line.any? do |line|
+            attrs = TokenPattern.parse_query_line(line)
+            next unless attrs && !attrs[:exclude] && !attrs[:disabled]
+
+            attrs[:pattern] == JESUS_PHRASE
+          end
+      end
+
+      def jesus_antimentions_in_query?(query_terms)
+        query_terms.to_s.each_line.any? do |line|
+          attrs = TokenPattern.parse_query_line(line)
+          next false unless attrs && !attrs[:disabled]
+
+          jesus_antimention_phrase?(attrs[:pattern])
+        end
+      end
+
+      def jesus_antimention_phrase?(pattern)
+        pattern.to_s.match?(/\AANTIMENTIONS OF JESUS/i)
       end
 
       def fishermen_gospels_query?(query_terms)
@@ -306,6 +366,10 @@ module Inamen
         end
       end
 
+      def bulky_antimention_phrase?(pattern)
+        fishermen_antimention_phrase?(pattern) || jesus_antimention_phrase?(pattern)
+      end
+
       def fishermen_antimention_phrase?(pattern)
         pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN)/i)
       end
@@ -314,6 +378,25 @@ module Inamen
         split_include_alternatives(pattern).any? do |alternative|
           alternative.match?(/\AJames\*/i) || alternative.match?(/\AJohn\*/i)
         end
+      end
+
+      def bulky_phrases_customized?(feature_id, phrases)
+        case feature_id.to_s
+        when "fishermen_gospels" then fishermen_phrases_customized?(feature_id, phrases)
+        when "jesus_mentions" then jesus_phrases_customized?(phrases)
+        else false
+        end
+      end
+
+      def jesus_phrases_customized?(phrases)
+        return false if phrases.nil? || phrases.empty?
+        return false unless raw_has_exclude_phrases?(phrases)
+
+        normalized = normalize_raw_phrases_hash(phrases)
+        return true if normalized.values.any? { |row| boolean_param(row["disabled"]) }
+
+        preset = preset_search_phrases_hash("jesus_mentions")
+        extract_exclude_phrases(phrases) != extract_exclude_phrases(preset)
       end
 
       def fishermen_phrases_customized?(feature_id, phrases)
@@ -340,15 +423,15 @@ module Inamen
 
       def search_phrases_from_post(feature_id, raw_post)
         normalized = normalize_raw_phrases_hash(raw_post)
-        simplified = fishermen_query_simplified?(normalized)
+        simplified = bulky_query_simplified?(feature_id, normalized)
         hydrated = search_phrases_hash_for(
           feature_id,
           raw: normalized,
-          merge_preset_excludes: !simplified && fishermen_preset_includes?(normalized)
+          merge_preset_excludes: !simplified && bulky_preset_includes?(feature_id, normalized)
         )
 
         unless simplified
-          if fishermen_preset_includes?(normalized) || raw_has_exclude_phrases?(normalized)
+          if bulky_preset_includes?(feature_id, normalized) || raw_has_exclude_phrases?(normalized)
             preset = preset_search_phrases_hash(feature_id)
             preset.each do |idx, row|
               next unless boolean_param(row["exclude"])
@@ -375,12 +458,15 @@ module Inamen
         row = stringify_phrase_row(stored)
         posted = posted.transform_keys(&:to_s)
         row["phrase"] = posted["phrase"] if posted["phrase"].to_s != ""
+        full_row_post = posted.key?("phrase")
         %w[case_sensitive exclude disabled].each do |flag|
-          next unless posted.key?(flag)
-
-          if boolean_param(posted[flag])
-            row[flag] = "1"
-          else
+          if posted.key?(flag)
+            if boolean_param(posted[flag])
+              row[flag] = "1"
+            else
+              row.delete(flag)
+            end
+          elsif full_row_post
             row.delete(flag)
           end
         end
@@ -427,8 +513,8 @@ module Inamen
 
       def compact_search_phrases_for_session(feature_id, phrases)
         return phrases if feature_id.to_s.empty? || !bulky_phrase_feature?(feature_id) || phrases.nil? || phrases.empty?
-        return normalize_raw_phrases_hash(phrases) if fishermen_phrases_customized?(feature_id, phrases)
-        return normalize_raw_phrases_hash(phrases) if fishermen_query_simplified?(phrases)
+        return normalize_raw_phrases_hash(phrases) if bulky_phrases_customized?(feature_id, phrases)
+        return normalize_raw_phrases_hash(phrases) if bulky_query_simplified?(feature_id, phrases)
 
         phrases.each_with_object({}) do |(idx, row), compact|
           next if boolean_param(row["exclude"] || row[:exclude])
@@ -442,7 +528,7 @@ module Inamen
 
         compact = query.to_h.transform_keys(&:to_sym)
         compact.delete(:query_terms)
-        if fishermen_phrases_customized?(feature_id, compact[:search_phrases])
+        if bulky_phrases_customized?(feature_id, compact[:search_phrases])
           compact[:search_phrases] = normalize_raw_phrases_hash(compact[:search_phrases])
         else
           compact[:search_phrases] = compact_search_phrases_for_session(feature_id, compact[:search_phrases])
@@ -487,6 +573,10 @@ module Inamen
           return adjust_fishermen_rows!(edition, rows, query_terms: query_terms)
         end
 
+        if feature_id.to_s == "jesus_mentions"
+          return adjust_jesus_rows!(edition, rows, query_terms: query_terms, search_selection: search_selection)
+        end
+
         if preset.exclude_verses&.any?
           subtract = tokens_in_verses(
             edition.db,
@@ -511,6 +601,63 @@ module Inamen
         verse_result.summary.books = text_rows.map(&:book).uniq.length
         verse_result.summary.chapters = text_rows.map { |row| [row.book, row.chapter] }.uniq.length
         verse_result
+      end
+
+      def jesus_antimention_only_query?(query_terms)
+        entries = fishermen_phrase_entries_from_query_terms(query_terms).reject { |entry| entry[:disabled] }
+        jesus_antimention_rows_active?(entries) && !jesus_include_rows_active?(entries)
+      end
+
+      def build_jesus_antimention_verse_result(db, search_selection:)
+        require_relative "verse_match_query"
+        require_relative "canon_index"
+
+        selection = search_selection.is_a?(SearchSelection) ? search_selection : SearchSelection.default
+        where_sql, where_params = selection.where_clause
+        token_placeholders = (["?"] * JESUS_PATTERNS.length).join(", ")
+        merged = {}
+
+        JesusMentionsAntimentions::EXCLUDE_VERSES.each do |book, chapter, verse|
+          sql = <<~SQL
+            SELECT word_index FROM tokens
+            WHERE book = ? AND chapter = ? AND verse = ?
+              AND token_raw IN (#{token_placeholders})
+              #{where_sql}
+            ORDER BY word_index
+          SQL
+          params = [book, chapter, verse, *JESUS_PATTERNS, *where_params]
+          indices = db.execute(sql, params).map { |row| row[0].to_i }
+          next if indices.empty?
+
+          merged[[book, chapter, verse, CorpusStore::BUCKET_VERSE_TEXT]] = indices
+        end
+
+        verses = merged.map do |(book, chapter, verse, bucket), indices|
+          sorted = indices.sort.uniq
+          VerseMatchQuery::VerseRow.new(
+            book: book,
+            chapter: chapter,
+            verse: verse,
+            bucket: bucket,
+            occurrence_count: indices.length,
+            highlight_indices: sorted,
+            first_hit_index: nil
+          )
+        end
+        verses.sort_by! { |row| CanonIndex.sort_key(row.book, row.chapter, row.verse) + [row.bucket] }
+        verses.each_with_index { |row, index| row.first_hit_index = index + 1 }
+
+        VerseMatchQuery::Result.new(
+          summary: VerseMatchQuery::Summary.new(
+            occurrences: verses.sum(&:occurrence_count),
+            verses: verses.length,
+            chapters: verses.map { |row| [row.book, row.chapter] }.uniq.length,
+            books: verses.map(&:book).uniq.length,
+            scope_label: selection.label
+          ),
+          verses: verses,
+          hits: []
+        )
       end
 
       private
@@ -576,7 +723,7 @@ module Inamen
         entries.map do |entry|
           pattern = entry[:phrase]
           source = fishermen_include_source(pattern, include_rows)
-          antimention = fishermen_antimention_phrase?(pattern)
+          antimention = bulky_antimention_phrase?(pattern)
           count =
             if entry[:exclude] || antimention
               key = fishermen_exclude_key(pattern)
@@ -662,6 +809,84 @@ module Inamen
         end
 
         merged.sort_by { |raw, count| [-count, raw] }.to_h
+      end
+
+      def adjust_jesus_rows!(edition, rows, query_terms:, search_selection:)
+        all_entries = fishermen_phrase_entries_from_query_terms(query_terms)
+        entries = all_entries.reject { |entry| entry[:disabled] }
+        exclude_amount = jesus_exclude_amount(edition.db, search_selection, entries)
+        include_rows = rows.reject(&:exclude).each_with_object({}) { |row, index| index[row.pattern] = row }
+        scope_label = selection_for("jesus_mentions").label
+        row_class = rows.first&.class || Inamen::TokenQuery::ResultRow
+
+        if entries.one? && !entries.first[:exclude] && !jesus_antimention_rows_active?(entries)
+          if jesus_apply_default_subtraction?(all_entries)
+            subtract = tokens_in_verses(
+              edition.db,
+              search_selection,
+              verses: JesusMentionsAntimentions::EXCLUDE_VERSES,
+              token_raws: JESUS_PATTERNS
+            )
+            apply_subtraction!(rows, subtract)
+          end
+          return rows
+        end
+
+        entries.map do |entry|
+          pattern = entry[:phrase]
+          source = include_rows[pattern] || include_rows[JESUS_PHRASE]
+          antimention = jesus_antimention_phrase?(pattern)
+          count =
+            if entry[:exclude] || antimention
+              exclude_amount
+            else
+              source&.count || include_rows.values.sum(&:count)
+            end
+          overlap = antimention && jesus_include_rows_active?(entries) && !entry[:exclude]
+          row_class.new(
+            pattern: pattern,
+            case_sensitive: entry[:case_sensitive],
+            count: count,
+            wildcard: source&.wildcard || pattern.include?("*"),
+            scope: scope_label,
+            spellings: entry[:exclude] || antimention ? {} : (source&.spellings || {}),
+            exclude: entry[:exclude],
+            overlap: overlap
+          )
+        end
+      end
+
+      def jesus_exclude_amount(db, search_selection, entries)
+        return 0 unless jesus_antimention_rows_active?(entries)
+
+        tokens_in_verses(
+          db,
+          search_selection,
+          verses: JesusMentionsAntimentions::EXCLUDE_VERSES,
+          token_raws: JESUS_PATTERNS
+        )
+      end
+
+      def jesus_antimention_rows_active?(entries)
+        entries.any? do |entry|
+          next false if entry[:disabled]
+          next false unless jesus_antimention_phrase?(entry[:phrase])
+
+          true
+        end
+      end
+
+      def jesus_apply_default_subtraction?(all_entries)
+        !all_entries.any? { |entry| jesus_antimention_phrase?(entry[:phrase]) }
+      end
+
+      def jesus_include_rows_active?(entries)
+        entries.any? do |entry|
+          next false if entry[:exclude]
+          next false if jesus_antimention_phrase?(entry[:phrase])
+
+          entry[:phrase].to_s.strip != ""
+        end
       end
 
       def tokens_in_verses(db, selection, verses:, token_raws:)

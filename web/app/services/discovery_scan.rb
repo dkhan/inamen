@@ -15,7 +15,8 @@ class DiscoveryScan
   EqualCountRow = Struct.new(:scope, :count, :words, :match_by, keyword_init: true)
   WordEntry = Struct.new(:token_norm, :token_raws, keyword_init: true)
 
-  WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, keyword_init: true)
+  WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, :overlap,
+                            keyword_init: true)
 
   MODES = %w[divisible equal_count word_count file_stats].freeze
   MATCH_BY = %w[norm spelling].freeze
@@ -332,13 +333,22 @@ class DiscoveryScan
           edition: edition
         )
       else
-        terms = Inamen::TokenQuery.parse_terms(params.query_terms)
-        result = Inamen::VerseMatchQuery.scan(
-          edition.db,
-          terms: terms,
-          search_selection: params.search_selection,
-          word_stream: edition.word_stream_index
-        )
+        result =
+          if params.from_feature == "jesus_mentions" &&
+             Inamen::FeatureDiscoverPresets.jesus_antimention_only_query?(params.query_terms)
+            Inamen::FeatureDiscoverPresets.build_jesus_antimention_verse_result(
+              edition.db,
+              search_selection: params.search_selection
+            )
+          else
+            terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+            Inamen::VerseMatchQuery.scan(
+              edition.db,
+              terms: terms,
+              search_selection: params.search_selection,
+              word_stream: edition.word_stream_index
+            )
+          end
         if params.from_feature.present?
           result = Inamen::FeatureDiscoverPresets.adjust_verse_result!(params.from_feature, result)
         end
@@ -355,7 +365,10 @@ class DiscoveryScan
   end
 
   def self.word_count_table_total(rows)
-    Array(rows).sum { |row| row.exclude ? -row.count : row.count }
+    Array(rows).sum do |row|
+      next 0 if row.overlap
+      row.exclude ? -row.count : row.count
+    end
   end
 
   def self.align_verse_summary_with_counts!(verse_result, rows)
@@ -506,11 +519,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v23", *shared_cache_components(params, edition)]
+    ["discovery_counts/v24", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v23", *shared_cache_components(params, edition)]
+    ["discovery_verses/v24", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)

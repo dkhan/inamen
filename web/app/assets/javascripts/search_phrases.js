@@ -81,6 +81,8 @@
       setRowDisabled(row, disableCheckbox.checked);
       disableCheckbox.addEventListener("change", () => {
         setRowDisabled(row, disableCheckbox.checked);
+        document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
+        document.dispatchEvent(new CustomEvent("discovery:schedule-scan", { detail: { force: true } }));
       });
     }
 

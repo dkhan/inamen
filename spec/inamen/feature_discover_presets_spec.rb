@@ -33,11 +33,28 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(entries[3][:case_sensitive]).to be(true)
     end
 
-    it "includes possessive Jesus for jesus_mentions" do
+    it "includes possessive Jesus and antimention exclude rows for jesus_mentions" do
       entries = described_class.phrase_entries_for("jesus_mentions")
       expect(entries.first[:phrase]).to include("Jesus")
       expect(entries.first[:phrase]).to include(described_class::JESUS_POSSESSIVE)
       expect(entries.first[:case_sensitive]).to be(true)
+      expect(entries.last[:phrase]).to eq(Inamen::JesusMentionsAntimentions.exclude_phrase)
+      expect(entries.last[:exclude]).to be(true)
+    end
+
+    it "omits bulky antimentions from jesus_mentions feature links" do
+      entries = described_class.phrase_entries_for_link("jesus_mentions")
+      expect(entries.length).to eq(1)
+      expect(entries.first[:phrase]).to eq(described_class::JESUS_PHRASE)
+      expect(entries.none? { |entry| entry[:exclude] }).to be(true)
+    end
+
+    it "hydrates jesus_mentions preset excludes for feature-link includes" do
+      raw = { "0" => { "phrase" => described_class::JESUS_PHRASE, "case_sensitive" => "1" } }
+      hydrated = described_class.search_phrases_hash_for("jesus_mentions", raw: raw, merge_preset_excludes: true)
+      expect(hydrated.keys).to eq(%w[0 1])
+      expect(hydrated["1"]["exclude"]).to eq("1")
+      expect(hydrated["1"]["phrase"]).to start_with("ANTIMENTIONS OF JESUS")
     end
 
     it "maps jesus_boundary_same_verse to boundary words plus Jesus" do
@@ -209,6 +226,12 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: "James* | John*")).to eq("fishermen_gospels")
     end
 
+    it "keeps jesus_mentions when antimention rows are includes (exclude unchecked)" do
+      query_terms = Inamen::JesusMentionsAntimentions.exclude_phrase
+      expect(described_class.resolve_from_feature("jesus_mentions", query_terms: query_terms)).to eq("jesus_mentions")
+      expect(described_class.resolve_from_feature(nil, query_terms: query_terms)).to eq("jesus_mentions")
+    end
+
     it "keeps fishermen_gospels when all preset includes are present" do
       query_terms = %w[Peter* Thomas* Nathanael* James* John*].join("\n")
       expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: query_terms)).to eq("fishermen_gospels")
@@ -286,6 +309,95 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(exclusions[:john]).to eq([])
       expect(exclusions[:james]).not_to be_empty
     end
+
+    it "applies disabled flags to hydrated jesus antimentions from a full row post" do
+      preset = described_class.send(:preset_search_phrases_hash, "jesus_mentions")
+      posted = preset.transform_values(&:dup)
+      posted["1"]["disabled"] = "1"
+
+      merged = described_class.search_phrases_from_post("jesus_mentions", posted)
+      expect(merged["1"]["disabled"]).to eq("1")
+      expect(merged["0"]["disabled"]).to be_nil
+
+      query_terms = merged.sort_by { |key, _| key.to_i }.map do |_, row|
+        line = row["phrase"]
+        line += "|cs" if row["case_sensitive"] == "1"
+        line += "|exclude" if row["exclude"] == "1"
+        line += "|disabled" if row["disabled"] == "1"
+        line
+      end.join("\n")
+      expect(query_terms).to include("|disabled")
+      expect(described_class.jesus_antimentions_in_query?(query_terms)).to be(false)
+    end
+
+    it "clears disabled flags when a full row post omits unchecked checkboxes" do
+      preset = described_class.send(:preset_search_phrases_hash, "jesus_mentions")
+      posted = preset.transform_values(&:dup)
+      posted["1"]["disabled"] = "1"
+      enabled = described_class.search_phrases_from_post("jesus_mentions", posted)
+      expect(enabled["1"]["disabled"]).to eq("1")
+
+      posted["1"].delete("disabled")
+      disabled = described_class.search_phrases_from_post("jesus_mentions", posted)
+      expect(disabled["1"]["disabled"]).to be_nil
+
+      query_terms = disabled.sort_by { |key, _| key.to_i }.map do |_, row|
+        line = row["phrase"]
+        line += "|cs" if row["case_sensitive"] == "1"
+        line += "|exclude" if row["exclude"] == "1"
+        line += "|disabled" if row["disabled"] == "1"
+        line
+      end.join("\n")
+      expect(query_terms).not_to include("|disabled")
+      expect(described_class.jesus_antimentions_in_query?(query_terms)).to be(true)
+    end
+  end
+
+  describe ".jesus_antimention_only_query?" do
+    it "is true when only antimention rows are active" do
+      query_terms = "#{Inamen::JesusMentionsAntimentions.exclude_phrase}|cs"
+      expect(described_class.jesus_antimention_only_query?(query_terms)).to be(true)
+    end
+
+    it "is false when the Jesus include row is active" do
+      query_terms = [
+        "#{described_class::JESUS_PHRASE}|cs",
+        "#{Inamen::JesusMentionsAntimentions.exclude_phrase}|cs|exclude"
+      ].join("\n")
+      expect(described_class.jesus_antimention_only_query?(query_terms)).to be(false)
+    end
+
+    it "is true when the Jesus include row is disabled" do
+      query_terms = [
+        "#{described_class::JESUS_PHRASE}|cs|disabled",
+        "#{Inamen::JesusMentionsAntimentions.exclude_phrase}|cs"
+      ].join("\n")
+      expect(described_class.jesus_antimention_only_query?(query_terms)).to be(true)
+    end
+  end
+
+  describe ".build_jesus_antimention_verse_result" do
+    let(:db_path) { Inamen::CorpusPublisher.prebuilt_path("kjv_normalized") }
+    let(:db) { Inamen::CorpusStore.open(db_path) }
+
+    after { db.close }
+
+    it "returns all three Joshua and Justus verses when only antimentions are active" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      result = described_class.build_jesus_antimention_verse_result(db, search_selection: selection)
+
+      expect(result.summary.occurrences).to eq(3)
+      expect(result.summary.verses).to eq(3)
+      expect(result.verses.map { |row| [row.book, row.chapter, row.verse] }).to eq(
+        [
+          ["Acts", 7, 45],
+          ["Colossians", 4, 11],
+          ["Hebrews", 4, 8]
+        ]
+      )
+    end
   end
 
   describe ".adjust_verse_result!" do
@@ -358,6 +470,98 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
 
       expect(raw_total).to be >= 980
       expect(adjusted.sum(&:count)).to eq(980)
+    end
+
+    it "returns jesus include and antimention exclude rows for the full preset" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      query_terms = described_class.phrase_entries_for("jesus_mentions").map do |entry|
+        line = entry[:phrase]
+        line += "|cs" if entry[:case_sensitive]
+        line += "|exclude" if entry[:exclude]
+        line
+      end.join("\n")
+      rows = Inamen::TokenQuery.scan(
+        db,
+        terms: Inamen::TokenQuery.parse_terms("#{described_class::JESUS_PHRASE}|cs"),
+        search_selection: selection
+      )
+      adjusted = described_class.adjust_rows!(
+        "jesus_mentions",
+        edition,
+        rows,
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      expect(adjusted.size).to eq(2)
+      expect(adjusted.count(&:exclude)).to eq(1)
+      include_row = adjusted.find { |row| !row.exclude }
+      exclude_row = adjusted.find { |row| row.exclude }
+      expect(include_row.count).to be >= 980
+      expect(exclude_row.pattern).to start_with("ANTIMENTIONS OF JESUS")
+      expect(exclude_row.count).to eq(include_row.count - 980)
+      expect(adjusted.sum { |row| row.exclude ? -row.count : row.count }).to eq(980)
+    end
+
+    it "does not double-count antimentions when both rows are includes" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      query_terms = [
+        "#{described_class::JESUS_PHRASE}|cs",
+        Inamen::JesusMentionsAntimentions.exclude_phrase.to_s + "|cs"
+      ].join("\n")
+      rows = Inamen::TokenQuery.scan(
+        db,
+        terms: Inamen::TokenQuery.parse_terms("#{described_class::JESUS_PHRASE}|cs"),
+        search_selection: selection
+      )
+      adjusted = described_class.adjust_rows!(
+        "jesus_mentions",
+        edition,
+        rows,
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      include_row = adjusted.find { |row| !row.exclude && !row.overlap }
+      antimention_row = adjusted.find { |row| row.pattern.start_with?("ANTIMENTIONS OF JESUS") }
+      expect(antimention_row.count).to eq(3)
+      expect(antimention_row.overlap).to be(true)
+      net_total = adjusted.sum { |row| row.overlap ? 0 : (row.exclude ? -row.count : row.count) }
+      expect(net_total).to eq(include_row.count)
+    end
+
+    it "omits disabled jesus antimentions from totals" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      query_terms = described_class.phrase_entries_for("jesus_mentions").map do |entry|
+        line = entry[:phrase]
+        line += "|cs" if entry[:case_sensitive]
+        line += "|exclude" if entry[:exclude]
+        line += "|disabled" if entry[:exclude]
+        line
+      end.join("\n")
+      rows = Inamen::TokenQuery.scan(
+        db,
+        terms: Inamen::TokenQuery.parse_terms("#{described_class::JESUS_PHRASE}|cs"),
+        search_selection: selection
+      )
+      adjusted = described_class.adjust_rows!(
+        "jesus_mentions",
+        edition,
+        rows,
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      expect(adjusted.count(&:exclude)).to eq(0)
+      gross = adjusted.sum(&:count)
+      expect(gross).to be >= 983
+      expect(adjusted.sum { |row| row.exclude ? -row.count : row.count }).to eq(gross)
     end
 
     it "returns seven fishermen rows with antimention exclude counts" do

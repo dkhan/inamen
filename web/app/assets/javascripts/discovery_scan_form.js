@@ -128,14 +128,15 @@
   function phraseFingerprint(discoveryForm) {
     const parts = [];
     discoveryForm.querySelectorAll("[data-search-phrase-row]").forEach((row) => {
-      if (rowDisabled(row)) return;
       const input = row.querySelector(".search-phrase-input");
       const caseSensitive = row.querySelector('input[name$="[case_sensitive]"]');
       const exclude = row.querySelector('input[name$="[exclude]"]');
+      const disable = row.querySelector("[data-search-phrase-disable]");
       if (!input) return;
       const flags = [
         caseSensitive && caseSensitive.checked ? "cs" : "ci",
-        exclude && exclude.checked ? "ex" : null
+        exclude && exclude.checked ? "ex" : null,
+        disable && disable.checked ? "dis" : null
       ]
         .filter(Boolean)
         .join(":");
@@ -157,14 +158,14 @@
     return scanFingerprint(discoveryForm) !== discoveryForm.dataset.lastScannedPhrase;
   }
 
-  function runScan(discoveryForm) {
+  function runScan(discoveryForm, options = {}) {
     const scanAction = discoveryForm.getAttribute("data-scan-action");
     if (!canScan(discoveryForm)) {
       const results = document.querySelector("[data-discovery-results]");
       if (results) results.hidden = true;
       return;
     }
-    if (!scanAction || !shouldScan(discoveryForm)) return;
+    if (!scanAction || (!options.force && !shouldScan(discoveryForm))) return;
 
     if (pendingFocusInput) {
       rememberPhraseFocus(pendingFocusInput);
@@ -185,7 +186,7 @@
     clearTimeout(scanTimer);
     scanTimer = setTimeout(() => {
       scanTimer = null;
-      runScan(discoveryForm);
+      runScan(discoveryForm, options);
     }, SCAN_DEBOUNCE_MS);
   }
 
@@ -222,7 +223,7 @@
     discoveryForm.addEventListener("change", (event) => {
       if (!isPhraseCheckbox(event.target)) return;
       cancelScheduledScan();
-      scheduleScan(discoveryForm);
+      scheduleScan(discoveryForm, { force: true });
     });
 
     discoveryForm.addEventListener("submit", () => {
@@ -237,8 +238,8 @@
       results.hidden = !canScan(discoveryForm);
     });
 
-    document.addEventListener("discovery:schedule-scan", () => {
-      scheduleScan(discoveryForm);
+    document.addEventListener("discovery:schedule-scan", (event) => {
+      scheduleScan(discoveryForm, event.detail || {});
     });
 
     document.addEventListener("discovery:cancel-scan", () => {

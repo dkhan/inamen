@@ -138,7 +138,7 @@ class DiscoveriesController < ApplicationController
       if request.post? && action_name == "scan" && params[:search_phrases].present?
         raw = search_phrases_param_hash(params[:search_phrases])
         if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+          if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
             Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
           else
             Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
@@ -193,7 +193,7 @@ class DiscoveriesController < ApplicationController
       from_feature = @scan_params.from_feature || params[:from_feature].presence || stored_discover_query&.dig("from_feature")
       query[:search_phrases] =
         if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+          if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
             Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
           else
             Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
