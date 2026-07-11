@@ -894,3 +894,73 @@ mark.search-hit {
   font-size: 0.85rem;
   margin-right: 0.35rem;
 }
+
+.feature-save-form .form-field {
+  margin-bottom: 1.25rem;
+}
+
+.feature-save-form .form-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.feature-save-form .form-input {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.row-saved .feature-id .badge {
+  margin-left: 0.35rem;
+}
+
+.feature-actions-head {
+  width: 4.5rem;
+}
+
+.feature-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.feature-show-actions {
+  margin-top: 0.5rem;
+}
+
+.feature-icon-form {
+  display: inline;
+}
+
+.feature-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  cursor: pointer;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
+.feature-icon-button:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.feature-icon-form .feature-icon-button {
+  margin-left: 0.25rem;
+}

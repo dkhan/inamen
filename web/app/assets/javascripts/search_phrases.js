@@ -38,6 +38,24 @@
     return root.querySelector(`input[name="search_phrases[${index}][phrase]"]`);
   }
 
+  function rememberPhraseFocus(input) {
+    if (!(input instanceof HTMLInputElement) || !input.classList.contains("search-phrase-input")) {
+      return;
+    }
+
+    const match = input.name.match(/search_phrases\[(\d+)\]/);
+    if (!match) return;
+
+    sessionStorage.setItem(
+      PHRASE_FOCUS_KEY,
+      JSON.stringify({
+        index: Number.parseInt(match[1], 10),
+        start: input.selectionStart ?? input.value.length,
+        end: input.selectionEnd ?? input.value.length
+      })
+    );
+  }
+
   function restorePhraseFocus(root) {
     let saved = null;
     try {
@@ -53,14 +71,29 @@
     const input = phraseInputForIndex(root, saved.index) || rows(root).at(-1)?.querySelector(".search-phrase-input");
     if (!input) return;
 
-    requestAnimationFrame(() => {
-      input.focus();
+    const applyFocus = () => {
+      input.focus({ preventScroll: true });
       if (typeof saved.start === "number" && typeof saved.end === "number") {
         const end = Math.min(saved.end, input.value.length);
         const start = Math.min(saved.start, end);
         input.setSelectionRange(start, end);
       }
+    };
+
+    requestAnimationFrame(() => {
+      applyFocus();
+      window.setTimeout(applyFocus, 0);
     });
+  }
+
+  function bindPhraseFocusTracking(input) {
+    if (!input) return;
+
+    const saveFocus = () => rememberPhraseFocus(input);
+    input.addEventListener("input", saveFocus);
+    input.addEventListener("keyup", saveFocus);
+    input.addEventListener("mouseup", saveFocus);
+    input.addEventListener("select", saveFocus);
   }
 
   function setRowDisabled(row, disabled) {
@@ -76,6 +109,7 @@
     const removeButton = row.querySelector("[data-remove-phrase]");
     const disableCheckbox = row.querySelector("[data-search-phrase-disable]");
     const input = row.querySelector(".search-phrase-input");
+    bindPhraseFocusTracking(input);
 
     if (disableCheckbox) {
       setRowDisabled(row, disableCheckbox.checked);
@@ -158,13 +192,31 @@
       });
     }
 
-    restorePhraseFocus(root);
-
-    if (root.dataset.focusOnLoad === "true") {
-      const input = rows(root)[0]?.querySelector(".search-phrase-input");
-      if (input) input.focus();
-    }
+    document.addEventListener(
+      "discovery:phrases-ready",
+      () => {
+        if (root.dataset.focusOnLoad === "true") {
+          const input = rows(root)[0]?.querySelector(".search-phrase-input");
+          if (input) input.focus();
+          return;
+        }
+        restorePhraseFocus(root);
+      },
+      { once: true }
+    );
   }
+
+  document.addEventListener("discovery:save-phrase-focus", (event) => {
+    const input = event.detail?.input;
+    if (input instanceof HTMLInputElement) {
+      rememberPhraseFocus(input);
+      return;
+    }
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement && active.classList.contains("search-phrase-input")) {
+      rememberPhraseFocus(active);
+    }
+  });
 
   document.addEventListener("DOMContentLoaded", init);
   document.addEventListener("turbo:load", init);

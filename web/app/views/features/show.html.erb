@@ -1,4 +1,4 @@
-<% content_for :title, "#{(@row || @entry).name} — Inamen" %>
+<% content_for :title, "#{(@row || @entry || @saved_feature).name} — Inamen" %>
 <% if @status == :computing %>
   <% content_for :head do %>
     <meta http-equiv="refresh" content="3">
@@ -8,13 +8,20 @@
 <div class="page-header">
   <p class="breadcrumb">
     <%= link_to "Features", features_path(edition: @edition.edition_id) %>
-    / <code><%= (@row || @entry).id %></code>
+    / <code><%= @saved_feature&.url_id || @row&.id || @entry&.id %></code>
   </p>
-  <h1><%= (@row || @entry).name %></h1>
-  <p class="lead"><%= (@row || @entry).description %></p>
-  <% kjvcode_url = (@row&.kjvcode_url || @entry.kjvcode_url) %>
-  <% if kjvcode_url.present? %>
-    <p class="lead-meta"><%= feature_kjvcode_link(kjvcode_url) %></p>
+  <h1><%= @saved_feature&.name || @row&.name || @entry&.name %></h1>
+  <% if @saved_feature %>
+    <p class="lead">Saved from Discover</p>
+    <div class="feature-show-actions">
+      <%= saved_feature_actions(@row, edition: @edition.edition_id) %>
+    </div>
+  <% else %>
+    <p class="lead"><%= (@row || @entry).description %></p>
+    <% kjvcode_url = (@row&.kjvcode_url || @entry.kjvcode_url) %>
+    <% if kjvcode_url.present? %>
+      <p class="lead-meta"><%= feature_kjvcode_link(kjvcode_url) %></p>
+    <% end %>
   <% end %>
 </div>
 
@@ -49,7 +56,7 @@
       </div>
       <div>
         <dt>Scope</dt>
-        <dd><%= @row.scope.tr("_", " ") %></dd>
+        <dd><%= @saved_feature ? @row.scope : @row.scope.tr("_", " ") %></dd>
       </div>
       <div>
         <dt>Edition</dt>
@@ -85,7 +92,7 @@
       </ul>
     </section>
   <% end %>
-<% else %>
+<% elsif @entry %>
   <section class="panel">
     <dl class="stats">
       <div>

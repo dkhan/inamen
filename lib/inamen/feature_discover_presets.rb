@@ -291,9 +291,19 @@ module Inamen
       end
 
       def resolve_from_feature(feature_id, query_terms:)
+        inferred = infer_bulk_feature_from_query(query_terms)
+
         id = feature_id.to_s
         id = nil if id.empty?
-        id = infer_bulk_feature_from_query(query_terms) if id.nil?
+
+        if inferred == "jesus_mentions" && jesus_mentions_query?(query_terms)
+          return "jesus_mentions"
+        end
+        if inferred == "fishermen_gospels" && fishermen_gospels_query?(query_terms)
+          return "fishermen_gospels"
+        end
+
+        id = inferred if id.nil?
         return nil unless id
 
         case id
@@ -314,13 +324,24 @@ module Inamen
       end
 
       def jesus_mentions_query?(query_terms)
-        jesus_antimentions_in_query?(query_terms) ||
-          query_terms.to_s.each_line.any? do |line|
-            attrs = TokenPattern.parse_query_line(line)
-            next unless attrs && !attrs[:exclude] && !attrs[:disabled]
+        jesus_antimentions_in_query?(query_terms) || jesus_include_phrase_in_query?(query_terms)
+      end
 
-            attrs[:pattern] == JESUS_PHRASE
-          end
+      def jesus_include_phrase_in_query?(query_terms)
+        query_terms.to_s.each_line.any? do |line|
+          attrs = TokenPattern.parse_query_line(line)
+          next unless attrs && !attrs[:exclude] && !attrs[:disabled]
+
+          jesus_include_pattern?(attrs[:pattern])
+        end
+      end
+
+      def jesus_include_pattern?(pattern)
+        return true if pattern.to_s == JESUS_PHRASE
+
+        alts = split_include_alternatives(pattern)
+        jesus_alts = split_include_alternatives(JESUS_PHRASE)
+        alts.any? && (alts - jesus_alts).empty?
       end
 
       def jesus_antimentions_in_query?(query_terms)
@@ -328,12 +349,19 @@ module Inamen
           attrs = TokenPattern.parse_query_line(line)
           next false unless attrs && !attrs[:disabled]
 
-          jesus_antimention_phrase?(attrs[:pattern])
+          jesus_antimention_phrase?(attrs[:pattern]) || jesus_antimention_part?(attrs[:pattern])
         end
       end
 
       def jesus_antimention_phrase?(pattern)
         pattern.to_s.match?(/\AANTIMENTIONS OF JESUS/i)
+      end
+
+      def jesus_antimention_part?(pattern)
+        normalized = pattern.to_s.strip
+        JesusMentionsAntimentions::ANTIMENTION_PARTS.any? do |part|
+          normalized == part || normalized.start_with?(part)
+        end
       end
 
       def fishermen_gospels_query?(query_terms)
@@ -834,13 +862,18 @@ module Inamen
 
         entries.map do |entry|
           pattern = entry[:phrase]
-          source = include_rows[pattern] || include_rows[JESUS_PHRASE]
-          antimention = jesus_antimention_phrase?(pattern)
+          stripped = pattern.to_s.strip
+          source = include_rows[stripped] || include_rows[pattern] || include_rows[JESUS_PHRASE]
+          antimention = jesus_antimention_phrase?(stripped) || jesus_antimention_part?(stripped)
           count =
-            if entry[:exclude] || antimention
+            if entry[:exclude]
+              jesus_exclude_row_count(stripped, include_rows, exclude_amount)
+            elsif antimention
               exclude_amount
+            elsif jesus_include_pattern?(stripped)
+              jesus_gross_token_count(edition.db, search_selection)
             else
-              source&.count || include_rows.values.sum(&:count)
+              source&.count || 0
             end
           overlap = antimention && jesus_include_rows_active?(entries) && !entry[:exclude]
           row_class.new(
@@ -849,11 +882,48 @@ module Inamen
             count: count,
             wildcard: source&.wildcard || pattern.include?("*"),
             scope: scope_label,
-            spellings: entry[:exclude] || antimention ? {} : (source&.spellings || {}),
+            spellings: jesus_row_spellings(entry, antimention:, include_rows:, source:, pattern: stripped),
             exclude: entry[:exclude],
             overlap: overlap
           )
         end
+      end
+
+      def jesus_exclude_row_count(pattern, include_rows, exclude_amount)
+        if jesus_antimention_phrase?(pattern)
+          exclude_amount
+        elsif jesus_antimention_part?(pattern)
+          include_rows[pattern]&.count || 1
+        else
+          include_rows[pattern]&.count || 0
+        end
+      end
+
+      def jesus_row_spellings(entry, antimention:, include_rows:, source:, pattern:)
+        return {} if entry[:exclude] || antimention
+        return jesus_include_spellings(include_rows) if jesus_include_pattern?(pattern)
+
+        source&.spellings || {}
+      end
+
+      def jesus_include_spellings(include_rows)
+        split_include_alternatives(JESUS_PHRASE).each_with_object({}) do |alternative, hash|
+          spellings = include_rows[alternative]&.spellings || {}
+          spellings.each do |raw, count|
+            hash[raw] = hash.fetch(raw, 0) + count
+          end
+        end.sort_by { |raw, count| [-count, raw] }.to_h
+      end
+
+      def jesus_gross_token_count(db, search_selection)
+        where_sql, where_params = search_selection.where_clause
+        token_placeholders = (["?"] * JESUS_PATTERNS.length).join(", ")
+        sql = <<~SQL
+          SELECT COUNT(*) FROM tokens
+          WHERE token_raw IN (#{token_placeholders})
+          #{where_sql}
+        SQL
+        db.execute(sql, [*JESUS_PATTERNS, *where_params]).first.first.to_i
       end
 
       def jesus_exclude_amount(db, search_selection, entries)
@@ -870,20 +940,22 @@ module Inamen
       def jesus_antimention_rows_active?(entries)
         entries.any? do |entry|
           next false if entry[:disabled]
-          next false unless jesus_antimention_phrase?(entry[:phrase])
 
-          true
+          jesus_antimention_phrase?(entry[:phrase]) || jesus_antimention_part?(entry[:phrase])
         end
       end
 
       def jesus_apply_default_subtraction?(all_entries)
-        !all_entries.any? { |entry| jesus_antimention_phrase?(entry[:phrase]) }
+        !all_entries.any? do |entry|
+          jesus_antimention_phrase?(entry[:phrase]) || jesus_antimention_part?(entry[:phrase])
+        end
       end
 
       def jesus_include_rows_active?(entries)
         entries.any? do |entry|
           next false if entry[:exclude]
           next false if jesus_antimention_phrase?(entry[:phrase])
+          next false if jesus_antimention_part?(entry[:phrase])
 
           entry[:phrase].to_s.strip != ""
         end

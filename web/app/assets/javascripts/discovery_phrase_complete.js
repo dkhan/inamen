@@ -302,7 +302,9 @@
           updateRow(row);
           document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
           if (row.dataset.canSearch === "true") {
-            document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
+            document.dispatchEvent(
+              new CustomEvent("discovery:schedule-scan", { detail: { rememberFocus: true, trigger: input } })
+            );
           }
         });
         item.appendChild(button);
@@ -316,7 +318,9 @@
     document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
 
     if (userInitiated && analysis.canSearch && !wasCanSearch) {
-      document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
+      document.dispatchEvent(
+        new CustomEvent("discovery:schedule-scan", { detail: { rememberFocus: true, trigger: input } })
+      );
     }
   }
 
@@ -357,6 +361,7 @@
         bindRow(row);
         updateRow(row);
       });
+      document.dispatchEvent(new CustomEvent("discovery:phrases-ready"));
     });
 
     document.addEventListener("discovery:search-phrase-row-added", (event) => {

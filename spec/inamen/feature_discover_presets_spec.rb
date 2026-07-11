@@ -240,6 +240,16 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
     it "keeps other feature presets" do
       expect(described_class.resolve_from_feature("amen_77", query_terms: "Amen|cs")).to eq("amen_77")
     end
+
+    it "switches to jesus_mentions when a stale simple feature has a jesus query" do
+      query_terms = [
+        "#{described_class::JESUS_PHRASE}|cs",
+        "And Jesus which is called Justus|exclude",
+        "Which also our fathers that came after brought in with Jesus|exclude",
+        "For if Jesus had given them rest|exclude"
+      ].join("\n")
+      expect(described_class.resolve_from_feature("paul_verses", query_terms: query_terms)).to eq("jesus_mentions")
+    end
   end
 
   describe ".selection_for" do
@@ -422,7 +432,9 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       selection = described_class.selection_for("paul_verses")
       terms = Inamen::TokenQuery.parse_terms("Paul")
       result = Inamen::VerseMatchQuery.scan(db, terms: terms, search_selection: selection)
-      expect(result.summary.verses).to eq(154)
+      expect(result.summary.verses).to eq(153)
+      expect(result.summary.occurrences).to eq(157)
+      expect(result.verses.count { |row| row.bucket != Inamen::CorpusStore::BUCKET_VERSE_TEXT }).to eq(1)
 
       adjusted = described_class.adjust_verse_result!("paul_verses", result)
       expect(adjusted.summary.verses).to eq(153)
@@ -532,6 +544,33 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(antimention_row.overlap).to be(true)
       net_total = adjusted.sum { |row| row.overlap ? 0 : (row.exclude ? -row.count : row.count) }
       expect(net_total).to eq(include_row.count)
+    end
+
+    it "totals 980 for unbundled jesus include and antimention exclude rows" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      query_terms = [
+        "#{described_class::JESUS_PHRASE}|cs",
+        "And Jesus which is called Justus|exclude",
+        "Which also our fathers that came after brought in with Jesus|exclude",
+        "For if Jesus had given them rest|exclude"
+      ].join("\n")
+      rows = Inamen::TokenQuery.scan(
+        db,
+        terms: Inamen::TokenQuery.parse_terms(query_terms),
+        search_selection: selection
+      )
+      adjusted = described_class.adjust_rows!(
+        "jesus_mentions",
+        edition,
+        rows,
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      total = adjusted.sum { |row| row.overlap ? 0 : (row.exclude ? -row.count : row.count) }
+      expect(total).to eq(980)
     end
 
     it "omits disabled jesus antimentions from totals" do

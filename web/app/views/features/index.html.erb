@@ -5,6 +5,18 @@
   <% end %>
 <% end %>
 
+<% if flash[:notice].present? %>
+  <section class="panel notice">
+    <p><%= flash[:notice] %></p>
+  </section>
+<% end %>
+
+<% if flash[:alert].present? %>
+  <section class="panel notice">
+    <p><%= flash[:alert] %></p>
+  </section>
+<% end %>
+
 <section class="panel toolbar">
   <%= form_with url: features_path, method: :get, local: true, class: "toolbar-form" do %>
     <label>
@@ -46,6 +58,7 @@
         <th class="num">Expected</th>
         <th>Unit</th>
         <th>Scope</th>
+        <th class="feature-actions-head" aria-label="Actions"></th>
       </tr>
     </thead>
     <tbody>
@@ -61,6 +74,7 @@
             <td class="num"><%= format_feature_count(row.expected) %></td>
             <td><%= row.unit %></td>
             <td><%= row.scope.tr("_", " ") %></td>
+            <td class="feature-actions"></td>
           </tr>
         <% end %>
       <% else %>
@@ -76,8 +90,23 @@
             <td class="num"><%= format_feature_count(expected) %></td>
             <td><%= entry.unit %></td>
             <td><%= entry.scope.tr("_", " ") %></td>
+            <td class="feature-actions"></td>
           </tr>
         <% end %>
+      <% end %>
+      <% @saved_rows.each do |row| %>
+        <tr class="row-saved">
+          <td><%= feature_discover_status_link(row.id, match: row.match, edition: @edition.edition_id) %></td>
+          <td>
+            <%= link_to row.name, feature_path(row.id, edition: @edition.edition_id), class: "feature-link" %>
+            <div class="feature-id"><code><%= row.id %></code> <span class="badge badge-muted">saved</span></div>
+          </td>
+          <td class="num"><%= format_feature_count(row.count) %></td>
+          <td class="num"><%= format_feature_count(row.expected) %></td>
+          <td><%= row.unit %></td>
+          <td><%= row.scope %></td>
+          <td class="feature-actions"><%= saved_feature_actions(row, edition: @edition.edition_id) %></td>
+        </tr>
       <% end %>
     </tbody>
   </table>

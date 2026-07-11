@@ -59,6 +59,11 @@
         </label>
         <% if word_count_mode %>
           <div class="discovery-phrase-toolbar-actions" aria-label="Search phrase tools">
+            <% if @status == :ready %>
+              <%= link_to "Save feature",
+                  feature_save_path(actual_count: discovery_word_count_total(@rows), edition: @edition.edition_id),
+                  class: "discovery-phrase-action" %>
+            <% end %>
             <button type="button" class="discovery-phrase-action" id="clear-search-phrases">Clear all</button>
           </div>
         <% end %>

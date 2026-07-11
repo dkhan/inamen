@@ -130,6 +130,20 @@ module Inamen
       }
     end
 
+    def to_query_hash
+      query = {
+        "submitted" => "1",
+        "colophons" => colophons ? "1" : "0",
+        "superscriptions" => superscriptions ? "1" : "0"
+      }
+      if books.sort == BookCategories.all_books.sort
+        query["all_books"] = "1"
+      else
+        query["books"] = books
+      end
+      query
+    end
+
     def cache_key
       digest = Digest::SHA256.hexdigest(books.sort.join("\0"))[0, 16]
       "c#{colophons ? 1 : 0}s#{superscriptions ? 1 : 0}:#{digest}"

@@ -523,7 +523,7 @@ class DiscoveryScan
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v24", *shared_cache_components(params, edition)]
+    ["discovery_verses/v25", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)

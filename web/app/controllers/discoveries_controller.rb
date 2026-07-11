@@ -290,19 +290,9 @@ class DiscoveriesController < ApplicationController
       end
     end
 
-    return query if selection.default?
+    return query if selection.default? && !for_storage
 
-    selection_query = {
-      submitted: "1",
-      colophons: selection.colophons ? "1" : "0",
-      superscriptions: selection.superscriptions ? "1" : "0"
-    }
-    if selection.books.sort == Inamen::BookCategories.all_books.sort
-      selection_query[:all_books] = "1"
-    else
-      selection_query[:books] = selection.books
-    end
-    query[:search_selection] = selection_query
+    query[:search_selection] = selection.to_query_hash
     query[:dq] = session[DISCOVER_QUERY_ID_KEY] if !for_storage && use_discover_query_token_in_urls?
     query
   end

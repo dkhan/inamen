@@ -280,12 +280,13 @@ module Inamen
       end
 
       def build_summary(verse_rows, selection, occurrences:)
-        books = verse_rows.map(&:book).uniq
-        chapters = verse_rows.map { |row| [row.book, row.chapter] }.uniq
+        verse_text_rows = verse_rows.select { |row| row.bucket == CorpusStore::BUCKET_VERSE_TEXT }
+        books = verse_text_rows.map(&:book).uniq
+        chapters = verse_text_rows.map { |row| [row.book, row.chapter] }.uniq
 
         Summary.new(
           occurrences: occurrences,
-          verses: verse_rows.length,
+          verses: verse_text_rows.length,
           chapters: chapters.length,
           books: books.length,
           scope_label: selection.label

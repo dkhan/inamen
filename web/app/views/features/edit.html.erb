@@ -1,0 +1,74 @@
+<% content_for :title, "Edit feature — Inamen" %>
+
+<div class="page-header">
+  <p class="breadcrumb">
+    <%= link_to "Features", features_path(edition: @edition.edition_id) %>
+    / <%= link_to @saved_feature.name, feature_path(@saved_feature.url_id, edition: @edition.edition_id) %>
+    / Edit
+  </p>
+  <h1>Edit feature</h1>
+  <p class="lead">Update the name or expected count for this saved feature.</p>
+</div>
+
+<%= form_with url: feature_path(@saved_feature.url_id, edition: @edition.edition_id),
+    method: :patch, scope: :saved_feature, local: true, class: "feature-save-form" do |form| %>
+  <% if @saved_feature.errors.any? %>
+    <section class="panel notice">
+      <p><strong>Could not update feature.</strong></p>
+      <ul>
+        <% @saved_feature.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <section class="panel">
+    <div class="form-field">
+      <%= form.label :name, "Name", class: "form-label" %>
+      <%= form.text_field :name, required: true, autofocus: true, class: "form-input" %>
+    </div>
+
+    <dl class="stats">
+      <div>
+        <dt>Actual</dt>
+        <dd><%= format_feature_count(@row.count) %> <%= @saved_feature.unit %></dd>
+      </div>
+      <div>
+        <dt>Expected</dt>
+        <dd>
+          <%= form.number_field :expected_count, min: 0, required: true, class: "form-input input-narrow" %>
+          <%= @saved_feature.unit %>
+        </dd>
+      </div>
+      <div>
+        <dt>Status</dt>
+        <dd><%= feature_match_badge(@row.count == @saved_feature.expected_count) %></dd>
+      </div>
+      <div>
+        <dt>Edition</dt>
+        <dd><code><%= @saved_feature.edition_id %></code></dd>
+      </div>
+      <div>
+        <dt>Scope</dt>
+        <dd><%= @saved_feature.scope_label %></dd>
+      </div>
+    </dl>
+  </section>
+
+  <% if @saved_feature.details.present? %>
+    <section class="panel">
+      <h2>Details</h2>
+      <ul class="detail-list">
+        <% @saved_feature.details.each do |line| %>
+          <li><code><%= line %></code></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <div class="form-actions">
+    <%= form.submit "Save", class: "button button-primary" %>
+    <%= link_to "Cancel", features_path(edition: @edition.edition_id), class: "button button-secondary" %>
+  </div>
+<% end %>

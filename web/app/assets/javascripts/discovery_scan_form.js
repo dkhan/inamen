@@ -1,6 +1,5 @@
 (function () {
   const SCAN_DEBOUNCE_MS = 200;
-  const PHRASE_FOCUS_KEY = "inamen:search-phrase-focus";
 
   let scanTimer = null;
   let pendingFocusInput = null;
@@ -88,21 +87,7 @@
   }
 
   function rememberPhraseFocus(input) {
-    if (!(input instanceof HTMLInputElement) || !input.classList.contains("search-phrase-input")) {
-      return;
-    }
-
-    const match = input.name.match(/search_phrases\[(\d+)\]/);
-    if (!match) return;
-
-    sessionStorage.setItem(
-      PHRASE_FOCUS_KEY,
-      JSON.stringify({
-        index: Number.parseInt(match[1], 10),
-        start: input.selectionStart ?? input.value.length,
-        end: input.selectionEnd ?? input.value.length
-      })
-    );
+    document.dispatchEvent(new CustomEvent("discovery:save-phrase-focus", { detail: { input } }));
   }
 
   function scopeFingerprint(discoveryForm) {
@@ -168,8 +153,12 @@
     if (!scanAction || (!options.force && !shouldScan(discoveryForm))) return;
 
     if (pendingFocusInput) {
-      rememberPhraseFocus(pendingFocusInput);
+      document.dispatchEvent(
+        new CustomEvent("discovery:save-phrase-focus", { detail: { input: pendingFocusInput } })
+      );
       pendingFocusInput = null;
+    } else {
+      document.dispatchEvent(new CustomEvent("discovery:save-phrase-focus"));
     }
 
     discoveryForm.action = scanAction;
@@ -179,8 +168,8 @@
   }
 
   function scheduleScan(discoveryForm, options = {}) {
-    if (options.rememberFocus) {
-      pendingFocusInput = options.trigger ?? null;
+    if (options.rememberFocus || options.trigger) {
+      pendingFocusInput = options.trigger ?? pendingFocusInput;
     }
 
     clearTimeout(scanTimer);
