@@ -573,6 +573,29 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(total).to eq(980)
     end
 
+    it "counts one per antimention phrase when only unbundled antimentions are active" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("jesus_mentions")
+      query_terms = Inamen::JesusMentionsAntimentions::ANTIMENTION_PARTS.join("\n")
+      rows = Inamen::TokenQuery.scan(
+        db,
+        terms: Inamen::TokenQuery.parse_terms(query_terms),
+        search_selection: selection
+      )
+      adjusted = described_class.adjust_rows!(
+        "jesus_mentions",
+        edition,
+        rows,
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      expect(adjusted.map(&:count)).to eq([1, 1, 1])
+      expect(adjusted.sum(&:count)).to eq(3)
+      expect(adjusted.none?(&:overlap)).to be(true)
+    end
+
     it "omits disabled jesus antimentions from totals" do
       skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
 

@@ -2,7 +2,6 @@
 <% content_for :main_class, "site-main site-main-wide" %>
 <% word_count_mode = @scan_params.mode == "word_count" %>
 <% file_stats_mode = @scan_params.mode == "file_stats" %>
-<% from_feature = word_count_mode ? @scan_params.from_feature : nil %>
 <% auto_scan = params[:auto_scan] == "1" && @status != :ready %>
 <% equal_count_mode = @scan_params.mode == "equal_count" %>
 <% filter_scan_mode = !word_count_mode && !file_stats_mode %>
@@ -45,7 +44,6 @@
       }.compact do %>
     <%= hidden_field_tag :edition, @edition.edition_id %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
-    <%= hidden_field_tag :from_feature, from_feature if from_feature && word_count_mode %>
 
     <aside class="discovery-search-within<%= " is-hidden" if file_stats_mode %>">
       <%= render "search_within_tree", selection: selection %>
@@ -96,17 +94,6 @@
     </div>
   <% end %>
 </section>
-
-<% if from_feature && word_count_mode %>
-  <section class="panel notice">
-    <p>
-      <strong>Feature scan:</strong> <%= feature_discover_name(from_feature) %>
-      <% if auto_scan %>
-        — running discover search…
-      <% end %>
-    </p>
-  </section>
-<% end %>
 
 <% if @status == :computing %>
   <section class="panel notice">

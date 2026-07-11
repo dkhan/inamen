@@ -71,17 +71,7 @@ module DiscoveriesHelper
   end
 
   def discovery_search_phrase_rows(scan_params)
-    raw = if params[:search_phrases].present?
-            params[:search_phrases].permit!.to_h
-          elsif stored_discover_query&.dig("search_phrases").present?
-            stored_discover_query["search_phrases"]
-          end
-
-    hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      discover_from_feature(scan_params),
-      raw: raw,
-      merge_preset_excludes: merge_fishermen_preset_excludes?
-    )
+    hydrated = discover_search_phrases_hash
     if hydrated.present?
       return hydrated.sort_by { |key, _| key.to_i }.map { |index, row| [index, phrase_entry_from_row(row)] }
     end
@@ -97,25 +87,11 @@ module DiscoveriesHelper
   end
 
   def discovery_scan_hidden_phrases(scan_params)
-    entries = discovery_search_phrase_entries(scan_params)
-    return entries unless scan_params.from_feature.present? &&
-                          Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(scan_params.from_feature)
-
-    entries.reject(&:exclude)
+    discovery_search_phrase_entries(scan_params)
   end
 
   def discovery_search_phrase_entries(scan_params)
-    raw = if params[:search_phrases].present?
-            params[:search_phrases].permit!.to_h
-          elsif stored_discover_query&.dig("search_phrases").present?
-            stored_discover_query["search_phrases"]
-          end
-
-    hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      discover_from_feature(scan_params),
-      raw: raw,
-      merge_preset_excludes: merge_fishermen_preset_excludes?
-    )
+    hydrated = discover_search_phrases_hash
     if hydrated.present?
       DiscoveryScan.phrase_entries_from_params(hydrated)
     else
@@ -130,11 +106,9 @@ module DiscoveriesHelper
       hidden_field_tag(:divisible_by, scan_params.divisible_by),
       hidden_field_tag(:min_count, scan_params.min_count),
       hidden_field_tag(:min_group_size, scan_params.min_group_size),
-      hidden_field_tag(:match_by, scan_params.match_by)
+      hidden_field_tag(:match_by, scan_params.match_by),
+      hidden_field_tag(:query_terms, scan_params.query_terms)
     ]
-    unless scan_params.from_feature.present? && Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
-      parts << hidden_field_tag(:query_terms, scan_params.query_terms)
-    end
 
     discovery_scan_hidden_phrases(scan_params).each_with_index do |phrase, index|
       parts << hidden_field_tag("search_phrases[#{index}][phrase]", phrase.phrase)
@@ -142,9 +116,6 @@ module DiscoveriesHelper
       parts << hidden_field_tag("search_phrases[#{index}][exclude]", "1") if phrase.exclude
       parts << hidden_field_tag("search_phrases[#{index}][disabled]", "1") if phrase.disabled
     end
-    parts << hidden_field_tag(:from_feature, scan_params.from_feature) if scan_params.from_feature.present? &&
-                                                                          scan_params.mode == "word_count" &&
-                                                                          !use_discover_query_token_in_urls?
 
     unless selection.default?
       parts << hidden_field_tag("search_selection[submitted]", "1")
@@ -172,15 +143,7 @@ module DiscoveriesHelper
   end
 
   def discovery_search_phrases_param_hash(scan_params)
-    raw = if params[:search_phrases].present?
-            params[:search_phrases].permit!.to_h
-          elsif stored_discover_query&.dig("search_phrases").present?
-            stored_discover_query["search_phrases"]
-          end
-
-    compact = Inamen::FeatureDiscoverPresets.compact_search_phrases_for_session(scan_params.from_feature, raw)
-    return compact if compact.present?
-
+    raw = discover_search_phrases_hash
     return raw if raw.present?
 
     DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms).map.with_index.to_h do |phrase, index|
@@ -204,10 +167,9 @@ module DiscoveriesHelper
       divisible_by: scan_params.divisible_by,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
-      match_by: scan_params.match_by
+      match_by: scan_params.match_by,
+      query_terms: scan_params.query_terms
     }
-    query[:query_terms] = scan_params.query_terms unless Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
-    query[:from_feature] = scan_params.from_feature if scan_params.from_feature.present? && !use_discover_query_token_in_urls?
 
     return query if selection.default?
 
@@ -311,10 +273,15 @@ module DiscoveriesHelper
     )
   end
 
-  def discover_from_feature(scan_params)
-    scan_params.from_feature.presence ||
-      params[:from_feature].presence ||
-      stored_discover_query&.dig("from_feature")
+  def discover_search_phrases_hash(raw_phrases = nil)
+    raw = if raw_phrases.present?
+            raw_phrases.is_a?(ActionController::Parameters) ? raw_phrases.permit!.to_h : raw_phrases.to_h
+          elsif params[:search_phrases].present?
+            params[:search_phrases].permit!.to_h
+          elsif stored_discover_query&.dig("search_phrases").present?
+            stored_discover_query["search_phrases"]
+          end
+    raw || {}
   end
 
   private

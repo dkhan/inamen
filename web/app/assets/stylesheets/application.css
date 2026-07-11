@@ -910,6 +910,77 @@ mark.search-hit {
   max-width: 28rem;
 }
 
+.feature-save-form .form-textarea {
+  max-width: 40rem;
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.feature-save-form .form-field .hint {
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+.notes-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.notes-editor-button {
+  min-width: 2rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.notes-editor-button:hover {
+  background: var(--panel-muted);
+}
+
+.feature-notes p {
+  margin: 0 0 0.85rem;
+}
+
+.feature-notes p:last-child {
+  margin-bottom: 0;
+}
+
+.feature-notes ul {
+  margin: 0 0 0.85rem;
+  padding-left: 1.4rem;
+}
+
+.feature-notes ul:last-child {
+  margin-bottom: 0;
+}
+
+.feature-notes li {
+  margin-bottom: 0.35rem;
+}
+
+.feature-notes li:last-child {
+  margin-bottom: 0;
+}
+
+.feature-notes strong {
+  font-weight: 700;
+}
+
+.feature-notes em {
+  font-style: italic;
+}
+
+.feature-notes del {
+  text-decoration: line-through;
+}
+
 .form-actions {
   display: flex;
   flex-wrap: wrap;

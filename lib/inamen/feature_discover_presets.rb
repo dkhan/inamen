@@ -869,7 +869,7 @@ module Inamen
             if entry[:exclude]
               jesus_exclude_row_count(stripped, include_rows, exclude_amount)
             elsif antimention
-              exclude_amount
+              jesus_antimention_row_count(stripped, include_rows, exclude_amount)
             elsif jesus_include_pattern?(stripped)
               jesus_gross_token_count(edition.db, search_selection)
             else
@@ -896,6 +896,14 @@ module Inamen
           include_rows[pattern]&.count || 1
         else
           include_rows[pattern]&.count || 0
+        end
+      end
+
+      def jesus_antimention_row_count(pattern, include_rows, exclude_amount)
+        if jesus_antimention_part?(pattern)
+          include_rows[pattern]&.count || 1
+        else
+          exclude_amount
         end
       end
 

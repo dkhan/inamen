@@ -49,5 +49,21 @@ RSpec.describe Inamen::VerseMatchQuery do
     ensure
       full_db&.close
     end
+    it "highlights every word in a multi-word phrase match" do
+      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      full_db = Inamen::CorpusStore.open(db_path)
+      selection = Inamen::SearchSelection.default
+      phrase = "Which also our fathers that came after brought in with Jesus"
+      terms = [Inamen::TokenQuery::QueryTerm.new(pattern: phrase, case_sensitive: false, exclude: false)]
+      result = described_class.scan(full_db, terms: terms, search_selection: selection)
+      row = result.verses.find { |verse| verse.book == "Acts" && verse.chapter == 7 && verse.verse == 45 }
+
+      expect(row).not_to be_nil
+      expect(row.highlight_indices.length).to eq(Inamen::PhraseQuery.phrase_words(phrase).length)
+    ensure
+      full_db&.close
+    end
   end
 end

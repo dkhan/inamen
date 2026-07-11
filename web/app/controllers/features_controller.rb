@@ -158,6 +158,8 @@ class FeaturesController < ApplicationController
       :saved_actual_count,
       :mode,
       :from_feature,
+      :notes,
+      :kjvcode_url,
       :search_selection_json,
       :search_phrases_json
     ).to_h
@@ -168,7 +170,7 @@ class FeaturesController < ApplicationController
   end
 
   def saved_feature_update_params
-    params.require(:saved_feature).permit(:name, :expected_count)
+    params.require(:saved_feature).permit(:name, :expected_count, :notes, :kjvcode_url)
   end
 
   def load_saved_feature

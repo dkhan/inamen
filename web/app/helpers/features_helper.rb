@@ -44,7 +44,6 @@ module FeaturesHelper
         "search_selection" => saved_feature.search_selection,
         "search_phrases" => saved_feature.search_phrases
       }
-      store_query["from_feature"] = saved_feature.from_feature if saved_feature.from_feature.present?
       token = DiscoverQueryStore.write(session[DiscoverState::DISCOVER_QUERY_ID_KEY], store_query)
       session[DiscoverState::DISCOVER_QUERY_ID_KEY] = token
       return discoveries_path(edition: saved_feature.edition_id, dq: token, auto_scan: "1")
@@ -114,5 +113,9 @@ module FeaturesHelper
     return if url.blank?
 
     link_to "KJV Code", url, class: "inline-link", target: "_blank", rel: "noopener noreferrer"
+  end
+
+  def format_feature_notes(text)
+    Inamen::NoteFormatter.render(text).html_safe
   end
 end

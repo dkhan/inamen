@@ -10,15 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_11_174127) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_11_191323) do
   create_table "saved_features", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.json "details", default: [], null: false
     t.string "edition_id", null: false
     t.integer "expected_count", null: false
     t.string "from_feature"
+    t.string "kjvcode_url"
     t.string "mode", default: "word_count", null: false
     t.string "name", null: false
+    t.text "notes"
     t.integer "saved_actual_count", null: false
     t.string "scope_label", null: false
     t.json "search_phrases", default: {}, null: false

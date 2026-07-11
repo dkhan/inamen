@@ -16,8 +16,8 @@ class SavedFeatureCatalog
         match: actual == saved_feature.expected_count,
         kjvcode_expected: nil,
         kjvcode_match: nil,
-        kjvcode_url: nil,
-        notes: "Saved #{saved_feature.created_at.to_fs(:long)}",
+        kjvcode_url: saved_feature.kjvcode_url.presence,
+        notes: saved_feature.notes.presence,
         details: Array(saved_feature.details)
       )
     end

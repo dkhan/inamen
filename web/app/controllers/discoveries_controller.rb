@@ -133,33 +133,16 @@ class DiscoveriesController < ApplicationController
 
   def build_scan_params
     hash = scan_param_hash
-    from_feature = hash[:from_feature]
     hash[:search_phrases] =
       if request.post? && action_name == "scan" && params[:search_phrases].present?
-        raw = search_phrases_param_hash(params[:search_phrases])
-        if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
-            Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
-          else
-            Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
-          end
-        else
-          raw
-        end
+        search_phrases_param_hash(params[:search_phrases])
       else
-        hydrated_search_phrases(
-          from_feature,
-          hash[:search_phrases],
-          merge_preset_excludes: merge_fishermen_preset_excludes?
-        )
+        discover_search_phrases_hash(hash[:search_phrases])
       end
     if hash[:search_phrases].blank? && hash[:query_terms].blank? && stored_discover_query&.dig("query_terms").present?
       hash[:query_terms] = stored_discover_query["query_terms"]
     end
-    hash[:from_feature] = Inamen::FeatureDiscoverPresets.resolve_from_feature(
-      from_feature,
-      query_terms: DiscoveryScan.query_terms_from_raw(hash)
-    )
+    hash.delete(:from_feature)
     DiscoveryScan.normalize(hash)
   end
 
@@ -190,27 +173,12 @@ class DiscoveriesController < ApplicationController
     query = scan_query(current_edition_id, @scan_params, for_storage: true)
     raw = params[:search_phrases].present? ? search_phrases_param_hash(params[:search_phrases]) : nil
     if request.post? && action_name == "scan" && raw.present?
-      from_feature = @scan_params.from_feature || params[:from_feature].presence || stored_discover_query&.dig("from_feature")
-      query[:search_phrases] =
-        if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
-            Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
-          else
-            Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
-          end
-        else
-          raw
-        end
+      query[:search_phrases] = raw
     else
-      phrases = hydrated_search_phrases(
-        @scan_params.from_feature,
-        params[:search_phrases],
-        merge_preset_excludes: merge_fishermen_preset_excludes?
-      )
+      phrases = discover_search_phrases_hash(params[:search_phrases])
       query[:search_phrases] = phrases if phrases.present?
     end
-    query[:from_feature] = @scan_params.from_feature if @scan_params.from_feature.present?
-    query.except(:auto_scan, :dq, :query_terms)
+    query.except(:auto_scan, :dq, :query_terms, :from_feature)
   end
 
   def current_discover_query
@@ -229,13 +197,8 @@ class DiscoveriesController < ApplicationController
       min_group_size: params[:min_group_size],
       match_by: params[:match_by],
       query_terms: params[:query_terms],
-      search_phrases: params[:search_phrases],
-      from_feature: params[:from_feature]
+      search_phrases: params[:search_phrases]
     }
-
-    if hash[:from_feature].blank?
-      hash[:from_feature] = stored&.dig("from_feature")
-    end
 
     if params[:from_feature].present? && params[:search_selection].blank?
       hash[:search_selection] = Inamen::FeatureDiscoverPresets.selection_query_for(params[:from_feature])
@@ -270,10 +233,8 @@ class DiscoveriesController < ApplicationController
       match_by: scan_params.match_by
     }
     unless for_storage || use_discover_query_token_in_urls?
-      query[:query_terms] = scan_params.query_terms unless Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
+      query[:query_terms] = scan_params.query_terms
     end
-
-    query[:from_feature] = scan_params.from_feature if scan_params.from_feature.present? && !for_storage && !use_discover_query_token_in_urls?
 
     if for_storage || !use_discover_query_token_in_urls?
       if scan_params.mode == "word_count"
@@ -282,9 +243,6 @@ class DiscoveriesController < ApplicationController
           phrases = search_phrases_param_hash(params[:search_phrases])
         elsif stored_discover_query&.dig("search_phrases").present?
           phrases = stored_discover_query["search_phrases"]
-        end
-        unless for_storage
-          phrases = Inamen::FeatureDiscoverPresets.compact_search_phrases_for_session(scan_params.from_feature, phrases)
         end
         query[:search_phrases] = phrases if phrases.present?
       end
@@ -317,26 +275,12 @@ class DiscoveriesController < ApplicationController
   end
 
   def current_search_phrases_hash
-    raw = if params[:search_phrases].present?
-            search_phrases_param_hash(params[:search_phrases])
-          elsif stored_discover_query&.dig("search_phrases").present?
-            stored_discover_query["search_phrases"]
-          end
-
-    Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      @scan_params.from_feature,
-      raw: raw,
-      merge_preset_excludes: merge_fishermen_preset_excludes?
-    )
+    discover_search_phrases_hash(params[:search_phrases])
   end
 
-  def hydrated_search_phrases(from_feature, raw_phrases, merge_preset_excludes: true)
+  def discover_search_phrases_hash(raw_phrases = nil)
     raw = search_phrases_param_hash(raw_phrases) if raw_phrases.present?
     raw = stored_discover_query&.dig("search_phrases") if raw.blank?
-    Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      from_feature,
-      raw: raw,
-      merge_preset_excludes: merge_preset_excludes
-    )
+    raw || {}
   end
 end

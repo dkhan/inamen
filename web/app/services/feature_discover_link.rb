@@ -9,8 +9,7 @@ class FeatureDiscoverLink
       mode = Inamen::FeatureDiscoverPresets.discover_mode_for(feature_id)
       query = {
         edition: edition_id.to_s,
-        mode: mode,
-        from_feature: feature_id.to_s
+        mode: mode
       }
 
       highlight = Inamen::FeatureDiscoverPresets.discover_highlight_for(feature_id)
@@ -19,7 +18,7 @@ class FeatureDiscoverLink
       return query if mode == "file_stats"
 
       query[:auto_scan] = "1"
-      phrases = Inamen::FeatureDiscoverPresets.phrase_entries_for_link(feature_id)
+      phrases = Inamen::FeatureDiscoverPresets.phrase_entries_for(feature_id)
 
       query[:search_phrases] = phrases.each_with_index.to_h do |phrase, index|
         row = { phrase: phrase[:phrase] }

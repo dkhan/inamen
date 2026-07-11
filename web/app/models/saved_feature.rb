@@ -33,8 +33,7 @@ class SavedFeature < ApplicationRecord
     DiscoveryScan.normalize(
       mode: mode,
       search_selection: search_selection,
-      search_phrases: search_phrases,
-      from_feature: from_feature
+      search_phrases: search_phrases
     )
   end
 

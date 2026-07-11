@@ -13,6 +13,9 @@
   <h1><%= @saved_feature&.name || @row&.name || @entry&.name %></h1>
   <% if @saved_feature %>
     <p class="lead">Saved from Discover</p>
+    <% if @row.kjvcode_url.present? %>
+      <p class="lead-meta"><%= feature_kjvcode_link(@row.kjvcode_url) %></p>
+    <% end %>
     <div class="feature-show-actions">
       <%= saved_feature_actions(@row, edition: @edition.edition_id) %>
     </div>
@@ -78,7 +81,7 @@
   <% if @row.notes.present? %>
     <section class="panel">
       <h2>Notes</h2>
-      <p><%= @row.notes %></p>
+      <div class="feature-notes"><%= format_feature_notes(@row.notes) %></div>
     </section>
   <% end %>
 

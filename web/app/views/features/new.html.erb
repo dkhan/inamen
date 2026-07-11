@@ -1,4 +1,7 @@
 <% content_for :title, "Save feature — Inamen" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "notes_editor", defer: true %>
+<% end %>
 
 <div class="page-header">
   <p class="breadcrumb">
@@ -63,6 +66,18 @@
         <dd><%= @saved_feature.scope_label %></dd>
       </div>
     </dl>
+
+    <div class="form-field">
+      <%= form.label :notes, "Notes", class: "form-label" %>
+      <%= render "notes_field", form: form %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :kjvcode_url, "KJV Code link", class: "form-label" %>
+      <%= form.url_field :kjvcode_url, class: "form-input",
+          placeholder: "https://kjvcode.com/pattern/..." %>
+      <p class="hint">Optional link to a related pattern on kjvcode.com.</p>
+    </div>
   </section>
 
   <% if @saved_feature.details.present? %>

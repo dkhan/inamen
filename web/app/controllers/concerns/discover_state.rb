@@ -81,23 +81,11 @@ module DiscoverState
     phrases = stored["search_phrases"]
     return true if phrases.is_a?(Hash) && Inamen::FeatureDiscoverPresets.raw_has_exclude_phrases?(phrases)
 
-    from_feature = stored["from_feature"]
-    from_feature.present? && Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
+    phrases.is_a?(Hash) && phrases.length > 4
   end
 
   def merge_fishermen_preset_excludes?
-    from_feature = params[:from_feature].presence || stored_discover_query&.dig("from_feature")
-    return true unless Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-
-    raw = fishermen_merge_raw_search_phrases
-    return true if raw.blank?
-
-    return false if Inamen::FeatureDiscoverPresets.bulky_query_simplified?(from_feature, raw)
-
-    return true unless request.post? && action_name == "scan"
-    return true if params[:search_phrases].blank?
-
-    Inamen::FeatureDiscoverPresets.bulky_preset_includes?(from_feature, raw)
+    false
   end
 
   private
