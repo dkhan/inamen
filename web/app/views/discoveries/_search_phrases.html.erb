@@ -1,10 +1,10 @@
-<% phrases = discovery_search_phrases(scan_params) %>
+<% phrases = discovery_search_phrase_rows(scan_params) %>
 
 <div class="search-phrases-field" id="search-phrases-panel"
     data-dictionary-url="<%= dictionary_discoveries_path(edition: @edition.edition_id, format: :json) %>">
   <span class="search-phrases-label">Search phrases</span>
   <div id="search-phrases-list" data-search-phrases-list>
-    <% phrases.each_with_index do |phrase, index| %>
+    <% phrases.each do |index, phrase| %>
       <%= render "search_phrase_row", index: index, phrase: phrase %>
     <% end %>
   </div>

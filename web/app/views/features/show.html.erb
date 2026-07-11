@@ -45,7 +45,7 @@
       </div>
       <div>
         <dt>Status</dt>
-        <dd><%= feature_match_badge(@row.match) %></dd>
+        <dd><%= feature_discover_status_link(@row.id, match: @row.match, edition: @edition.edition_id) %></dd>
       </div>
       <div>
         <dt>Scope</dt>

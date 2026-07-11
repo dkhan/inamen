@@ -12,6 +12,7 @@
   <ul class="search-within-tree" role="tree" aria-label="Search within">
     <li class="search-within-node" role="treeitem">
       <label class="search-within-row">
+        <%= hidden_field_tag "search_selection[colophons]", "0", id: nil %>
         <%= check_box_tag "search_selection[colophons]", "1", selection.colophons,
             id: "search_selection_colophons", class: "search-within-leaf" %>
         <span>Colophons</span>
@@ -19,6 +20,7 @@
     </li>
     <li class="search-within-node" role="treeitem">
       <label class="search-within-row">
+        <%= hidden_field_tag "search_selection[superscriptions]", "0", id: nil %>
         <%= check_box_tag "search_selection[superscriptions]", "1", selection.superscriptions,
             id: "search_selection_superscriptions", class: "search-within-leaf" %>
         <span>Superscriptions</span>

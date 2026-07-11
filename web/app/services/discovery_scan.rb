@@ -6,6 +6,7 @@ require "digest"
 class DiscoveryScan
   Params = Struct.new(
     :mode, :divisible_by, :search_selection, :min_count, :min_group_size, :match_by, :query_terms,
+    :from_feature,
     keyword_init: true
   )
 
@@ -16,7 +17,7 @@ class DiscoveryScan
 
   WordCountRow = Struct.new(:pattern, :case_sensitive, :count, :wildcard, :scope, :spellings, :exclude, keyword_init: true)
 
-  MODES = %w[divisible equal_count word_count].freeze
+  MODES = %w[divisible equal_count word_count file_stats].freeze
   MATCH_BY = %w[norm spelling].freeze
 
   PhraseEntry = Struct.new(:phrase, :case_sensitive, :exclude, :disabled, keyword_init: true)
@@ -48,7 +49,8 @@ class DiscoveryScan
       min_count: min_count.positive? ? min_count : 7,
       min_group_size: min_group_size >= 2 ? min_group_size : 2,
       match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm",
-      query_terms: query_terms
+      query_terms: query_terms,
+      from_feature: raw[:from_feature].presence
     )
   end
 
@@ -141,7 +143,7 @@ class DiscoveryScan
       if raw_phrases.is_a?(ActionController::Parameters)
         raw_phrases.permit!.to_h.values
       elsif raw_phrases.is_a?(Hash)
-        raw_phrases.values
+        raw_phrases.sort_by { |key, _| key.to_i }.map(&:last)
       else
         Array(raw_phrases)
       end
@@ -156,6 +158,7 @@ class DiscoveryScan
   def self.run(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
     return run_counts(edition, p, force: force) if p.mode == "word_count"
+    return compute_file_stats(edition) if p.mode == "file_stats"
 
     key = cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -163,6 +166,10 @@ class DiscoveryScan
     Rails.cache.fetch(key, expires_in: 7.days) do
       compute(edition, p)
     end
+  end
+
+  def self.run_file_stats(edition, params, force: false)
+    run(edition, params, force: force)
   end
 
   def self.run_counts(edition, params, force: false)
@@ -204,9 +211,15 @@ class DiscoveryScan
       compute_equal_count(edition, params)
     when "word_count"
       compute_word_count_rows(edition, params)
+    when "file_stats"
+      compute_file_stats(edition)
     else
       compute_divisible(edition, params)
     end
+  end
+
+  def self.compute_file_stats(edition)
+    edition.file_stats
   end
 
   def self.compute_divisible(edition, params)
@@ -248,9 +261,9 @@ class DiscoveryScan
   def self.compute_word_count_rows(edition, params)
     return [] unless enabled_search_terms?(params.query_terms)
 
-    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+    terms = word_count_terms(params)
 
-    Inamen::TokenQuery.scan(
+    rows = Inamen::TokenQuery.scan(
       edition.db,
       terms: terms,
       search_selection: params.search_selection
@@ -265,21 +278,63 @@ class DiscoveryScan
         exclude: row.exclude
       )
     end
+
+    return rows if params.from_feature.blank?
+
+    Inamen::FeatureDiscoverPresets.adjust_rows!(
+      params.from_feature,
+      edition,
+      rows,
+      search_selection: params.search_selection,
+      query_terms: params.query_terms
+    )
   end
 
   def self.compute_verse_result(edition, params)
-    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
-    rows = read_counts_cached(edition, params) || compute_word_count_rows(edition, params)
-
-    verse_result = Inamen::VerseMatchQuery.scan(
-      edition.db,
-      terms: terms,
-      search_selection: params.search_selection,
-      word_stream: edition.word_stream_index
-    )
-    verse_result.summary.occurrences = rows.sum { |row| row.exclude ? -row.count : row.count }
+    verse_result =
+      if params.from_feature == "fishermen_gospels"
+        exclusions = Inamen::FeatureDiscoverPresets.fishermen_exclusions_from_query_terms(params.query_terms)
+        Inamen::FishermenNameCounts.build_verse_result(
+          edition.lines,
+          scope: :gospels,
+          search_selection: params.search_selection,
+          james_exclusions: exclusions[:james],
+          john_exclusions: exclusions[:john]
+        )
+      else
+        terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+        result = Inamen::VerseMatchQuery.scan(
+          edition.db,
+          terms: terms,
+          search_selection: params.search_selection,
+          word_stream: edition.word_stream_index
+        )
+        if params.from_feature.present?
+          result = Inamen::FeatureDiscoverPresets.adjust_verse_result!(params.from_feature, result)
+        end
+        result
+      end
     Inamen::VerseMatchQuery.prepare_display!(edition, verse_result)
   end
+
+  def self.word_count_terms(params)
+    if params.from_feature == "fishermen_gospels"
+      include_only_terms(params.query_terms)
+    else
+      Inamen::TokenQuery.parse_terms(params.query_terms)
+    end
+  end
+
+  def self.include_only_terms(query_terms)
+    lines = query_terms.to_s.each_line.filter_map do |line|
+      attrs = Inamen::TokenPattern.parse_query_line(line)
+      next if attrs.nil? || attrs[:disabled] || attrs[:exclude]
+
+      line.strip
+    end
+    Inamen::TokenQuery.parse_terms(lines.join("\n"))
+  end
+  private_class_method :include_only_terms
 
   def self.cached?(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
@@ -323,8 +378,12 @@ class DiscoveryScan
   def self.read_cached(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
     return read_counts_cached(edition, p) if p.mode == "word_count"
+    return compute_file_stats(edition) if p.mode == "file_stats"
 
-    Rails.cache.read(cache_key_for(edition, p))
+    cached = Rails.cache.read(cache_key_for(edition, p))
+    return cached if cached
+
+    nil
   rescue TypeError
     clear_cache!(edition, p)
     nil
@@ -380,7 +439,7 @@ class DiscoveryScan
 
   def self.job_payload(params)
     p = params.is_a?(Params) ? params : normalize(params)
-    {
+    payload = {
       mode: p.mode,
       divisible_by: p.divisible_by,
       search_selection: p.search_selection.to_h.merge(submitted: "1"),
@@ -389,6 +448,8 @@ class DiscoveryScan
       match_by: p.match_by,
       query_terms: p.query_terms
     }
+    payload[:from_feature] = p.from_feature if p.from_feature.present?
+    payload
   end
 
   def self.cache_key_for(edition, params)
@@ -397,11 +458,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v15", *shared_cache_components(params, edition)]
+    ["discovery_counts/v22", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v15", *shared_cache_components(params, edition)]
+    ["discovery_verses/v22", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)
@@ -420,7 +481,8 @@ class DiscoveryScan
       p.divisible_by,
       p.search_selection.cache_key,
       p.min_count,
-      p.min_group_size
+      p.min_group_size,
+      p.from_feature
     ]
   end
 end

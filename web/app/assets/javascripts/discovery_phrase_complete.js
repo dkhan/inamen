@@ -243,6 +243,11 @@
     return checkbox ? checkbox.checked : false;
   }
 
+  function rowExcluded(row) {
+    const checkbox = row.querySelector('input[name$="[exclude]"]');
+    return checkbox ? checkbox.checked : false;
+  }
+
   function updateRow(row, options = {}) {
     const userInitiated = options.userInitiated === true;
     const input = row.querySelector(".search-phrase-input");
@@ -255,6 +260,15 @@
       preview.hidden = true;
       suggestions.hidden = true;
       row.dataset.canSearch = "false";
+      return;
+    }
+
+    if (rowExcluded(row)) {
+      preview.innerHTML = "";
+      preview.hidden = true;
+      suggestions.hidden = true;
+      row.dataset.canSearch = "false";
+      document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
       return;
     }
 

@@ -91,6 +91,7 @@ end
 if ARGV[0] == "corpora" && ARGV[1] == "prebuild"
   require "inamen/corpus_publisher"
   require "inamen/verse_index_publisher"
+  require "inamen/file_stats_publisher"
   require "inamen/word_stream_publisher"
   require "inamen/lexicon_publisher"
   require "inamen/canon_ordinals_publisher"
@@ -100,6 +101,9 @@ if ARGV[0] == "corpora" && ARGV[1] == "prebuild"
     puts built_path
   end
   Inamen::VerseIndexPublisher.build_all_prebuilt!(force: force).each do |built_path|
+    puts built_path
+  end
+  Inamen::FileStatsPublisher.build_all_prebuilt!(force: force).each do |built_path|
     puts built_path
   end
   Inamen::WordStreamPublisher.build_all_prebuilt!(force: force).each do |built_path|

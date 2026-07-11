@@ -1,8 +1,11 @@
 <% content_for :title, "Discover — Inamen" %>
 <% content_for :main_class, "site-main site-main-wide" %>
 <% word_count_mode = @scan_params.mode == "word_count" %>
+<% file_stats_mode = @scan_params.mode == "file_stats" %>
+<% from_feature = word_count_mode ? @scan_params.from_feature : nil %>
+<% auto_scan = params[:auto_scan] == "1" && @status != :ready %>
 <% equal_count_mode = @scan_params.mode == "equal_count" %>
-<% filter_scan_mode = !word_count_mode %>
+<% filter_scan_mode = !word_count_mode && !file_stats_mode %>
 <% selection = @scan_params.search_selection %>
 <% if @status == :computing %>
   <% content_for :head do %>
@@ -37,12 +40,14 @@
       class: "discovery-layout",
       data: {
         scan_action: scan_discoveries_path,
-        results_ready: (@status == :ready ? "true" : nil)
+        results_ready: (@status == :ready ? "true" : nil),
+        auto_scan: (auto_scan ? "true" : nil)
       }.compact do %>
     <%= hidden_field_tag :edition, @edition.edition_id %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token, id: nil %>
+    <%= hidden_field_tag :from_feature, from_feature if from_feature && word_count_mode %>
 
-    <aside class="discovery-search-within">
+    <aside class="discovery-search-within<%= " is-hidden" if file_stats_mode %>">
       <%= render "search_within_tree", selection: selection %>
     </aside>
 
@@ -55,7 +60,7 @@
         <% if word_count_mode %>
           <%= render "search_phrases", scan_params: @scan_params %>
         <% end %>
-        <% unless equal_count_mode || word_count_mode %>
+        <% unless equal_count_mode || word_count_mode || file_stats_mode %>
           <label>
             Divisible by
             <%= number_field_tag :divisible_by, @scan_params.divisible_by, min: 1, max: 10_000, class: "input-narrow" %>
@@ -82,6 +87,17 @@
   <% end %>
 </section>
 
+<% if from_feature && word_count_mode %>
+  <section class="panel notice">
+    <p>
+      <strong>Feature scan:</strong> <%= feature_discover_name(from_feature) %>
+      <% if auto_scan %>
+        — running discover search…
+      <% end %>
+    </p>
+  </section>
+<% end %>
+
 <% if @status == :computing %>
   <section class="panel notice">
     <p><strong>Scanning…</strong> Building the index and querying token counts. This page refreshes every few seconds.</p>
@@ -92,6 +108,8 @@
       <% if word_count_mode %>
         Enter a search phrase and press <em>Enter</em>, click away, or toggle <em>Case Sensitive</em> to scan.
         Separate multiple terms in one box with <code>|</code> (e.g. <code>six|seven</code>).
+      <% elsif file_stats_mode %>
+        Select <em>File stats</em> to view the whole-file word breakdown for the 7<sup>7</sup> feature.
       <% else %>
         Press <em>Enter</em> in a filter field to run a scan with the current settings.
       <% end %>
@@ -144,6 +162,38 @@
         <% end %>
         <%= render "verse_details_dialog" %>
       <% end %>
+    <% elsif file_stats_mode && @file_stats %>
+      <p class="hint">
+        Whole-file counts for <strong>7<sup>7</sup></strong>
+        (<%= number_with_delimiter(@file_stats.seven_power) %>).
+        The entire Bible = <%= format_feature_count(@file_stats.total) %> words.
+      </p>
+      <table class="features-table discovery-table discovery-file-stats">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th class="num">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @file_stats.rows.each do |row| %>
+            <tr>
+              <td><%= row.label %></td>
+              <td class="num"><%= format_feature_count(row.count) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr class="row-total <%= discovery_file_stats_row_class("combined_total") %>">
+            <td><strong>Total words (7<sup>7</sup>)</strong></td>
+            <td class="num"><strong><%= format_feature_count(@file_stats.total) %></strong></td>
+          </tr>
+          <tr class="<%= discovery_file_stats_row_class("file_characters") %>">
+            <td>Total file characters</td>
+            <td class="num"><%= format_feature_count(@file_stats.character_count) %></td>
+          </tr>
+        </tfoot>
+      </table>
     <% elsif equal_count_mode %>
       <table class="features-table discovery-table">
         <thead>

@@ -54,11 +54,11 @@ module Inamen
       FeatureEntry.new(
         id: "fishermen_gospels",
         name: "John 21 fishing party (Gospels)",
-        description: "Occurrences of Peter*, Thomas*, Nathanael* in Gospels verse text; James/John son-of-Zebedee whitelists only.",
+        description: "Occurrences of Peter*, Thomas*, Nathanael* in Gospels verse text; James/John son-of-Zebedee via KJS antimentions.",
         expected_count: 153,
         unit: "occurrences",
         scope: "gospels",
-        notes: "See FishermenNameCounts. Sum of five names in Matthew–John.",
+        notes: "See FishermenNameCounts and data/features/fishermen_gospels.kjs. Sum of five names in Matthew–John.",
         kjvcode_url: "https://kjvcode.com/pattern/men-who-caught-153-fishes-153x-in-gospels/"
       ),
       FeatureEntry.new(
@@ -218,9 +218,10 @@ module Inamen
         BY_ID.fetch(id.to_s) { raise ArgumentError, "Unknown feature: #{id.inspect}" }
       end
 
-      def run(id, lines:, db: nil, path: nil)
+      def run(id, lines:, db: nil, path: nil, edition_id: nil, file_stats: nil)
         entry = fetch(id)
-        count, details = compute(id, lines, db: db, path: path)
+        file_stats ||= FileStatsPublisher.load_for(edition_id) if edition_id
+        count, details = compute(id, lines, db: db, path: path, file_stats: file_stats)
         FeatureResult.new(
           id: entry.id,
           name: entry.name,
@@ -234,9 +235,10 @@ module Inamen
         )
       end
 
-      def run_all(lines:, db: nil, path: nil)
+      def run_all(lines:, db: nil, path: nil, edition_id: nil)
+        file_stats = FileStatsPublisher.load_for(edition_id) if edition_id
         VerseIndex.verse_map(lines)
-        CATALOG.map { |entry| run(entry.id, lines: lines, db: db, path: path) }
+        CATALOG.map { |entry| run(entry.id, lines: lines, db: db, path: path, edition_id: edition_id, file_stats: file_stats) }
       end
 
       def print_catalog(out: $stdout)
@@ -293,12 +295,12 @@ module Inamen
         rows.each { |row| write_row.call(row) }
       end
 
-      def compute(id, lines, db:, path:)
+      def compute(id, lines, db:, path:, file_stats: nil)
         case id.to_s
         when "combined_total"
-          combined_total(lines)
+          combined_total(lines, file_stats: file_stats)
         when "file_character_total"
-          file_character_total(path)
+          file_character_total(path, file_stats: file_stats)
         when "peter_verses"
           name_verse_count(lines, :peter)
         when "paul_verses"
@@ -338,14 +340,33 @@ module Inamen
         end
       end
 
-      def combined_total(lines)
+      def combined_total(lines, file_stats: nil)
+        if file_stats
+          count = file_stats.total
+          return [count, ["combined_total=#{count}", "7^7=#{7**7}"]]
+        end
+
         totals = CountingService.total_for_lines(lines)
         count = CountingService.combined_total(totals)
         [count, ["combined_total=#{count}", "7^7=#{7**7}"]]
       end
 
-      def file_character_total(path)
+      def file_character_total(path, file_stats: nil)
         raise ArgumentError, "file_character_total requires path:" if path.to_s.empty?
+
+        if file_stats
+          count = file_stats.character_count
+          bytes = File.binread(path).bytesize
+          seven_factor = 7 * (777.7 * 777.7).ceil
+          return [
+            count,
+            [
+              "codepoints=#{count}",
+              "bytes=#{bytes}",
+              "7*ceil(777.7^2)=#{seven_factor}"
+            ]
+          ]
+        end
 
         text = File.read(path, encoding: "UTF-8")
         count = text.length

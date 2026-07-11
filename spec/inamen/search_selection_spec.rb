@@ -60,6 +60,29 @@ RSpec.describe Inamen::SearchSelection do
       selection = described_class.from_params(submitted: "1", all_books: "1")
       expect(selection.default?).to be(true)
     end
+
+    it "keeps verse-text scope when colophons and superscriptions are explicitly off" do
+      selection = described_class.from_params(
+        submitted: "1",
+        all_books: "1",
+        colophons: "0",
+        superscriptions: "0"
+      )
+      expect(selection.colophons).to be(false)
+      expect(selection.superscriptions).to be(false)
+      expect(selection.default?).to be(false)
+    end
+
+    it "treats checkbox plus hidden submit values as checked" do
+      selection = described_class.from_params(
+        submitted: "1",
+        all_books: "1",
+        colophons: %w[0 1],
+        superscriptions: "0"
+      )
+      expect(selection.colophons).to be(true)
+      expect(selection.superscriptions).to be(false)
+    end
   end
 
   describe "#where_clause" do

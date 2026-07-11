@@ -422,6 +422,14 @@ body {
   padding-top: 0.65rem;
 }
 
+.discovery-file-stats tfoot tr.row-highlight td {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.discovery-search-within.is-hidden {
+  display: none;
+}
+
 .toolbar-form {
   display: flex;
   flex-wrap: wrap;
@@ -548,6 +556,26 @@ body {
 
 .feature-link:hover {
   color: var(--accent);
+}
+
+.feature-discover-status-link {
+  color: inherit;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.feature-discover-status-link:hover .badge-discoverable {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  filter: brightness(1.08);
+}
+
+.badge-discoverable {
+  cursor: pointer;
+}
+
+.badge-static {
+  cursor: default;
 }
 
 .feature-id {

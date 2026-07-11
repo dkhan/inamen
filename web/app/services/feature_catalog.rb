@@ -18,7 +18,12 @@ class FeatureCatalog
   end
 
   def self.compute_all(edition)
-    Inamen::Features.run_all(lines: edition.lines, db: edition.db, path: edition.path).map do |result|
+    Inamen::Features.run_all(
+      lines: edition.lines,
+      db: edition.db,
+      path: edition.path,
+      edition_id: edition.edition_id
+    ).map do |result|
       build_row(edition, result)
     end
   end
@@ -62,7 +67,13 @@ class FeatureCatalog
   end
 
   def self.run_one(edition, feature_id)
-    result = Inamen::Features.run(feature_id, lines: edition.lines, db: edition.db, path: edition.path)
+    result = Inamen::Features.run(
+      feature_id,
+      lines: edition.lines,
+      db: edition.db,
+      path: edition.path,
+      edition_id: edition.edition_id
+    )
     build_row(edition, result)
   end
 

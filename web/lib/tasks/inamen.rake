@@ -11,6 +11,9 @@ namespace :inamen do
       Inamen::VerseIndexPublisher.build_all_prebuilt!(force: force).each do |built_path|
         puts built_path
       end
+      Inamen::FileStatsPublisher.build_all_prebuilt!(force: force).each do |built_path|
+        puts built_path
+      end
       Inamen::WordStreamPublisher.build_all_prebuilt!(force: force).each do |built_path|
         puts built_path
       end

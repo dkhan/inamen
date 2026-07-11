@@ -52,7 +52,7 @@
       <% if @status == :ready %>
         <% @rows.each do |row| %>
           <tr>
-            <td><%= feature_match_badge(row.match) %></td>
+            <td><%= feature_discover_status_link(row.id, match: row.match, edition: @edition.edition_id) %></td>
             <td>
               <%= link_to row.name, feature_path(row.id, edition: @edition.edition_id), class: "feature-link" %>
               <div class="feature-id"><code><%= row.id %></code></div>
@@ -67,7 +67,7 @@
         <% @catalog.each do |entry| %>
           <% expected = @edition.expected_count(entry.id) %>
           <tr class="row-pending">
-            <td><span class="badge badge-pending">pending</span></td>
+            <td><%= feature_discover_pending_link(entry.id, edition: @edition.edition_id) %></td>
             <td>
               <%= link_to entry.name, feature_path(entry.id, edition: @edition.edition_id), class: "feature-link" %>
               <div class="feature-id"><code><%= entry.id %></code></div>

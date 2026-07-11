@@ -4,16 +4,22 @@ class DiscoveriesController < ApplicationController
   include EditionSelectable
 
   before_action :set_scan_params
-  after_action :persist_discover_query, only: %i[index scan verses]
+  before_action :persist_discover_query_before_scan, only: :scan
+  after_action :persist_discover_query, only: %i[index verses]
 
   def index
     @edition.warm! if @scan_params.mode == "word_count"
+    maybe_run_feature_auto_scan!
     @status = page_status
 
     return unless @status == :ready
 
-    @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
-    @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params) if @scan_params.mode == "word_count"
+    if @scan_params.mode == "file_stats"
+      @file_stats = DiscoveryScan.read_cached(@edition, @scan_params)
+    else
+      @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
+      @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params) if @scan_params.mode == "word_count"
+    end
   end
 
   def dictionary
@@ -43,7 +49,14 @@ class DiscoveriesController < ApplicationController
   def scan
     edition_id = current_edition_id
     edition = @edition
-    scan_params = DiscoveryScan.normalize(scan_param_hash)
+    scan_params = build_scan_params
+
+    if scan_params.mode == "file_stats"
+      DiscoveryScan.clear_cache!(edition, scan_params) if params[:refresh] == "1"
+      DiscoveryScan.run_file_stats(edition, scan_params, force: params[:refresh] == "1")
+      redirect_to discoveries_path(scan_query(edition_id, scan_params))
+      return
+    end
 
     if scan_params.search_selection.empty?
       redirect_to discoveries_path(scan_query(edition_id, scan_params)), alert: "Select at least one book or text type."
@@ -55,7 +68,7 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if scan_params.mode == "word_count" && !DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms, raw_phrases: params[:search_phrases])
+    if scan_params.mode == "word_count" && !DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -92,38 +105,100 @@ class DiscoveriesController < ApplicationController
   end
 
   def page_status
+    return :ready if @scan_params.mode == "file_stats"
+
+    return :ready if DiscoveryScan.counts_cached?(@edition, @scan_params)
+
     if @scan_params.mode == "word_count" && invalid_word_count_phrases?
       return :pending
     end
 
-    return :ready if DiscoveryScan.counts_cached?(@edition, @scan_params)
     return :computing if DiscoveryScan.running?(@edition, @scan_params) || params[:waiting].present?
 
     :pending
   end
 
   def set_scan_params
-    @scan_params = DiscoveryScan.normalize(scan_param_hash)
+    @scan_params = build_scan_params
+  end
+
+  def build_scan_params
+    hash = scan_param_hash
+    from_feature = hash[:from_feature]
+    hash[:search_phrases] =
+      if request.post? && action_name == "scan" && params[:search_phrases].present?
+        raw = search_phrases_param_hash(params[:search_phrases])
+        if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
+          Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+        else
+          raw
+        end
+      else
+        hydrated_search_phrases(
+          from_feature,
+          hash[:search_phrases],
+          merge_preset_excludes: merge_fishermen_preset_excludes?
+        )
+      end
+    if hash[:search_phrases].blank? && hash[:query_terms].blank? && stored_discover_query&.dig("query_terms").present?
+      hash[:query_terms] = stored_discover_query["query_terms"]
+    end
+    hash[:from_feature] = Inamen::FeatureDiscoverPresets.resolve_from_feature(
+      from_feature,
+      query_terms: DiscoveryScan.query_terms_from_raw(hash)
+    )
+    DiscoveryScan.normalize(hash)
+  end
+
+  def maybe_run_feature_auto_scan!
+    return unless params[:auto_scan] == "1"
+    return unless @scan_params.mode == "word_count"
+    return if DiscoveryScan.counts_cached?(@edition, @scan_params)
+    return if invalid_word_count_phrases?
+    return unless @edition.corpus_ready?
+
+    DiscoveryScan.run_counts(@edition, @scan_params, force: false)
+    run_or_enqueue_verses!(@edition, @scan_params)
   end
 
   def persist_discover_query
     return unless @scan_params
 
-    store_discover_query!(current_discover_query)
+    store_discover_query!(discover_query_snapshot)
+  end
+
+  def persist_discover_query_before_scan
+    return unless @scan_params
+
+    store_discover_query!(discover_query_snapshot)
+  end
+
+  def discover_query_snapshot
+    query = scan_query(current_edition_id, @scan_params, for_storage: true)
+    raw = params[:search_phrases].present? ? search_phrases_param_hash(params[:search_phrases]) : nil
+    if request.post? && action_name == "scan" && raw.present?
+      from_feature = @scan_params.from_feature || params[:from_feature].presence || stored_discover_query&.dig("from_feature")
+      query[:search_phrases] =
+        if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
+          Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+        else
+          raw
+        end
+    else
+      phrases = hydrated_search_phrases(@scan_params.from_feature, params[:search_phrases], merge_preset_excludes: true)
+      query[:search_phrases] = phrases if phrases.present?
+    end
+    query[:from_feature] = @scan_params.from_feature if @scan_params.from_feature.present?
+    query.except(:auto_scan, :dq, :query_terms)
   end
 
   def current_discover_query
-    query = scan_query(current_edition_id, @scan_params)
-    if params[:search_phrases].present?
-      query[:search_phrases] = search_phrases_param_hash(params[:search_phrases])
-    elsif session.dig(:discover_query, "search_phrases").present?
-      query[:search_phrases] = session[:discover_query]["search_phrases"]
-    end
-    query
+    discover_query_snapshot
   end
 
   def scan_param_hash
-    {
+    stored = stored_discover_query
+    hash = {
       mode: params[:mode],
       divisible_by: params[:divisible_by],
       search_selection: search_selection_param_hash,
@@ -133,8 +208,21 @@ class DiscoveriesController < ApplicationController
       min_group_size: params[:min_group_size],
       match_by: params[:match_by],
       query_terms: params[:query_terms],
-      search_phrases: params[:search_phrases]
+      search_phrases: params[:search_phrases],
+      from_feature: params[:from_feature]
     }
+
+    if hash[:from_feature].blank?
+      hash[:from_feature] = stored&.dig("from_feature")
+    end
+
+    if params[:from_feature].present? && params[:search_selection].blank?
+      hash[:search_selection] = Inamen::FeatureDiscoverPresets.selection_query_for(params[:from_feature])
+    elsif hash[:search_selection].blank? && stored&.dig("search_selection").present?
+      hash[:search_selection] = stored["search_selection"]
+    end
+
+    hash
   end
 
   def search_selection_param_hash
@@ -150,7 +238,7 @@ class DiscoveriesController < ApplicationController
     }.compact
   end
 
-  def scan_query(edition_id, scan_params)
+  def scan_query(edition_id, scan_params, for_storage: false)
     selection = scan_params.search_selection
     query = {
       edition: edition_id,
@@ -158,15 +246,26 @@ class DiscoveriesController < ApplicationController
       divisible_by: scan_params.divisible_by,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
-      match_by: scan_params.match_by,
-      query_terms: scan_params.query_terms
+      match_by: scan_params.match_by
     }
+    unless for_storage || use_discover_query_token_in_urls?
+      query[:query_terms] = scan_params.query_terms unless Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
+    end
 
-    if scan_params.mode == "word_count"
-      if params[:search_phrases].present?
-        query[:search_phrases] = search_phrases_param_hash(params[:search_phrases])
-      elsif session.dig(:discover_query, "search_phrases").present?
-        query[:search_phrases] = session[:discover_query]["search_phrases"]
+    query[:from_feature] = scan_params.from_feature if scan_params.from_feature.present? && !for_storage && !use_discover_query_token_in_urls?
+
+    if for_storage || !use_discover_query_token_in_urls?
+      if scan_params.mode == "word_count"
+        phrases = nil
+        if params[:search_phrases].present?
+          phrases = search_phrases_param_hash(params[:search_phrases])
+        elsif stored_discover_query&.dig("search_phrases").present?
+          phrases = stored_discover_query["search_phrases"]
+        end
+        unless for_storage
+          phrases = Inamen::FeatureDiscoverPresets.compact_search_phrases_for_session(scan_params.from_feature, phrases)
+        end
+        query[:search_phrases] = phrases if phrases.present?
       end
     end
 
@@ -183,6 +282,7 @@ class DiscoveriesController < ApplicationController
       selection_query[:books] = selection.books
     end
     query[:search_selection] = selection_query
+    query[:dq] = session[DISCOVER_QUERY_ID_KEY] if !for_storage && use_discover_query_token_in_urls?
     query
   end
 
@@ -210,10 +310,26 @@ class DiscoveriesController < ApplicationController
   end
 
   def current_search_phrases_hash
-    if params[:search_phrases].present?
-      search_phrases_param_hash(params[:search_phrases])
-    elsif session.dig(:discover_query, "search_phrases").present?
-      session[:discover_query]["search_phrases"]
-    end
+    raw = if params[:search_phrases].present?
+            search_phrases_param_hash(params[:search_phrases])
+          elsif stored_discover_query&.dig("search_phrases").present?
+            stored_discover_query["search_phrases"]
+          end
+
+    Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
+      @scan_params.from_feature,
+      raw: raw,
+      merge_preset_excludes: merge_fishermen_preset_excludes?
+    )
+  end
+
+  def hydrated_search_phrases(from_feature, raw_phrases, merge_preset_excludes: true)
+    raw = search_phrases_param_hash(raw_phrases) if raw_phrases.present?
+    raw = stored_discover_query&.dig("search_phrases") if raw.blank?
+    Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
+      from_feature,
+      raw: raw,
+      merge_preset_excludes: merge_preset_excludes
+    )
   end
 end

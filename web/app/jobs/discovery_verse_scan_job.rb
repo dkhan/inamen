@@ -11,8 +11,8 @@ class DiscoveryVerseScanJob < ApplicationJob
     return if !force && (Rails.cache.exist?(lock_key) || DiscoveryScan.verses_cached?(edition, params))
 
     Rails.cache.write(lock_key, true, expires_in: 30.minutes)
-    DiscoveryScan.run_verses(edition, params, force: force)
     edition.warm!
+    DiscoveryScan.run_verses(edition, params, force: force)
   ensure
     Rails.cache.delete(lock_key)
   end

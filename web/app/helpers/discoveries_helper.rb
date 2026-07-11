@@ -6,11 +6,23 @@ module DiscoveriesHelper
     options_for_select(
       [
         ["Word count", "word_count"],
+        ["File stats", "file_stats"],
         ["Divisible by N", "divisible"],
         ["Equal occurrence count", "equal_count"]
       ],
       selected
     )
+  end
+
+  def discovery_file_stats_highlight
+    params[:highlight].presence
+  end
+
+  def discovery_file_stats_row_class(row_key)
+    highlight = discovery_file_stats_highlight
+    return "" if highlight.blank?
+
+    "row-highlight" if highlight.to_s == row_key.to_s
   end
 
   def discovery_match_by_options(selected)
@@ -55,10 +67,50 @@ module DiscoveriesHelper
   end
 
   def discovery_search_phrases(scan_params)
-    if params[:search_phrases].present?
-      DiscoveryScan.phrase_entries_from_params(params[:search_phrases])
-    elsif session.dig(:discover_query, "search_phrases").present?
-      DiscoveryScan.phrase_entries_from_params(session[:discover_query]["search_phrases"])
+    discovery_search_phrase_rows(scan_params).map(&:last)
+  end
+
+  def discovery_search_phrase_rows(scan_params)
+    raw = if params[:search_phrases].present?
+            params[:search_phrases].permit!.to_h
+          elsif stored_discover_query&.dig("search_phrases").present?
+            stored_discover_query["search_phrases"]
+          end
+
+    hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
+      scan_params.from_feature,
+      raw: raw,
+      merge_preset_excludes: merge_fishermen_preset_excludes?
+    )
+    if hydrated.present?
+      return hydrated.sort_by { |key, _| key.to_i }.map { |index, row| [index, phrase_entry_from_row(row)] }
+    end
+
+    discovery_search_phrase_entries(scan_params).each_with_index.map { |phrase, index| [index.to_s, phrase] }
+  end
+
+  def discovery_scan_hidden_phrases(scan_params)
+    entries = discovery_search_phrase_entries(scan_params)
+    return entries unless scan_params.from_feature.present? &&
+                          Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(scan_params.from_feature)
+
+    entries.reject(&:exclude)
+  end
+
+  def discovery_search_phrase_entries(scan_params)
+    raw = if params[:search_phrases].present?
+            params[:search_phrases].permit!.to_h
+          elsif stored_discover_query&.dig("search_phrases").present?
+            stored_discover_query["search_phrases"]
+          end
+
+    hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
+      scan_params.from_feature,
+      raw: raw,
+      merge_preset_excludes: merge_fishermen_preset_excludes?
+    )
+    if hydrated.present?
+      DiscoveryScan.phrase_entries_from_params(hydrated)
     else
       DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms)
     end
@@ -71,16 +123,21 @@ module DiscoveriesHelper
       hidden_field_tag(:divisible_by, scan_params.divisible_by),
       hidden_field_tag(:min_count, scan_params.min_count),
       hidden_field_tag(:min_group_size, scan_params.min_group_size),
-      hidden_field_tag(:match_by, scan_params.match_by),
-      hidden_field_tag(:query_terms, scan_params.query_terms)
+      hidden_field_tag(:match_by, scan_params.match_by)
     ]
+    unless scan_params.from_feature.present? && Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
+      parts << hidden_field_tag(:query_terms, scan_params.query_terms)
+    end
 
-    discovery_search_phrases(scan_params).each_with_index do |phrase, index|
+    discovery_scan_hidden_phrases(scan_params).each_with_index do |phrase, index|
       parts << hidden_field_tag("search_phrases[#{index}][phrase]", phrase.phrase)
       parts << hidden_field_tag("search_phrases[#{index}][case_sensitive]", "1") if phrase.case_sensitive
       parts << hidden_field_tag("search_phrases[#{index}][exclude]", "1") if phrase.exclude
       parts << hidden_field_tag("search_phrases[#{index}][disabled]", "1") if phrase.disabled
     end
+    parts << hidden_field_tag(:from_feature, scan_params.from_feature) if scan_params.from_feature.present? &&
+                                                                          scan_params.mode == "word_count" &&
+                                                                          !use_discover_query_token_in_urls?
 
     unless selection.default?
       parts << hidden_field_tag("search_selection[submitted]", "1")
@@ -98,28 +155,37 @@ module DiscoveriesHelper
 
   def discovery_verses_query(edition, scan_params)
     query = discovery_scan_query(edition, scan_params)
+    if use_discover_query_token_in_urls?
+      return query.merge(dq: session[:discover_query_id]).except(:search_phrases, :query_terms)
+    end
+
     phrases = discovery_search_phrases_param_hash(scan_params)
     query[:search_phrases] = phrases if phrases.present?
     query
   end
 
   def discovery_search_phrases_param_hash(scan_params)
-    if params[:search_phrases].present?
-      params[:search_phrases].permit!.to_h
-    elsif session.dig(:discover_query, "search_phrases").present?
-      session[:discover_query]["search_phrases"]
-    else
-      DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms).map.with_index.to_h do |phrase, index|
-        [
-          index.to_s,
-          {
-            "phrase" => phrase.phrase,
-            "case_sensitive" => phrase.case_sensitive ? "1" : "0",
-            "exclude" => phrase.exclude ? "1" : "0",
-            "disabled" => phrase.disabled ? "1" : "0"
-          }.compact
-        ]
-      end
+    raw = if params[:search_phrases].present?
+            params[:search_phrases].permit!.to_h
+          elsif stored_discover_query&.dig("search_phrases").present?
+            stored_discover_query["search_phrases"]
+          end
+
+    compact = Inamen::FeatureDiscoverPresets.compact_search_phrases_for_session(scan_params.from_feature, raw)
+    return compact if compact.present?
+
+    return raw if raw.present?
+
+    DiscoveryScan.phrase_entries_from_query_terms(scan_params.query_terms).map.with_index.to_h do |phrase, index|
+      [
+        index.to_s,
+        {
+          "phrase" => phrase.phrase,
+          "case_sensitive" => phrase.case_sensitive ? "1" : "0",
+          "exclude" => phrase.exclude ? "1" : "0",
+          "disabled" => phrase.disabled ? "1" : "0"
+        }.compact
+      ]
     end
   end
 
@@ -131,9 +197,10 @@ module DiscoveriesHelper
       divisible_by: scan_params.divisible_by,
       min_count: scan_params.min_count,
       min_group_size: scan_params.min_group_size,
-      match_by: scan_params.match_by,
-      query_terms: scan_params.query_terms
+      match_by: scan_params.match_by
     }
+    query[:query_terms] = scan_params.query_terms unless Inamen::FeatureDiscoverPresets.omit_query_terms_from_urls?(scan_params.from_feature)
+    query[:from_feature] = scan_params.from_feature if scan_params.from_feature.present? && !use_discover_query_token_in_urls?
 
     return query if selection.default?
 
@@ -225,6 +292,16 @@ module DiscoveriesHelper
 
   def discovery_verse_results_display_limit
     VERSE_RESULTS_DISPLAY_LIMIT
+  end
+
+  def phrase_entry_from_row(row)
+    entry = row.respond_to?(:symbolize_keys) ? row.symbolize_keys : row
+    DiscoveryScan::PhraseEntry.new(
+      phrase: entry[:phrase].to_s,
+      case_sensitive: ActiveModel::Type::Boolean.new.cast(entry[:case_sensitive]),
+      exclude: ActiveModel::Type::Boolean.new.cast(entry[:exclude]),
+      disabled: ActiveModel::Type::Boolean.new.cast(entry[:disabled])
+    )
   end
 
   private

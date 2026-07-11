@@ -65,6 +65,14 @@ class EditionContext
     Inamen::VerseIndex.verse_text_from_index(chapter_index, book: book, chapter: chapter, verse: verse)
   end
 
+  def file_stats
+    @file_stats ||= Inamen::FileStatsPublisher.resolve(edition_id, lines: lines, text_path: path)
+  end
+
+  def file_stats_prebuilt_path
+    Inamen::FileStatsPublisher.prebuilt_path(edition_id, text_path: path)
+  end
+
   def warm!
     chapter_index
     word_stream_index

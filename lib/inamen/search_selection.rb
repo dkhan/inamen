@@ -94,7 +94,12 @@ module Inamen
       end
 
       def truthy?(value)
-        value == true || value == "1" || value == "true" || value == "on"
+        case value
+        when Array
+          value.any? { |item| truthy?(item) }
+        else
+          value == true || value == "1" || value == "true" || value == "on"
+        end
       end
     end
 
