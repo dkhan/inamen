@@ -222,12 +222,24 @@ module Inamen
       FISHERMEN_INCLUDE_PHRASES = %w[Peter* Thomas* Nathanael* James* John*].freeze
 
       def fishermen_preset_includes?(raw)
-        phrases = normalize_raw_phrases_hash(raw).values.filter_map do |row|
-          next if boolean_param(row["exclude"])
-
-          row["phrase"]
-        end
+        phrases = fisherman_include_phrases_from_raw(raw)
         FISHERMEN_INCLUDE_PHRASES.all? { |pattern| phrases.include?(pattern) }
+      end
+
+      def fishermen_query_simplified?(raw)
+        return false if raw.nil? || raw.empty?
+
+        fisherman_include_phrases_from_raw(raw).sort != FISHERMEN_INCLUDE_PHRASES.sort
+      end
+
+      def fisherman_include_phrases_from_raw(raw)
+        normalize_raw_phrases_hash(raw).values.filter_map do |row|
+          next if boolean_param(row["exclude"])
+          next if boolean_param(row["disabled"])
+
+          phrase = row["phrase"].to_s.strip
+          phrase unless phrase.empty?
+        end
       end
 
       def search_phrases_hash_for(feature_id, raw: nil, merge_preset_excludes: true)
@@ -238,6 +250,7 @@ module Inamen
 
         normalized = normalize_raw_phrases_hash(raw)
         return normalized if raw_has_exclude_phrases?(raw)
+        return normalized if fishermen_query_simplified?(normalized)
         return normalized unless merge_preset_excludes
 
         merged = preset.dup
@@ -252,6 +265,7 @@ module Inamen
       def resolve_from_feature(feature_id, query_terms:)
         id = feature_id.to_s
         id = nil if id.empty?
+        id = "fishermen_gospels" if id.nil? && fishermen_gospels_query?(query_terms)
         return nil unless id
 
         case id
@@ -263,12 +277,37 @@ module Inamen
       end
 
       def fishermen_gospels_query?(query_terms)
+        fishermen_antimentions_in_query?(query_terms) ||
+          fishermen_all_preset_includes_in_query?(query_terms) ||
+          query_terms.to_s.each_line.any? do |line|
+            attrs = TokenPattern.parse_query_line(line)
+            next unless attrs && !attrs[:exclude] && !attrs[:disabled]
+
+            fishermen_name_pattern?(attrs[:pattern])
+          end
+      end
+
+      def fishermen_all_preset_includes_in_query?(query_terms)
+        phrases = query_terms.to_s.each_line.filter_map do |line|
+          attrs = TokenPattern.parse_query_line(line)
+          next if !attrs || attrs[:exclude] || attrs[:disabled]
+
+          attrs[:pattern]
+        end
+        FISHERMEN_INCLUDE_PHRASES.all? { |pattern| phrases.include?(pattern) }
+      end
+
+      def fishermen_antimentions_in_query?(query_terms)
         query_terms.to_s.each_line.any? do |line|
           attrs = TokenPattern.parse_query_line(line)
-          next unless attrs && !attrs[:exclude] && !attrs[:disabled]
+          next false unless attrs && !attrs[:disabled]
 
-          fishermen_name_pattern?(attrs[:pattern])
+          fishermen_antimention_phrase?(attrs[:pattern])
         end
+      end
+
+      def fishermen_antimention_phrase?(pattern)
+        pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN)/i)
       end
 
       def fishermen_name_pattern?(pattern)
@@ -301,15 +340,22 @@ module Inamen
 
       def search_phrases_from_post(feature_id, raw_post)
         normalized = normalize_raw_phrases_hash(raw_post)
-        hydrated = search_phrases_hash_for(feature_id, raw: normalized, merge_preset_excludes: true)
+        simplified = fishermen_query_simplified?(normalized)
+        hydrated = search_phrases_hash_for(
+          feature_id,
+          raw: normalized,
+          merge_preset_excludes: !simplified && fishermen_preset_includes?(normalized)
+        )
 
-        if fishermen_preset_includes?(normalized) || raw_has_exclude_phrases?(normalized)
-          preset = preset_search_phrases_hash(feature_id)
-          preset.each do |idx, row|
-            next unless boolean_param(row["exclude"])
-            next if hydrated.key?(idx.to_s)
+        unless simplified
+          if fishermen_preset_includes?(normalized) || raw_has_exclude_phrases?(normalized)
+            preset = preset_search_phrases_hash(feature_id)
+            preset.each do |idx, row|
+              next unless boolean_param(row["exclude"])
+              next if hydrated.key?(idx.to_s)
 
-            hydrated[idx.to_s] = stringify_phrase_row(row)
+              hydrated[idx.to_s] = stringify_phrase_row(row)
+            end
           end
         end
 
@@ -382,6 +428,7 @@ module Inamen
       def compact_search_phrases_for_session(feature_id, phrases)
         return phrases if feature_id.to_s.empty? || !bulky_phrase_feature?(feature_id) || phrases.nil? || phrases.empty?
         return normalize_raw_phrases_hash(phrases) if fishermen_phrases_customized?(feature_id, phrases)
+        return normalize_raw_phrases_hash(phrases) if fishermen_query_simplified?(phrases)
 
         phrases.each_with_object({}) do |(idx, row), compact|
           next if boolean_param(row["exclude"] || row[:exclude])
@@ -497,14 +544,17 @@ module Inamen
 
       def adjust_fishermen_rows!(edition, rows, query_terms:)
         entries = fishermen_phrase_entries_from_query_terms(query_terms).reject { |entry| entry[:disabled] }
-        gross = FishermenNameCounts.gross_counts(edition.lines, scope: :gospels)
-        gross_spellings = FishermenNameCounts.gross_spellings(edition.lines, scope: :gospels)
         exclusions = fishermen_exclusions_from_query_terms(query_terms)
-        books = FishermenNameCounts.scope_books(:gospels)
-        net = {
-          james: FishermenNameCounts.count_with_exclusions(edition.lines, books, "James", exclusions[:james]),
-          john: FishermenNameCounts.count_with_exclusions(edition.lines, books, "John", exclusions[:john])
-        }
+        bundle = FishermenNameCounts.gospel_scan_bundle(
+          edition.lines,
+          james_exclusions: exclusions[:james],
+          john_exclusions: exclusions[:john],
+          edition: edition,
+          search_selection: FeatureDiscoverPresets.selection_for("fishermen_gospels")
+        )
+        gross = bundle.gross
+        gross_spellings = bundle.gross_spellings
+        net = bundle.net
         gross_by_pattern = {
           "Peter*" => gross[:peter],
           "Thomas*" => gross[:thomas],
@@ -520,14 +570,15 @@ module Inamen
           "John*" => gross_spellings[:john]
         }
         include_rows = rows.reject(&:exclude).each_with_object({}) { |row, index| index[row.pattern] = row }
-        scope_label = include_rows.values.first&.scope
-        row_class = rows.first.class
+        scope_label = include_rows.values.first&.scope || selection_for("fishermen_gospels").label
+        row_class = rows.first&.class || Inamen::TokenQuery::ResultRow
 
         entries.map do |entry|
           pattern = entry[:phrase]
           source = fishermen_include_source(pattern, include_rows)
+          antimention = fishermen_antimention_phrase?(pattern)
           count =
-            if entry[:exclude]
+            if entry[:exclude] || antimention
               key = fishermen_exclude_key(pattern)
               gross[key] - net[key]
             else
@@ -539,7 +590,12 @@ module Inamen
             count: count,
             wildcard: source&.wildcard || pattern.include?("*"),
             scope: scope_label,
-            spellings: fishermen_row_spellings(entry, include_rows: include_rows, spellings_by_pattern: spellings_by_pattern),
+            spellings: fishermen_row_spellings(
+              entry,
+              include_rows: include_rows,
+              spellings_by_pattern: spellings_by_pattern,
+              antimention: antimention
+            ),
             exclude: entry[:exclude]
           )
         end
@@ -589,8 +645,8 @@ module Inamen
         end
       end
 
-      def fishermen_row_spellings(entry, include_rows:, spellings_by_pattern:)
-        return {} if entry[:exclude]
+      def fishermen_row_spellings(entry, include_rows:, spellings_by_pattern:, antimention: false)
+        return {} if entry[:exclude] || antimention
 
         alternatives = split_include_alternatives(entry[:phrase])
         merged = alternatives.each_with_object({}) do |alternative, hash|

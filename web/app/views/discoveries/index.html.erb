@@ -58,6 +58,11 @@
           <%= select_tag :mode, discovery_mode_options(@scan_params.mode), onchange: "this.form.requestSubmit()" %>
         </label>
         <% if word_count_mode %>
+          <div class="discovery-phrase-toolbar-actions" aria-label="Search phrase tools">
+            <button type="button" class="discovery-phrase-action" id="clear-search-phrases">Clear all</button>
+          </div>
+        <% end %>
+        <% if word_count_mode %>
           <%= render "search_phrases", scan_params: @scan_params %>
         <% end %>
         <% unless equal_count_mode || word_count_mode || file_stats_mode %>

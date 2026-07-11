@@ -44,4 +44,11 @@ RSpec.describe Inamen::CorpusStore do
       expect(db.get_first_value("SELECT SUM(count) FROM token_counts").to_i).to eq(790_849)
     end
   end
+
+  describe ".normalize_token" do
+    it "folds ligatures so ASCII spellings match KJV tokens" do
+      expect(described_class.normalize_token("Alph\u00e6us")).to eq("alphaeus")
+      expect(described_class.normalize_token("Alphaeus")).to eq("alphaeus")
+    end
+  end
 end

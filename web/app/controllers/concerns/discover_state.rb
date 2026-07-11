@@ -5,10 +5,25 @@ module DiscoverState
 
   DISCOVER_QUERY_ID_KEY = :discover_query_id
   LEGACY_DISCOVER_QUERY_KEY = :discover_query
+  DISCOVER_SERVER_EPOCH_KEY = :discover_server_epoch
 
   included do
     helper_method :discover_path_with_state, :stored_discover_query, :use_discover_query_token_in_urls?,
                   :merge_fishermen_preset_excludes?
+  end
+
+  def reset_discover_query_if_server_restarted!
+    current = discover_server_epoch
+    return if session[DISCOVER_SERVER_EPOCH_KEY] == current
+
+    token = session[DISCOVER_QUERY_ID_KEY].presence || params[:dq].presence
+    DiscoverQueryStore.delete(token)
+    session.delete(DISCOVER_QUERY_ID_KEY)
+    session.delete(LEGACY_DISCOVER_QUERY_KEY)
+    session[DISCOVER_SERVER_EPOCH_KEY] = current
+    @discover_query_fresh = true
+    remove_instance_variable(:@stored_discover_query) if defined?(@stored_discover_query)
+    @stored_discover_query = nil
   end
 
   def store_discover_query!(query)
@@ -71,14 +86,16 @@ module DiscoverState
   end
 
   def merge_fishermen_preset_excludes?
-    return true unless request.post? && action_name == "scan"
-    return true if params[:search_phrases].blank?
-
     from_feature = params[:from_feature].presence || stored_discover_query&.dig("from_feature")
     return true unless Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
 
-    raw = discover_raw_search_phrases_param
-    return true if Inamen::FeatureDiscoverPresets.raw_has_exclude_phrases?(raw)
+    raw = fishermen_merge_raw_search_phrases
+    return true if raw.blank?
+
+    return false if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+
+    return true unless request.post? && action_name == "scan"
+    return true if params[:search_phrases].blank?
 
     Inamen::FeatureDiscoverPresets.fishermen_preset_includes?(raw)
   end
@@ -86,6 +103,8 @@ module DiscoverState
   private
 
   def load_stored_discover_query
+    return nil if @discover_query_fresh
+
     token = params[:dq].presence || session[DISCOVER_QUERY_ID_KEY]
     adopt_discover_query_token!(token) if params[:dq].present?
 
@@ -99,6 +118,10 @@ module DiscoverState
     DiscoverQueryStore.fetch(session[DISCOVER_QUERY_ID_KEY])
   end
 
+  def discover_server_epoch
+    Rails.application.config.discover_server_epoch
+  end
+
   def discover_raw_search_phrases_param
     return nil unless params[:search_phrases].present?
 
@@ -106,6 +129,18 @@ module DiscoverState
       params[:search_phrases].permit!.to_h
     else
       params[:search_phrases].to_h
+    end
+  end
+
+  # Prefer URL/form phrases over session so a fishermen feature link rehydrates
+  # antimentions even when the stored query was previously simplified.
+  def fishermen_merge_raw_search_phrases
+    if request.post? && action_name == "scan" && params[:search_phrases].present?
+      discover_raw_search_phrases_param
+    elsif params[:search_phrases].present?
+      discover_raw_search_phrases_param
+    else
+      stored_discover_query&.dig("search_phrases")
     end
   end
 end

@@ -168,5 +168,25 @@ RSpec.describe Inamen::TokenQuery do
       expect(rows.map(&:pattern)).to eq(%w[seven cities])
       expect(rows.map(&:count)).to all(be_positive)
     end
+
+    it "does not split fishermen antimention exclude rows into hundreds of terms" do
+      phrase = "ANTIMENTIONS OF JOHN (THE APOSTLE, SON OF ZEBEDEE) | John the Baptist | John was cast"
+      terms = described_class.parse_terms("#{phrase}|exclude\n")
+      expect(terms.length).to eq(1)
+      expect(terms.first.pattern).to eq(phrase)
+      expect(terms.first.exclude).to be(true)
+    end
+
+    it "matches lexicon counts when using the word-stream fast path" do
+      stream = Inamen::WordStreamIndex.build_from_db(db)
+      selection = Inamen::SearchSelection.default
+      terms = described_class.parse_terms("seven\n*jesus*\nJesus Christ\n")
+      lexicon_rows = described_class.scan(db, terms: terms, search_selection: selection)
+      stream_rows = described_class.scan(db, terms: terms, search_selection: selection, word_stream: stream)
+
+      expect(stream_rows.map(&:pattern)).to eq(lexicon_rows.map(&:pattern))
+      expect(stream_rows.map(&:count)).to eq(lexicon_rows.map(&:count))
+      expect(stream_rows.map(&:spellings)).to eq(lexicon_rows.map(&:spellings))
+    end
   end
 end

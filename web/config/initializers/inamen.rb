@@ -13,3 +13,4 @@ Rails.application.config.inamen.verse_indices_root = data_root.join("verse_indic
 Rails.application.config.inamen.word_streams_root = data_root.join("word_streams")
 Rails.application.config.inamen.engine_version = Inamen::VERSION
 Rails.application.config.inamen.indexer_revision = Inamen::CorpusStore::INDEXER_REVISION
+Rails.application.config.discover_server_epoch = SecureRandom.hex(16)

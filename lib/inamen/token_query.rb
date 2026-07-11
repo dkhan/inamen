@@ -15,7 +15,14 @@ module Inamen
           next [] unless attrs
           next [] if attrs[:disabled]
 
-          TokenPattern.split_phrase_patterns(attrs[:pattern]).map do |pattern|
+          patterns =
+            if attrs[:exclude] && bulk_antimention_exclude?(attrs[:pattern])
+              [attrs[:pattern]]
+            else
+              TokenPattern.split_phrase_patterns(attrs[:pattern])
+            end
+
+          patterns.map do |pattern|
             QueryTerm.new(
               pattern: pattern,
               case_sensitive: attrs[:case_sensitive],
@@ -29,9 +36,13 @@ module Inamen
         terms
       end
 
-      def scan(db, terms:, search_selection: nil, scope: :whole_bible, bucket: :default)
+      def scan(db, terms:, search_selection: nil, scope: :whole_bible, bucket: :default, word_stream: nil)
         selection = resolve_selection(search_selection, scope, bucket)
         scope_label = TokenCountQuery.selection_label(selection)
+        if word_stream
+          return scan_with_word_stream(word_stream, terms, selection, scope_label)
+        end
+
         Array(terms).map do |term|
           count, spellings =
             if PhraseQuery.phrase?(term.pattern)
@@ -71,6 +82,72 @@ module Inamen
         return search_selection if search_selection.is_a?(SearchSelection)
 
         SearchSelection.from_legacy(scope: scope, bucket: bucket)
+      end
+
+      def bulk_antimention_exclude?(pattern)
+        pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN)/i)
+      end
+
+      def scan_with_word_stream(word_stream, terms, selection, scope_label)
+        Array(terms).map do |term|
+          count, spellings = count_term_with_word_stream(word_stream, term, selection)
+          ResultRow.new(
+            pattern: term.pattern,
+            case_sensitive: term.case_sensitive,
+            count: count,
+            wildcard: TokenPattern.wildcard?(term.pattern),
+            scope: scope_label,
+            spellings: spellings,
+            exclude: term.exclude
+          )
+        end
+      end
+
+      def count_term_with_word_stream(word_stream, term, selection)
+        if PhraseQuery.phrase?(term.pattern)
+          positions = word_stream.phrase_positions(
+            term.pattern,
+            case_sensitive: term.case_sensitive,
+            selection: selection
+          )
+          spellings = phrase_spellings_from_stream_positions(
+            word_stream,
+            positions,
+            term.pattern
+          )
+          [spellings.values.sum, spellings]
+        else
+          positions = word_stream.positions_for(
+            term.pattern,
+            case_sensitive: term.case_sensitive,
+            selection: selection
+          )
+          spellings = spellings_from_stream_positions(word_stream, positions, term.pattern)
+          [spellings.values.sum, spellings]
+        end
+      end
+
+      def spellings_from_stream_positions(word_stream, positions, _pattern)
+        tallies = Hash.new(0)
+        positions.each do |position|
+          token = word_stream.token_at(position)
+          next unless token
+
+          tallies[token.token_raw] += 1
+        end
+        tallies.sort_by { |raw, count| [-count, raw] }.to_h
+      end
+
+      def phrase_spellings_from_stream_positions(word_stream, positions, pattern)
+        words = PhraseQuery.phrase_words(pattern)
+        tallies = Hash.new(0)
+        positions.each do |start|
+          phrase_raw = words.length.times.map do |offset|
+            word_stream.token_at(start + offset).token_raw
+          end.join(" ")
+          tallies[phrase_raw] += 1
+        end
+        tallies.sort_by { |phrase, count| [-count, phrase] }.to_h
       end
 
       def count_exact(db, term, selection:)

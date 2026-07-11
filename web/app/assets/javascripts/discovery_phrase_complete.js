@@ -21,7 +21,7 @@
   }
 
   function normalizeToken(text) {
-    return normalizeApostrophe(text.toLowerCase());
+    return normalizeApostrophe(text.toLowerCase()).replace(/æ/g, "ae").replace(/œ/g, "oe");
   }
 
   function wildcardPattern(pattern) {

@@ -47,5 +47,15 @@ RSpec.describe Inamen::PhraseCompleter do
       expect(result.can_search).to be(true)
       expect(result.branches.first.preview.first.valid).to be(true)
     end
+
+    it "accepts ASCII spellings of ligature dictionary words in phrases" do
+      words = ["James", "the", "son", "of", "Alph\u00e6us"]
+      completer = described_class.new(words: words)
+      result = completer.analyze("James the son of Alphaeus")
+
+      expect(result.can_search).to be(true)
+      expect(result.branches.first.preview.map(&:text)).to eq(%w[James the son of Alphaeus])
+      expect(result.branches.first.preview.all?(&:valid)).to be(true)
+    end
   end
 end

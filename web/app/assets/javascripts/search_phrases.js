@@ -96,13 +96,10 @@
     if (removeButton) {
       removeButton.addEventListener("mousedown", (event) => event.preventDefault());
       removeButton.addEventListener("click", () => {
-        if (rows(root).length <= 1) {
-          if (input) input.value = "";
-          document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
-          return;
-        }
+        document.dispatchEvent(new CustomEvent("discovery:cancel-scan"));
         row.remove();
         reindexRows(root);
+        document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
         document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
       });
     }
@@ -125,11 +122,30 @@
     if (input) input.focus();
   }
 
+  function clearAllRows(root) {
+    document.dispatchEvent(new CustomEvent("discovery:cancel-scan"));
+    rows(root).forEach((row) => row.remove());
+    const row = rowFromTemplate(root, 0);
+    list(root).appendChild(row);
+    bindRow(root, row);
+    document.dispatchEvent(new CustomEvent("discovery:search-phrase-row-added", { detail: { row } }));
+    const input = row.querySelector(".search-phrase-input");
+    if (input) input.focus();
+    document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
+    document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
+  }
+
   function init() {
     const root = panel();
     if (!root) return;
 
     rows(root).forEach((row) => bindRow(root, row));
+
+    const clearButton = document.getElementById("clear-search-phrases");
+    if (clearButton) {
+      clearButton.addEventListener("mousedown", (event) => event.preventDefault());
+      clearButton.addEventListener("click", () => clearAllRows(root));
+    }
 
     const addButton = document.getElementById("add-search-phrase");
     if (addButton) {
@@ -141,6 +157,11 @@
     }
 
     restorePhraseFocus(root);
+
+    if (root.dataset.focusOnLoad === "true") {
+      const input = rows(root)[0]?.querySelector(".search-phrase-input");
+      if (input) input.focus();
+    }
   }
 
   document.addEventListener("DOMContentLoaded", init);

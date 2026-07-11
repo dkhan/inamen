@@ -78,7 +78,7 @@ module DiscoveriesHelper
           end
 
     hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      scan_params.from_feature,
+      discover_from_feature(scan_params),
       raw: raw,
       merge_preset_excludes: merge_fishermen_preset_excludes?
     )
@@ -86,7 +86,14 @@ module DiscoveriesHelper
       return hydrated.sort_by { |key, _| key.to_i }.map { |index, row| [index, phrase_entry_from_row(row)] }
     end
 
-    discovery_search_phrase_entries(scan_params).each_with_index.map { |phrase, index| [index.to_s, phrase] }
+    rows = discovery_search_phrase_entries(scan_params).each_with_index.map { |phrase, index| [index.to_s, phrase] }
+    return rows if rows.any?
+
+    [["0", empty_discovery_phrase_entry]]
+  end
+
+  def empty_discovery_phrase_entry
+    DiscoveryScan::PhraseEntry.new(phrase: "", case_sensitive: false, exclude: false, disabled: false)
   end
 
   def discovery_scan_hidden_phrases(scan_params)
@@ -105,7 +112,7 @@ module DiscoveriesHelper
           end
 
     hydrated = Inamen::FeatureDiscoverPresets.search_phrases_hash_for(
-      scan_params.from_feature,
+      discover_from_feature(scan_params),
       raw: raw,
       merge_preset_excludes: merge_fishermen_preset_excludes?
     )
@@ -218,7 +225,7 @@ module DiscoveriesHelper
   end
 
   def discovery_word_count_total(rows)
-    rows.sum { |row| row.exclude ? -row.count : row.count }
+    DiscoveryScan.word_count_table_total(rows)
   end
 
   def discovery_word_count_spellings_label(spellings, limit: 8)
@@ -302,6 +309,12 @@ module DiscoveriesHelper
       exclude: ActiveModel::Type::Boolean.new.cast(entry[:exclude]),
       disabled: ActiveModel::Type::Boolean.new.cast(entry[:disabled])
     )
+  end
+
+  def discover_from_feature(scan_params)
+    scan_params.from_feature.presence ||
+      params[:from_feature].presence ||
+      stored_discover_query&.dig("from_feature")
   end
 
   private

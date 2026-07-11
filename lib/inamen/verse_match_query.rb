@@ -64,6 +64,7 @@ module Inamen
 
       def prepare_display!(edition, result)
         return result unless result&.verses&.any?
+        return result if result.verses.first.html_excerpt.present?
 
         db = edition.db
         canon_verse_total = CanonIndex.verse_ordinals_for(db).length

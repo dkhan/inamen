@@ -159,6 +159,11 @@
 
   function runScan(discoveryForm) {
     const scanAction = discoveryForm.getAttribute("data-scan-action");
+    if (!canScan(discoveryForm)) {
+      const results = document.querySelector("[data-discovery-results]");
+      if (results) results.hidden = true;
+      return;
+    }
     if (!scanAction || !shouldScan(discoveryForm)) return;
 
     if (pendingFocusInput) {
@@ -229,10 +234,6 @@
     document.addEventListener("discovery:phrase-validity-changed", () => {
       const results = document.querySelector("[data-discovery-results]");
       if (!results) return;
-      if (discoveryForm.dataset.resultsReady === "true") {
-        results.hidden = false;
-        return;
-      }
       results.hidden = !canScan(discoveryForm);
     });
 

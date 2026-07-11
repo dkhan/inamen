@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "digest"
 require "set"
 require_relative "fishermen_gospels_kjs"
 
@@ -65,6 +66,12 @@ module Inamen
     }.freeze
 
     GROSS_PREFIX_KEYS = PREFIX_NAMES.merge(james: "James", john: "John").freeze
+    PREFIX_REGEXES = GROSS_PREFIX_KEYS.transform_values { |prefix| /\A#{Regexp.escape(prefix)}/i }.freeze
+    STREAM_WILDCARD_PATTERNS = GROSS_PREFIX_KEYS.transform_values { |prefix| "#{prefix}*" }.freeze
+    # Cheap verse-text gate before tokenizing; stream misses still covered via target verse set union.
+    NAME_TEXT_HINT = /(?:^|[^\p{L}\p{M}])(?:Peter|Thomas|Nathanael|James|John)/i.freeze
+
+    GospelScanBundle = Struct.new(:gross, :gross_spellings, :net, :positions, keyword_init: true)
 
     def self.counts(lines, scope: :nt)
       both = counts_both(lines)
@@ -77,40 +84,150 @@ module Inamen
     end
 
     def self.gross_counts(lines, scope: :gospels)
-      books = scope_books(scope)
-      counts = PREFIX_NAMES.transform_values { 0 }.merge(james: 0, john: 0)
-
-      VerseIndex.each_verse(lines) do |book, _chapter, _verse, text|
-        next unless books.include?(book)
-
-        PREFIX_NAMES.each do |key, prefix|
-          counts[key] += prefix_match_count(text, prefix)
-        end
-        counts[:james] += prefix_match_count(text, "James")
-        counts[:john] += prefix_match_count(text, "John")
-      end
-
-      counts
+      gospel_scan_bundle(lines, scope: scope).gross
     end
 
     def self.gross_spellings(lines, scope: :gospels)
+      gospel_scan_bundle(lines, scope: scope).gross_spellings
+    end
+
+    def self.gospel_scan_bundle(lines, scope: :gospels, james_exclusions: FishermenGospelsKjs.james_exclusions,
+                                john_exclusions: FishermenGospelsKjs.john_exclusions, collect_positions: false,
+                                word_stream: nil, edition: nil, search_selection: nil)
+      stream = word_stream || edition_word_stream(edition)
+      if stream && scope == :gospels
+        return gospel_scan_bundle_from_stream(
+          stream,
+          lines: lines,
+          james_exclusions: james_exclusions,
+          john_exclusions: john_exclusions,
+          collect_positions: collect_positions,
+          edition: edition,
+          search_selection: search_selection
+        )
+      end
+
       books = scope_books(scope)
-      tallies = GROSS_PREFIX_KEYS.transform_values { Hash.new(0) }
+      cache = (Thread.current[:inamen_fishermen_gospel_scan_cache] ||= {})
+      cache_key = [lines.__id__, scope, exclusion_fingerprint(james_exclusions), exclusion_fingerprint(john_exclusions), collect_positions]
+      return cache[cache_key] if cache.key?(cache_key)
 
-      VerseIndex.each_verse(lines) do |book, _chapter, _verse, text|
+      scan_gospel_bundle(
+        lines,
+        books: books,
+        james_exclusions: james_exclusions,
+        john_exclusions: john_exclusions,
+        collect_positions: collect_positions,
+        cache: cache,
+        cache_key: cache_key
+      )
+    end
+
+    def self.gospel_scan_bundle_from_stream(word_stream, lines:, james_exclusions:, john_exclusions:,
+                                            collect_positions: false, edition: nil, search_selection: nil)
+      books = scope_books(:gospels)
+      selection = resolve_stream_selection(search_selection, books)
+      cache = (Thread.current[:inamen_fishermen_gospel_scan_cache] ||= {})
+      cache_key = [
+        word_stream.object_id,
+        lines.__id__,
+        :gospels,
+        exclusion_fingerprint(james_exclusions),
+        exclusion_fingerprint(john_exclusions),
+        collect_positions
+      ]
+      return cache[cache_key] if cache.key?(cache_key)
+
+      target_verses = stream_target_verses(word_stream, selection: selection, books: books)
+      scan_gospel_bundle(
+        lines,
+        books: books,
+        james_exclusions: james_exclusions,
+        john_exclusions: john_exclusions,
+        collect_positions: collect_positions,
+        target_verses: target_verses,
+        edition: edition,
+        cache: cache,
+        cache_key: cache_key
+      )
+    end
+
+    def self.scan_gospel_bundle(lines, books:, james_exclusions:, john_exclusions:, collect_positions:,
+                                target_verses: nil, edition: nil, cache: nil, cache_key: nil)
+      james_compiled = compile_exclusion_phrases(james_exclusions, "James")
+      john_compiled = compile_exclusion_phrases(john_exclusions, "John")
+      gross = PREFIX_NAMES.transform_values { 0 }.merge(james: 0, john: 0)
+      gross_spellings = GROSS_PREFIX_KEYS.transform_values { Hash.new(0) }
+      net = { james: 0, john: 0 }
+      positions = collect_positions ? Hash.new { |hash, key| hash[key] = [] } : nil
+
+      VerseIndex.each_verse(lines) do |book, chapter, verse, text|
         next unless books.include?(book)
+        verse_key = [book, chapter, verse]
+        next unless scan_verse?(text, verse_key, target_verses)
 
-        Tokenizer.tokenize(text).each do |tok|
+        tokens = Tokenizer.tokenize(text)
+        tokens.each_with_index do |tok, idx|
           GROSS_PREFIX_KEYS.each do |key, prefix|
-            next unless tok.match?(/\A#{Regexp.escape(prefix)}/i)
+            next unless tok.match?(PREFIX_REGEXES[key])
 
-            tallies[key][tok] += 1
+            gross[key] += 1
+            gross_spellings[key][tok] += 1
+
+            case key
+            when :james
+              next if excluded_by_compiled?(tokens, idx, james_compiled)
+
+              net[:james] += 1
+              positions[verse_key] << idx + 1 if collect_positions
+            when :john
+              next if excluded_by_compiled?(tokens, idx, john_compiled)
+
+              net[:john] += 1
+              positions[verse_key] << idx + 1 if collect_positions
+            else
+              positions[verse_key] << idx + 1 if collect_positions
+            end
           end
         end
       end
 
-      tallies.transform_values { |hash| hash.sort_by { |raw, count| [-count, raw] }.to_h }
+      bundle = GospelScanBundle.new(
+        gross: gross,
+        gross_spellings: gross_spellings.transform_values { |hash| sort_spelling_tallies(hash) },
+        net: net,
+        positions: positions
+      )
+      cache[cache_key] = bundle if cache && cache_key
+      bundle
     end
+    private_class_method :scan_gospel_bundle
+
+    def self.stream_target_verses(word_stream, selection:, books:)
+      verses = Set.new
+      STREAM_WILDCARD_PATTERNS.each_value do |pattern|
+        word_stream.positions_for(pattern, case_sensitive: false, selection: selection).each do |position|
+          token = word_stream.token_at(position)
+          next unless token && books.include?(token.book)
+
+          verses << [token.book, token.chapter, token.verse]
+        end
+      end
+      verses
+    end
+    private_class_method :stream_target_verses
+
+    def self.scan_verse?(text, verse_key, target_verses)
+      return verse_text_relevant?(text) if target_verses.nil?
+
+      verse_text_relevant?(text) || target_verses.include?(verse_key)
+    end
+    private_class_method :scan_verse?
+
+    def self.verse_text_relevant?(text)
+      text.match?(NAME_TEXT_HINT)
+    end
+    private_class_method :verse_text_relevant?
 
     def self.counts_both(lines)
       @counts_cache ||= {}
@@ -145,39 +262,39 @@ module Inamen
 
     def self.count_with_exclusions(lines, books, prefix, exclusion_phrases)
       books = books.to_set
-      prefix_re = /\A#{Regexp.escape(prefix)}/i
-      total = 0
-
-      VerseIndex.each_verse(lines) do |book, _chapter, _verse, text|
-        next unless books.include?(book)
-
-        tokens = Tokenizer.tokenize(text)
-        tokens.each_with_index do |tok, idx|
-          next unless tok.match?(prefix_re)
-          next if excluded_name_index?(tokens, prefix, idx, exclusion_phrases)
-
-          total += 1
-        end
-      end
-
-      total
+      scope = books == GOSPEL_BOOKS.to_set ? :gospels : :nt
+      bundle = gospel_scan_bundle(
+        lines,
+        scope: scope,
+        james_exclusions: prefix == "James" ? exclusion_phrases : FishermenGospelsKjs.james_exclusions,
+        john_exclusions: prefix == "John" ? exclusion_phrases : FishermenGospelsKjs.john_exclusions
+      )
+      prefix == "James" ? bundle.net[:james] : bundle.net[:john]
     end
 
-    def self.build_verse_result(lines, scope: :gospels, search_selection: nil, james_exclusions: nil, john_exclusions: nil)
+    def self.build_verse_result(lines, scope: :gospels, search_selection: nil, james_exclusions: nil, john_exclusions: nil,
+                                word_stream: nil, edition: nil)
       require_relative "canon_index"
       require_relative "verse_match_query"
 
       books = scope_books(scope)
       selection = resolve_verse_selection(search_selection, books)
       merged = Hash.new { |hash, key| hash[key] = [] }
+      james_exclusions ||= FishermenGospelsKjs.james_exclusions
+      john_exclusions ||= FishermenGospelsKjs.john_exclusions
 
-      each_matching_position(
+      bundle = gospel_scan_bundle(
         lines,
         scope: scope,
         james_exclusions: james_exclusions,
-        john_exclusions: john_exclusions
-      ) do |book, chapter, verse, word_index, _name|
-        merged[[book, chapter, verse, CorpusStore::BUCKET_VERSE_TEXT]] << word_index
+        john_exclusions: john_exclusions,
+        collect_positions: true,
+        word_stream: word_stream,
+        edition: edition,
+        search_selection: search_selection
+      )
+      bundle.positions.each do |(book, chapter, verse), indices|
+        merged[[book, chapter, verse, CorpusStore::BUCKET_VERSE_TEXT]].concat(indices)
       end
 
       verses = merged.map do |(book, chapter, verse, bucket), indices|
@@ -241,20 +358,55 @@ module Inamen
     end
 
     def self.excluded_name_index?(tokens, prefix, idx, exclusion_phrases)
-      exclusion_phrases.any? do |phrase|
-        phrase_words = kjs_phrase_words(phrase)
-        phrase_words.each_with_index.any? do |word, word_index|
-          next false unless name_word_in_phrase?(word, prefix)
+      excluded_by_compiled?(tokens, idx, compile_exclusion_phrases(exclusion_phrases, prefix))
+    end
+    private_class_method :excluded_name_index?
 
+    def self.compile_exclusion_phrases(exclusion_phrases, prefix)
+      exclusion_phrases.map do |phrase|
+        words = kjs_phrase_words(phrase)
+        anchors = words.each_index.select { |word_index| name_word_in_phrase?(words[word_index], prefix) }
+        { words: words, anchors: anchors }
+      end
+    end
+    private_class_method :compile_exclusion_phrases
+
+    def self.excluded_by_compiled?(tokens, idx, compiled_phrases)
+      compiled_phrases.any? do |compiled|
+        compiled[:anchors].any? do |word_index|
           start = idx - word_index
           next false if start.negative?
-          next false if start + phrase_words.length > tokens.length
+          next false if start + compiled[:words].length > tokens.length
 
-          phrase_matches_at?(tokens, start, phrase_words)
+          phrase_matches_at?(tokens, start, compiled[:words])
         end
       end
     end
-    private_class_method :excluded_name_index?
+    private_class_method :excluded_by_compiled?
+
+    def self.exclusion_fingerprint(exclusion_phrases)
+      Digest::SHA256.hexdigest(Array(exclusion_phrases).join("\0"))
+    end
+    private_class_method :exclusion_fingerprint
+
+    def self.sort_spelling_tallies(hash)
+      hash.sort_by { |raw, count| [-count, raw] }.to_h
+    end
+    private_class_method :sort_spelling_tallies
+
+    def self.edition_word_stream(edition)
+      edition.respond_to?(:word_stream_index) ? edition.word_stream_index : nil
+    end
+    private_class_method :edition_word_stream
+
+    def self.resolve_stream_selection(search_selection, books)
+      if search_selection.is_a?(SearchSelection)
+        search_selection
+      else
+        SearchSelection.new(colophons: false, superscriptions: false, books: books.to_a.sort)
+      end
+    end
+    private_class_method :resolve_stream_selection
 
     def self.kjs_phrase_words(phrase)
       FishermenGospelsKjs.send(:decode_phrase, phrase.to_s).split(/\s+/).reject(&:empty?)

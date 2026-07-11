@@ -261,12 +261,17 @@ class DiscoveryScan
   def self.compute_word_count_rows(edition, params)
     return [] unless enabled_search_terms?(params.query_terms)
 
+    if params.from_feature == "fishermen_gospels"
+      return compute_fishermen_word_count_rows(edition, params)
+    end
+
     terms = word_count_terms(params)
 
     rows = Inamen::TokenQuery.scan(
       edition.db,
       terms: terms,
-      search_selection: params.search_selection
+      search_selection: params.search_selection,
+      word_stream: edition.word_stream_index
     ).map do |row|
       WordCountRow.new(
         pattern: row.pattern,
@@ -290,6 +295,29 @@ class DiscoveryScan
     )
   end
 
+  def self.compute_fishermen_word_count_rows(edition, params)
+    scope_label = Inamen::FeatureDiscoverPresets.selection_for("fishermen_gospels").label
+    stub_rows = phrase_entries_from_query_terms(params.query_terms).reject(&:disabled).reject(&:exclude).map do |entry|
+      WordCountRow.new(
+        pattern: entry.phrase,
+        case_sensitive: entry.case_sensitive,
+        count: 0,
+        wildcard: entry.phrase.include?("*"),
+        scope: scope_label,
+        spellings: {},
+        exclude: false
+      )
+    end
+
+    Inamen::FeatureDiscoverPresets.adjust_rows!(
+      "fishermen_gospels",
+      edition,
+      stub_rows,
+      search_selection: params.search_selection,
+      query_terms: params.query_terms
+    )
+  end
+
   def self.compute_verse_result(edition, params)
     verse_result =
       if params.from_feature == "fishermen_gospels"
@@ -299,7 +327,9 @@ class DiscoveryScan
           scope: :gospels,
           search_selection: params.search_selection,
           james_exclusions: exclusions[:james],
-          john_exclusions: exclusions[:john]
+          john_exclusions: exclusions[:john],
+          word_stream: edition.word_stream_index,
+          edition: edition
         )
       else
         terms = Inamen::TokenQuery.parse_terms(params.query_terms)
@@ -314,7 +344,25 @@ class DiscoveryScan
         end
         result
       end
+  end
+
+  def self.prepare_verses_for_display!(edition, verse_result, rows: nil)
+    return verse_result unless verse_result
+
+    align_verse_summary_with_counts!(verse_result, rows) if rows
     Inamen::VerseMatchQuery.prepare_display!(edition, verse_result)
+    verse_result
+  end
+
+  def self.word_count_table_total(rows)
+    Array(rows).sum { |row| row.exclude ? -row.count : row.count }
+  end
+
+  def self.align_verse_summary_with_counts!(verse_result, rows)
+    return verse_result unless verse_result&.summary
+
+    verse_result.summary.occurrences = word_count_table_total(rows)
+    verse_result
   end
 
   def self.word_count_terms(params)
@@ -458,11 +506,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v22", *shared_cache_components(params, edition)]
+    ["discovery_counts/v23", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v22", *shared_cache_components(params, edition)]
+    ["discovery_verses/v23", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)

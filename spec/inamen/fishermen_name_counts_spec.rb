@@ -87,5 +87,32 @@ RSpec.describe Inamen::FishermenNameCounts do
       expect(net[:john]).to eq(20)
       expect(gross[:john] - net[:john]).to eq(83)
     end
+
+    it "matches line-scan totals when using the word-stream fast path" do
+      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      db = Inamen::CorpusStore.open(db_path)
+      stream = Inamen::WordStreamIndex.build_from_db(db)
+      exclusions = {
+        james_exclusions: Inamen::FishermenGospelsKjs.james_exclusions,
+        john_exclusions: Inamen::FishermenGospelsKjs.john_exclusions
+      }
+      Thread.current[:inamen_fishermen_gospel_scan_cache] = nil
+      line_bundle = described_class.gospel_scan_bundle(@lines, **exclusions)
+      Thread.current[:inamen_fishermen_gospel_scan_cache] = nil
+      stream_bundle = described_class.gospel_scan_bundle(@lines, word_stream: stream, **exclusions)
+      verse_line = described_class.build_verse_result(@lines, scope: :gospels)
+      verse_stream = described_class.build_verse_result(@lines, scope: :gospels, word_stream: stream)
+
+      expect(stream_bundle.gross).to eq(line_bundle.gross)
+      expect(stream_bundle.gross_spellings).to eq(line_bundle.gross_spellings)
+      expect(stream_bundle.net).to eq(line_bundle.net)
+      expect(verse_stream.summary.occurrences).to eq(verse_line.summary.occurrences)
+      expect(verse_stream.summary.verses).to eq(verse_line.summary.verses)
+    ensure
+      db&.close
+      Thread.current[:inamen_fishermen_gospel_scan_cache] = nil
+    end
   end
 end

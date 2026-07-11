@@ -69,7 +69,13 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
         "0" => { "phrase" => "Peter*" },
         "1" => { "phrase" => "Thomas*" }
       }
-      full = described_class.search_phrases_hash_for("fishermen_gospels", raw: include_only)
+      partial = described_class.search_phrases_hash_for("fishermen_gospels", raw: include_only)
+      expect(partial.keys).to eq(%w[0 1])
+
+      feature_link_includes = described_class.send(:preset_search_phrases_hash, "fishermen_gospels").select do |_, row|
+        row["exclude"] != "1"
+      end
+      full = described_class.search_phrases_hash_for("fishermen_gospels", raw: feature_link_includes)
       expect(full.keys).to eq(%w[0 1 2 3 4 5 6])
       expect(full["5"]["exclude"]).to eq("1")
 
@@ -132,6 +138,22 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(hydrated).to eq({ "0" => { "phrase" => "Peter*" } })
     end
 
+    it "does not rehydrate the full fishermen preset when the query is simplified" do
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      raw = {
+        "0" => { "phrase" => "Peter*" },
+        "1" => { "phrase" => james_line["phrase"], "exclude" => "1" },
+        "2" => { "phrase" => john_line["phrase"], "exclude" => "1" }
+      }
+
+      expect(described_class.fishermen_query_simplified?(raw)).to be(true)
+      hydrated = described_class.search_phrases_hash_for("fishermen_gospels", raw: raw, merge_preset_excludes: true)
+      expect(hydrated.keys).to eq(%w[0 1 2])
+      expect(hydrated["0"]["phrase"]).to eq("Peter*")
+    end
+
     it "rehydrates preset excludes for fishermen feature-link includes" do
       raw = {
         "0" => { "phrase" => "Peter*" },
@@ -154,9 +176,42 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: "Peter*\nThomas*")).to be_nil
     end
 
+    it "keeps fishermen_gospels when antimention exclude rows remain" do
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = [james_line, john_line].map { |row| "#{row['phrase']}|exclude" }.join("\n")
+
+      expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: query_terms)).to eq("fishermen_gospels")
+    end
+
+    it "keeps fishermen_gospels when antimention rows are includes (exclude unchecked)" do
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = [james_line["phrase"], john_line["phrase"]].join("\n")
+
+      expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: query_terms)).to eq("fishermen_gospels")
+      expect(described_class.resolve_from_feature(nil, query_terms: query_terms)).to eq("fishermen_gospels")
+    end
+
+    it "keeps fishermen_gospels when includes are removed but antimentions and other names remain" do
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = ["Peter*", "#{james_line['phrase']}|exclude", "#{john_line['phrase']}|exclude"].join("\n")
+
+      expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: query_terms)).to eq("fishermen_gospels")
+    end
+
     it "keeps fishermen_gospels when James* or John* are included" do
       expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: "James*")).to eq("fishermen_gospels")
       expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: "James* | John*")).to eq("fishermen_gospels")
+    end
+
+    it "keeps fishermen_gospels when all preset includes are present" do
+      query_terms = %w[Peter* Thomas* Nathanael* James* John*].join("\n")
+      expect(described_class.resolve_from_feature("fishermen_gospels", query_terms: query_terms)).to eq("fishermen_gospels")
     end
 
     it "keeps other feature presets" do
@@ -348,6 +403,53 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(john_exclude.count).to eq(83)
       total = adjusted.sum { |row| row.exclude ? -row.count : row.count }
       expect(total).to eq(153)
+    end
+
+    it "returns antimention rows when only Peter* and exclude antimentions remain" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("fishermen_gospels")
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = ["Peter*", "#{james_line['phrase']}|exclude", "#{john_line['phrase']}|exclude"].join("\n")
+      adjusted = described_class.adjust_rows!(
+        "fishermen_gospels",
+        edition,
+        [],
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      expect(adjusted.map(&:pattern)).to eq(["Peter*", james_line["phrase"], john_line["phrase"]])
+      expect(adjusted.count(&:exclude)).to eq(2)
+      expect(adjusted.find { |row| row.pattern == "Peter*" }.count).to eq(97)
+    end
+
+    it "counts antimention rows as gross minus net when exclude is unchecked" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("fishermen_gospels")
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["exclude"] == "1" && row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = [james_line["phrase"], john_line["phrase"]].join("\n")
+      adjusted = described_class.adjust_rows!(
+        "fishermen_gospels",
+        edition,
+        [],
+        search_selection: selection,
+        query_terms: query_terms
+      )
+
+      james_row = adjusted.find { |row| row.pattern.start_with?("ANTIMENTIONS OF JAMES") }
+      john_row = adjusted.find { |row| row.pattern.start_with?("ANTIMENTIONS OF JOHN") }
+      expect(james_row.count).to eq(10)
+      expect(john_row.count).to eq(83)
+      expect(james_row.exclude).to be(false)
+      expect(john_row.exclude).to be(false)
+      total = adjusted.sum { |row| row.exclude ? -row.count : row.count }
+      expect(total).to eq(93)
     end
 
     it "omits disabled fishermen antimentions from totals" do

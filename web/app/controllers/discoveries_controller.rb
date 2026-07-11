@@ -3,6 +3,7 @@
 class DiscoveriesController < ApplicationController
   include EditionSelectable
 
+  before_action :reset_discover_query_if_server_restarted!
   before_action :set_scan_params
   before_action :persist_discover_query_before_scan, only: :scan
   after_action :persist_discover_query, only: %i[index verses]
@@ -18,7 +19,12 @@ class DiscoveriesController < ApplicationController
       @file_stats = DiscoveryScan.read_cached(@edition, @scan_params)
     else
       @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
-      @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params) if @scan_params.mode == "word_count"
+      if @scan_params.mode == "word_count"
+        @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
+        if @verse_result
+          DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: @rows)
+        end
+      end
     end
   end
 
@@ -35,8 +41,10 @@ class DiscoveriesController < ApplicationController
     end
 
     if DiscoveryScan.verses_cached?(@edition, @scan_params)
+      rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
       @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
       @edition.warm!
+      DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: rows)
       render partial: "verse_results", locals: { edition: @edition, verse_result: @verse_result },
              layout: false
       return
@@ -85,6 +93,7 @@ class DiscoveriesController < ApplicationController
     end
 
     if scan_params.mode == "word_count" && edition.corpus_ready?
+      edition.warm!
       DiscoveryScan.run_counts(edition, scan_params, force: params[:refresh] == "1")
       run_or_enqueue_verses!(edition, scan_params, force: params[:refresh] == "1")
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
@@ -129,7 +138,11 @@ class DiscoveriesController < ApplicationController
       if request.post? && action_name == "scan" && params[:search_phrases].present?
         raw = search_phrases_param_hash(params[:search_phrases])
         if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+          if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+            Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
+          else
+            Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+          end
         else
           raw
         end
@@ -180,12 +193,20 @@ class DiscoveriesController < ApplicationController
       from_feature = @scan_params.from_feature || params[:from_feature].presence || stored_discover_query&.dig("from_feature")
       query[:search_phrases] =
         if Inamen::FeatureDiscoverPresets.bulky_phrase_feature?(from_feature)
-          Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+          if Inamen::FeatureDiscoverPresets.fishermen_query_simplified?(raw)
+            Inamen::FeatureDiscoverPresets.search_phrases_hash_for(from_feature, raw: raw, merge_preset_excludes: false)
+          else
+            Inamen::FeatureDiscoverPresets.search_phrases_from_post(from_feature, raw)
+          end
         else
           raw
         end
     else
-      phrases = hydrated_search_phrases(@scan_params.from_feature, params[:search_phrases], merge_preset_excludes: true)
+      phrases = hydrated_search_phrases(
+        @scan_params.from_feature,
+        params[:search_phrases],
+        merge_preset_excludes: merge_fishermen_preset_excludes?
+      )
       query[:search_phrases] = phrases if phrases.present?
     end
     query[:from_feature] = @scan_params.from_feature if @scan_params.from_feature.present?
@@ -295,11 +316,7 @@ class DiscoveriesController < ApplicationController
   end
 
   def run_or_enqueue_verses!(edition, scan_params, force: false)
-    if edition.word_stream_index
-      DiscoveryScan.run_verses(edition, scan_params, force: force)
-    else
-      DiscoveryScan.enqueue_verses!(edition, scan_params, force: force)
-    end
+    DiscoveryScan.enqueue_verses!(edition, scan_params, force: force)
   end
 
   def invalid_word_count_phrases?
