@@ -177,6 +177,41 @@ RSpec.describe Inamen::TokenQuery do
       expect(terms.first.exclude).to be(true)
     end
 
+    it "counts bulk jesus antimention exclude rows as the sum of phrase parts" do
+      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      full_db = Inamen::CorpusStore.open(db_path)
+      selection = Inamen::SearchSelection.default
+      phrase = Inamen::JesusMentionsAntimentions.exclude_phrase
+      terms = described_class.parse_terms("#{phrase}|cs|exclude\n")
+      rows = described_class.scan(full_db, terms: terms, search_selection: selection)
+
+      expect(rows.length).to eq(1)
+      expect(rows.first.count).to eq(3)
+    ensure
+      full_db&.close
+    end
+
+    it "totals 980 for jesus includes minus antimention exclude" do
+      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      full_db = Inamen::CorpusStore.open(db_path)
+      selection = Inamen::SearchSelection.default
+      possessive = Inamen::FeatureDiscoverPresets::JESUS_POSSESSIVE
+      query = [
+        "Jesus|JESUS|#{possessive}|cs",
+        "#{Inamen::JesusMentionsAntimentions.exclude_phrase}|cs|exclude"
+      ].join("\n")
+      rows = described_class.scan(full_db, terms: described_class.parse_terms(query), search_selection: selection)
+      total = rows.sum { |row| row.exclude ? -row.count : row.count }
+
+      expect(total).to eq(980)
+    ensure
+      full_db&.close
+    end
+
     it "matches lexicon counts when using the word-stream fast path" do
       stream = Inamen::WordStreamIndex.build_from_db(db)
       selection = Inamen::SearchSelection.default
