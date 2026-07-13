@@ -3,8 +3,8 @@
 # Runs discovery scans for user-saved features.
 class SavedFeatureCatalog
   class << self
-    def row_for(saved_feature, edition)
-      actual = run_count(saved_feature, edition)
+    def row_for(saved_feature, edition, index: false)
+      actual = index ? index_count(saved_feature, edition) : run_count(saved_feature, edition)
       FeatureCatalog::ResultRow.new(
         id: saved_feature.url_id,
         name: saved_feature.name,
@@ -22,10 +22,26 @@ class SavedFeatureCatalog
       )
     end
 
-    def rows_for_edition(edition)
+    def rows_for_edition(edition, index: false)
       SavedFeature.where(edition_id: edition.edition_id).order(:name).map do |saved_feature|
-        row_for(saved_feature, edition)
+        row_for(saved_feature, edition, index: index)
       end
+    end
+
+    def index_count(saved_feature, edition)
+      return saved_feature.saved_actual_count unless edition.edition_id == saved_feature.edition_id
+
+      scan_params = saved_feature.to_scan_params
+      return saved_feature.saved_actual_count unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
+
+      if DiscoveryScan.counts_cached?(edition, scan_params)
+        rows = DiscoveryScan.read_counts_cached(edition, scan_params)
+        return DiscoveryScan.word_count_table_total(rows) if rows
+      end
+
+      saved_feature.saved_actual_count
+    rescue ArgumentError, TypeError
+      saved_feature.saved_actual_count
     end
 
     def run_count(saved_feature, edition)
@@ -33,6 +49,12 @@ class SavedFeatureCatalog
 
       scan_params = saved_feature.to_scan_params
       return saved_feature.saved_actual_count unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
+
+      if DiscoveryScan.counts_cached?(edition, scan_params)
+        rows = DiscoveryScan.read_counts_cached(edition, scan_params)
+        return DiscoveryScan.word_count_table_total(rows) if rows
+      end
+
       return saved_feature.saved_actual_count unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
 
       edition.warm! if edition.corpus_ready?

@@ -9,6 +9,7 @@
 <% if @status == :computing %>
   <% content_for :head do %>
     <meta http-equiv="refresh" content="3">
+    <meta name="turbo-cache-control" content="no-cache">
   <% end %>
 <% end %>
 <% content_for :head do %>

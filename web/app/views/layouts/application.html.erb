@@ -14,6 +14,7 @@
     <link rel="apple-touch-icon" href="/icon.png">
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "turbo", defer: true %>
   </head>
 
   <body>
@@ -21,9 +22,9 @@
       <div class="site-header-row">
         <a href="/" class="site-logo">Inamen</a>
         <nav class="site-nav">
-          <%= link_to "Features", features_path(edition: current_edition_id) %>
-          <%= link_to "Discover", discover_path_with_state %>
-          <%= link_to "Scripture", scripture_path_with_state %>
+          <%= link_to "Features", features_path(edition: current_edition_id), data: { turbo_preload: true } %>
+          <%= link_to "Discover", discover_path_with_state, data: { turbo_preload: true } %>
+          <%= link_to "Scripture", scripture_path_with_state, data: { turbo_preload: true } %>
         </nav>
       </div>
       <p class="site-tagline">Discover mathematical patterns in text</p>

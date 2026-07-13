@@ -9,7 +9,7 @@ class FeaturesController < ApplicationController
   def index
     @catalog = Inamen::Features.catalog
     @status = page_status
-    @saved_rows = SavedFeatureCatalog.rows_for_edition(@edition)
+    @saved_rows = SavedFeatureCatalog.rows_for_edition(@edition, index: true)
 
     return unless @status == :ready
 

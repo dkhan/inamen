@@ -15,6 +15,7 @@
 
     const url = root.dataset.versesUrl;
     if (!url) return;
+    if (versesReady(root)) return;
 
     try {
       const response = await fetch(url, {
