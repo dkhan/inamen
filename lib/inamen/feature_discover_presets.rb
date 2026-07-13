@@ -16,8 +16,10 @@ module Inamen
       end
     end
 
-    Preset = Struct.new(:phrases, :scope, :exclude_verses, :verse_metric, keyword_init: true) do
-      def initialize(phrases:, scope:, exclude_verses: nil, verse_metric: nil)
+    Preset = Struct.new(:phrases, :scope, :exclude_verses, :verse_metric, :chapter_refs, :special_metric,
+                        keyword_init: true) do
+      def initialize(phrases:, scope:, exclude_verses: nil, verse_metric: nil, chapter_refs: nil,
+                    special_metric: nil)
         super
       end
     end
@@ -172,6 +174,27 @@ module Inamen
           Phrase.new(phrase: FishermenGospelsKjs.john_exclude_phrase, exclude: true)
         ],
         scope: :gospels
+      ),
+      "first_last_chapter_words" => Preset.new(
+        phrases: [
+          Phrase.new(phrase: "Genesis 1"),
+          Phrase.new(phrase: "Revelation 22")
+        ],
+        scope: :verse_text,
+        chapter_refs: [["Genesis", 1], ["Revelation", 22]]
+      ),
+      "ot_first_last_chapter_words" => Preset.new(
+        phrases: [
+          Phrase.new(phrase: "Genesis 1"),
+          Phrase.new(phrase: "Malachi 4")
+        ],
+        scope: :verse_text,
+        chapter_refs: [["Genesis", 1], ["Malachi", 4]]
+      ),
+      "jesus_boundary_first7_nt" => Preset.new(
+        phrases: [Phrase.new(phrase: JESUS_PHRASE, case_sensitive: true)],
+        scope: :first_7_nt,
+        special_metric: :jesus_boundary_first7_nt
       )
     }.freeze
 
@@ -182,6 +205,18 @@ module Inamen
 
       def discoverable?(feature_id)
         PRESETS.key?(feature_id.to_s) || FILE_STATS_FEATURES.include?(feature_id.to_s)
+      end
+
+      def metric_only_preset?(feature_id)
+        preset = preset_for(feature_id)
+        return false unless preset
+
+        preset.chapter_refs&.any? || !preset.special_metric.nil?
+      end
+
+      def chapter_word_count_preset?(feature_id)
+        preset = preset_for(feature_id)
+        preset&.chapter_refs&.any?
       end
 
       def discover_mode_for(feature_id)

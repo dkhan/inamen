@@ -174,6 +174,7 @@ module DiscoveriesHelper
       match_by: scan_params.match_by,
       query_terms: scan_params.query_terms
     }
+    query[:from_feature] = scan_params.from_feature if scan_params.from_feature.present?
 
     return query if selection.default?
 

@@ -29,6 +29,7 @@ class FeatureDiscoverLink
       end
 
       query[:search_selection] = Inamen::FeatureDiscoverPresets.selection_query_for(feature_id)
+      query[:from_feature] = feature_id
 
       query
     end

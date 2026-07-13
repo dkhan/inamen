@@ -44,15 +44,12 @@ module FeaturesHelper
         "search_selection" => saved_feature.search_selection,
         "search_phrases" => saved_feature.search_phrases
       }
-      token = DiscoverQueryStore.write(session[DiscoverState::DISCOVER_QUERY_ID_KEY], store_query)
-      session[DiscoverState::DISCOVER_QUERY_ID_KEY] = token
+      token = DiscoverQueryStore.write(nil, store_query)
       return discoveries_path(edition: saved_feature.edition_id, dq: token, auto_scan: "1")
     end
 
     query = FeatureDiscoverLink.query_for(feature_id, edition_id: edition)
-    return nil unless query
-
-    discoveries_path(query)
+    discoveries_path(query) if query
   rescue ActiveRecord::RecordNotFound
     nil
   end

@@ -23,6 +23,15 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(described_class.discover_highlight_for("combined_total")).to eq("combined_total")
       expect(described_class.discover_highlight_for("file_character_total")).to eq("file_characters")
     end
+
+    it "includes chapter-word and jesus boundary first7 features" do
+      expect(described_class.discoverable?("ot_first_last_chapter_words")).to be(true)
+      expect(described_class.discoverable?("first_last_chapter_words")).to be(true)
+      expect(described_class.discoverable?("jesus_boundary_first7_nt")).to be(true)
+      expect(described_class.metric_only_preset?("ot_first_last_chapter_words")).to be(true)
+      expect(described_class.metric_only_preset?("jesus_boundary_first7_nt")).to be(true)
+      expect(described_class.metric_only_preset?("amen_77")).to be(false)
+    end
   end
 
   describe ".phrase_entries_for" do
