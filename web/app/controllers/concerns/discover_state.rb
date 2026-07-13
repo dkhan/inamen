@@ -16,14 +16,14 @@ module DiscoverState
     current = discover_server_epoch
     return if session[DISCOVER_SERVER_EPOCH_KEY] == current
 
-    token = session[DISCOVER_QUERY_ID_KEY].presence || params[:dq].presence
-    DiscoverQueryStore.delete(token)
+    DiscoverQueryStore.delete(session[DISCOVER_QUERY_ID_KEY]) if session[DISCOVER_QUERY_ID_KEY].present?
     session.delete(DISCOVER_QUERY_ID_KEY)
     session.delete(LEGACY_DISCOVER_QUERY_KEY)
     session[DISCOVER_SERVER_EPOCH_KEY] = current
-    @discover_query_fresh = true
     remove_instance_variable(:@stored_discover_query) if defined?(@stored_discover_query)
     @stored_discover_query = nil
+    # A dq token in the URL may be a fresh feature-link payload; do not block loading it.
+    @discover_query_fresh = params[:dq].blank?
   end
 
   def store_discover_query!(query)
@@ -80,6 +80,9 @@ module DiscoverState
 
     phrases = stored["search_phrases"]
     return true if phrases.is_a?(Hash) && Inamen::FeatureDiscoverPresets.raw_has_exclude_phrases?(phrases)
+    return true if phrases.is_a?(Hash) && phrases.values.any? do |row|
+      Inamen::FeatureDiscoverPresets.bulky_antimention_phrase?(row["phrase"] || row[:phrase])
+    end
 
     phrases.is_a?(Hash) && phrases.length > 4
   end

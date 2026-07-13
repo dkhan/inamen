@@ -162,6 +162,11 @@ class DiscoveriesController < ApplicationController
     if hash[:search_phrases].blank? && hash[:query_terms].blank? && stored_discover_query&.dig("query_terms").present?
       hash[:query_terms] = stored_discover_query["query_terms"]
     end
+    unless hash[:from_feature].present?
+      terms = DiscoveryScan.query_terms_from_raw(hash)
+      inferred = Inamen::FeatureDiscoverPresets.resolve_from_feature(nil, query_terms: terms)
+      hash[:from_feature] = inferred if inferred.present?
+    end
     hash.delete(:from_feature) unless params[:auto_scan] == "1" || hash[:from_feature].present?
     DiscoveryScan.normalize(hash)
   end

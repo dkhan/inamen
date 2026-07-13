@@ -36,7 +36,14 @@ class SavedFeatureCatalog
 
       if DiscoveryScan.counts_cached?(edition, scan_params)
         rows = DiscoveryScan.read_counts_cached(edition, scan_params)
-        return DiscoveryScan.word_count_table_total(rows) if rows
+        if rows
+          total = DiscoveryScan.word_count_table_total(rows)
+          if total != saved_feature.saved_actual_count
+            DiscoveryScan.clear_counts_cache!(edition, scan_params)
+            return saved_feature.saved_actual_count
+          end
+          return total
+        end
       end
 
       saved_feature.saved_actual_count
@@ -52,7 +59,14 @@ class SavedFeatureCatalog
 
       if DiscoveryScan.counts_cached?(edition, scan_params)
         rows = DiscoveryScan.read_counts_cached(edition, scan_params)
-        return DiscoveryScan.word_count_table_total(rows) if rows
+        if rows
+          total = DiscoveryScan.word_count_table_total(rows)
+          if total != saved_feature.saved_actual_count
+            DiscoveryScan.clear_counts_cache!(edition, scan_params)
+          else
+            return total
+          end
+        end
       end
 
       return saved_feature.saved_actual_count unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)

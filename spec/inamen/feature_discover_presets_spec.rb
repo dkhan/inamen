@@ -727,6 +727,31 @@ RSpec.describe Inamen::FeatureDiscoverPresets do
       expect(total).to eq(93)
     end
 
+    it "infers fishermen_gospels for unchecked antimention-only queries" do
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = [james_line["phrase"], john_line["phrase"]].join("\n")
+
+      expect(described_class.resolve_from_feature(nil, query_terms: query_terms)).to eq("fishermen_gospels")
+      expect(described_class.fishermen_gospels_query?(query_terms)).to be(true)
+    end
+
+    it "does not treat split antimention parts as independent phrase counts" do
+      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
+
+      selection = described_class.selection_for("fishermen_gospels")
+      preset = described_class.send(:preset_search_phrases_hash, "fishermen_gospels")
+      james_line = preset.values.find { |row| row["phrase"].include?("ANTIMENTIONS OF JAMES") }
+      john_line = preset.values.find { |row| row["phrase"].include?("ANTIMENTIONS OF JOHN") }
+      query_terms = [james_line["phrase"], john_line["phrase"]].join("\n")
+      terms = Inamen::TokenQuery.parse_terms(query_terms)
+      rows = Inamen::TokenQuery.scan(db, terms: terms, search_selection: selection)
+
+      expect(rows.size).to be > 2
+      expect(rows.sum(&:count)).to eq(94)
+    end
+
     it "omits disabled fishermen antimentions from totals" do
       skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
 

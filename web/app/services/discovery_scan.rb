@@ -478,6 +478,8 @@ class DiscoveryScan
   end
 
   def self.fishermen_discover_query?(params)
+    return true if params.from_feature.to_s == "fishermen_gospels"
+
     Inamen::FeatureDiscoverPresets.fishermen_gospels_query?(params.query_terms)
   end
 
@@ -629,11 +631,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v28", *shared_cache_components(params, edition)]
+    ["discovery_counts/v29", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v28", *shared_cache_components(params, edition)]
+    ["discovery_verses/v29", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)
