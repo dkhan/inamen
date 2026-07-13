@@ -18,6 +18,7 @@
   <%= javascript_include_tag "discovery_phrase_complete", defer: true if word_count_mode %>
   <%= javascript_include_tag "discovery_verse_loader", defer: true if word_count_mode && @verse_result.nil? %>
   <%= javascript_include_tag "discovery_verse_details", defer: true if word_count_mode %>
+  <%= javascript_include_tag "discovery_verse_show_more", defer: true if word_count_mode %>
 <% end %>
 
 <section class="panel toolbar">

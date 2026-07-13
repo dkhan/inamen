@@ -65,6 +65,14 @@ class EditionContext
     Inamen::VerseIndex.verse_text_from_index(chapter_index, book: book, chapter: chapter, verse: verse)
   end
 
+  def chapter_superscription(book:, chapter:)
+    bucket_text_for_chapter(book: book, chapter: chapter, bucket: Inamen::CorpusStore::BUCKET_PSALM_HEADING)
+  end
+
+  def chapter_colophon(book:, chapter:)
+    bucket_text_for_chapter(book: book, chapter: chapter, bucket: Inamen::CorpusStore::BUCKET_COLOPHON)
+  end
+
   def file_stats
     @file_stats ||= Inamen::FileStatsPublisher.resolve(edition_id, lines: lines, text_path: path)
   end
@@ -149,6 +157,12 @@ class EditionContext
   end
 
   private
+
+  def bucket_text_for_chapter(book:, chapter:, bucket:)
+    return nil unless corpus_ready?
+
+    Inamen::VerseHighlighter.bucket_text(db, book: book, chapter: chapter, verse: 0, bucket: bucket)
+  end
 
   def load_word_stream_index
     path = word_stream_prebuilt_path

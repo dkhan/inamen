@@ -8,7 +8,7 @@ class SavedFeatureCatalog
       FeatureCatalog::ResultRow.new(
         id: saved_feature.url_id,
         name: saved_feature.name,
-        description: "Saved from Discover",
+        description: saved_feature.display_description,
         count: actual,
         expected: saved_feature.expected_count,
         unit: saved_feature.unit,

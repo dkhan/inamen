@@ -66,4 +66,13 @@ RSpec.describe Inamen::VerseMatchQuery do
       full_db&.close
     end
   end
+
+  describe ".format_reference" do
+    it "shortens superscription and colophon labels" do
+      expect(described_class.format_reference("Psalms", 3, 0, Inamen::CorpusStore::BUCKET_PSALM_HEADING))
+        .to eq("Psalms 3 (sup.)")
+      expect(described_class.format_reference("2 Timothy", 4, 0, Inamen::CorpusStore::BUCKET_COLOPHON))
+        .to eq("2 Timothy 4 (col.)")
+    end
+  end
 end

@@ -142,6 +142,10 @@ module DiscoveriesHelper
     query
   end
 
+  def discovery_verses_more_url(edition, scan_params, offset:)
+    verses_discoveries_path(discovery_verses_query(edition, scan_params).merge(offset: offset))
+  end
+
   def discovery_search_phrases_param_hash(scan_params)
     raw = discover_search_phrases_hash
     return raw if raw.present?
@@ -251,12 +255,20 @@ module DiscoveriesHelper
     row.details || {}
   end
 
-  def discovery_verse_results_rows(verse_result)
-    verse_result.verses.first(VERSE_RESULTS_DISPLAY_LIMIT)
+  def discovery_verse_results_rows(verse_result, offset: 0, limit: VERSE_RESULTS_DISPLAY_LIMIT)
+    verse_result.verses.drop(offset).first(limit)
   end
 
-  def discovery_verse_results_truncated?(verse_result)
-    verse_result.verses.length > VERSE_RESULTS_DISPLAY_LIMIT
+  def discovery_verse_results_truncated?(verse_result, shown_count: VERSE_RESULTS_DISPLAY_LIMIT)
+    verse_result.verses.length > shown_count
+  end
+
+  def discovery_verse_results_remaining_count(verse_result, offset: VERSE_RESULTS_DISPLAY_LIMIT)
+    [verse_result.verses.length - offset, 0].max
+  end
+
+  def discovery_verse_show_more_label(remaining_count)
+    "Show more (#{number_with_delimiter(remaining_count)})"
   end
 
   def discovery_verse_results_display_limit

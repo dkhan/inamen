@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_11_191323) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_11_201345) do
   create_table "saved_features", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "description", default: "Saved from Discover", null: false
     t.json "details", default: [], null: false
     t.string "edition_id", null: false
     t.integer "expected_count", null: false

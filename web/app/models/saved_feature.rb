@@ -2,6 +2,7 @@
 
 class SavedFeature < ApplicationRecord
   URL_PREFIX = "saved_"
+  DEFAULT_DESCRIPTION = "Saved from Discover"
 
   validates :name, presence: true
   validates :edition_id, presence: true
@@ -17,6 +18,10 @@ class SavedFeature < ApplicationRecord
 
   def url_id
     "#{URL_PREFIX}#{id}"
+  end
+
+  def display_description
+    description.presence || DEFAULT_DESCRIPTION
   end
 
   def self.url_id?(value)

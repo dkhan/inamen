@@ -18,10 +18,24 @@
   </nav>
 
   <div class="scripture-chapter">
+    <% if @superscription_text.present? %>
+      <% highlight_superscription = @highlight_extra_bucket && @bucket == Inamen::CorpusStore::BUCKET_PSALM_HEADING %>
+      <p id="superscription" class="scripture-extra scripture-superscription<%= " is-highlighted" if highlight_superscription %>">
+        <span class="scripture-extra-label">Sup.</span>
+        <%= scripture_bucket_html(
+              @edition,
+              book: @book,
+              chapter: @chapter,
+              bucket: Inamen::CorpusStore::BUCKET_PSALM_HEADING,
+              highlight_indices: highlight_superscription ? @highlight_indices : []
+            ) %>
+      </p>
+    <% end %>
+
     <% @verses.sort.each do |verse_number, text| %>
-      <p id="v<%= verse_number %>" class="scripture-verse<%= " is-highlighted" if @highlight_verse == verse_number %>">
+      <p id="v<%= verse_number %>" class="scripture-verse<%= " is-highlighted" if @highlight_verse == verse_number && !@highlight_extra_bucket %>">
         <span class="verse-num"><%= verse_number %></span>
-        <% if @highlight_verse == verse_number && @highlight_indices.any? %>
+        <% if @highlight_verse == verse_number && @highlight_indices.any? && !@highlight_extra_bucket %>
           <% if @bucket == Inamen::CorpusStore::BUCKET_VERSE_TEXT %>
             <%= Inamen::VerseHighlighter.highlight_text(text, @highlight_indices) %>
           <% else %>
@@ -44,6 +58,20 @@
         <% end %>
       </p>
     <% end %>
+
+    <% if @colophon_text.present? %>
+      <% highlight_colophon = @highlight_extra_bucket && @bucket == Inamen::CorpusStore::BUCKET_COLOPHON %>
+      <p id="colophon" class="scripture-extra scripture-colophon<%= " is-highlighted" if highlight_colophon %>">
+        <span class="scripture-extra-label">Col.</span>
+        <%= scripture_bucket_html(
+              @edition,
+              book: @book,
+              chapter: @chapter,
+              bucket: Inamen::CorpusStore::BUCKET_COLOPHON,
+              highlight_indices: highlight_colophon ? @highlight_indices : []
+            ) %>
+      </p>
+    <% end %>
   </div>
 
   <nav class="scripture-chapter-nav scripture-chapter-nav-footer" aria-label="Chapter navigation">
@@ -61,11 +89,11 @@
   </nav>
 </section>
 
-<% if @highlight_verse.positive? %>
+<% if @highlight_scroll_target %>
   <% content_for :head do %>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        const target = document.getElementById("v<%= @highlight_verse %>");
+        const target = document.getElementById("<%= @highlight_scroll_target %>");
         if (target) target.scrollIntoView({ block: "center" });
       });
     </script>

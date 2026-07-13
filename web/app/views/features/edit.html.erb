@@ -10,7 +10,7 @@
     / Edit
   </p>
   <h1>Edit feature</h1>
-  <p class="lead">Update the name, expected count, notes, or KJV Code link for this saved feature.</p>
+  <p class="lead">Update the name, description, expected count, notes, or KJV Code link for this saved feature.</p>
 </div>
 
 <%= form_with url: feature_path(@saved_feature.url_id, edition: @edition.edition_id),
@@ -30,6 +30,12 @@
     <div class="form-field">
       <%= form.label :name, "Name", class: "form-label" %>
       <%= form.text_field :name, required: true, autofocus: true, class: "form-input" %>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :description, "Description", class: "form-label" %>
+      <%= form.text_field :description, class: "form-input",
+          placeholder: SavedFeature::DEFAULT_DESCRIPTION %>
     </div>
 
     <dl class="stats">

@@ -67,7 +67,8 @@ class FeaturesController < ApplicationController
 
   def update
     if @saved_feature.update(saved_feature_update_params)
-      redirect_to features_path(edition: @saved_feature.edition_id), notice: "Feature \"#{@saved_feature.name}\" updated."
+      redirect_to feature_path(@saved_feature.url_id, edition: @saved_feature.edition_id),
+                  notice: "Feature \"#{@saved_feature.name}\" updated."
       return
     end
 
@@ -170,7 +171,7 @@ class FeaturesController < ApplicationController
   end
 
   def saved_feature_update_params
-    params.require(:saved_feature).permit(:name, :expected_count, :notes, :kjvcode_url)
+    params.require(:saved_feature).permit(:name, :description, :expected_count, :notes, :kjvcode_url)
   end
 
   def load_saved_feature

@@ -5,24 +5,26 @@
     <p class="hint">No verse matches.</p>
   <% else %>
   <p class="discovery-verse-summary"><%= discovery_verse_match_summary(verse_result.summary) %></p>
-  <% if discovery_verse_results_truncated?(verse_result) %>
-    <p class="hint">Showing first <%= discovery_verse_results_display_limit %> of <%= number_with_delimiter(verse_result.verses.length) %> verses.</p>
-  <% end %>
 
   <ol class="discovery-verse-list">
-    <% discovery_verse_results_rows(verse_result).each do |row| %>
-      <li class="discovery-verse-item">
-        <%= link_to discovery_verse_reference(row),
-            discovery_scripture_chapter_path(edition, row),
-            class: "discovery-verse-ref" %>
-        <span class="discovery-verse-text"><%= discovery_verse_row_html(row) %></span>
-        <button type="button"
-            class="discovery-verse-details-button"
-            aria-label="Match details"
-            title="Match details"
-            data-verse-details="<%= h(discovery_verse_row_details(row).to_json) %>">☰</button>
-      </li>
-    <% end %>
+    <%= render "verse_result_rows",
+        edition: edition,
+        verse_result: verse_result,
+        offset: 0,
+        limit: discovery_verse_results_display_limit %>
   </ol>
+
+  <% remaining = discovery_verse_results_remaining_count(verse_result) %>
+  <% if remaining.positive? %>
+    <div class="discovery-verse-more">
+      <button type="button"
+          class="button button-secondary discovery-verse-show-more"
+          data-more-url="<%= discovery_verses_more_url(edition, @scan_params, offset: discovery_verse_results_display_limit) %>"
+          data-offset="<%= discovery_verse_results_display_limit %>"
+          data-remaining="<%= remaining %>">
+        <%= discovery_verse_show_more_label(remaining) %>
+      </button>
+    </div>
+  <% end %>
   <% end %>
 </section>

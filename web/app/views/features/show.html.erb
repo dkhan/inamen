@@ -6,13 +6,15 @@
 <% end %>
 
 <div class="page-header">
-  <p class="breadcrumb">
-    <%= link_to "Features", features_path(edition: @edition.edition_id) %>
-    / <code><%= @saved_feature&.url_id || @row&.id || @entry&.id %></code>
-  </p>
+  <% unless @saved_feature %>
+    <p class="breadcrumb">
+      <%= link_to "Features", features_path(edition: @edition.edition_id) %>
+      / <code><%= @row&.id || @entry&.id %></code>
+    </p>
+  <% end %>
   <h1><%= @saved_feature&.name || @row&.name || @entry&.name %></h1>
   <% if @saved_feature %>
-    <p class="lead">Saved from Discover</p>
+    <p class="lead"><%= @row.description %></p>
     <% if @row.kjvcode_url.present? %>
       <p class="lead-meta"><%= feature_kjvcode_link(@row.kjvcode_url) %></p>
     <% end %>

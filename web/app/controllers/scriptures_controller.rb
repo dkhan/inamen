@@ -33,6 +33,11 @@ class ScripturesController < ApplicationController
       return
     end
 
+    @superscription_text = @edition.chapter_superscription(book: @book, chapter: @chapter)
+    @colophon_text = @edition.chapter_colophon(book: @book, chapter: @chapter)
+    @highlight_extra_bucket = highlight_extra_bucket?
+    @highlight_scroll_target = highlight_scroll_target
+
     @prev_chapter = Inamen::CanonNavigation.prev_chapter(@book, @chapter)
     @next_chapter = Inamen::CanonNavigation.next_chapter(@book, @chapter)
     @title = "#{@book} #{@chapter}"
@@ -69,5 +74,18 @@ class ScripturesController < ApplicationController
       value = part.strip.to_i
       value.positive? ? value : nil
     end
+  end
+
+  def highlight_extra_bucket?
+    @highlight_indices.any? &&
+      @bucket != Inamen::CorpusStore::BUCKET_VERSE_TEXT
+  end
+
+  def highlight_scroll_target
+    return "colophon" if @highlight_extra_bucket && @bucket == Inamen::CorpusStore::BUCKET_COLOPHON
+    return "superscription" if @highlight_extra_bucket && @bucket == Inamen::CorpusStore::BUCKET_PSALM_HEADING
+    return "v#{@highlight_verse}" if @highlight_verse.positive? && @highlight_indices.any?
+
+    nil
   end
 end

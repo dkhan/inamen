@@ -718,7 +718,7 @@ code {
 
 .discovery-verse-item {
   display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr) auto;
+  grid-template-columns: calc(7.5rem + 5ch) minmax(0, 1fr) auto;
   gap: 0.75rem;
   align-items: start;
   padding: 0.65rem 0;
@@ -753,6 +753,15 @@ code {
 
 .discovery-verse-details-button:hover {
   border-color: var(--accent);
+}
+
+.discovery-verse-more {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.discovery-verse-show-more {
+  min-width: 10rem;
 }
 
 mark.search-hit {
@@ -887,6 +896,34 @@ mark.search-hit {
   background: rgba(110, 181, 255, 0.08);
   border-radius: 0.35rem;
   padding: 0.35rem 0.5rem;
+}
+
+.scripture-extra {
+  margin: 0 0 0.85rem;
+  line-height: 1.6;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.scripture-extra.is-highlighted {
+  background: rgba(110, 181, 255, 0.08);
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  color: inherit;
+}
+
+.scripture-extra-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: normal;
+  font-weight: 600;
+  margin-right: 0.35rem;
+}
+
+.scripture-colophon {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
 }
 
 .verse-num {

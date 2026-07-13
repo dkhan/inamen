@@ -262,7 +262,7 @@ class DiscoveryScan
   def self.compute_word_count_rows(edition, params)
     return [] unless enabled_search_terms?(params.query_terms)
 
-    if params.from_feature == "fishermen_gospels"
+    if fishermen_discover_query?(params)
       return compute_fishermen_word_count_rows(edition, params)
     end
 
@@ -321,7 +321,7 @@ class DiscoveryScan
 
   def self.compute_verse_result(edition, params)
     verse_result =
-      if params.from_feature == "fishermen_gospels"
+      if fishermen_discover_query?(params)
         exclusions = Inamen::FeatureDiscoverPresets.fishermen_exclusions_from_query_terms(params.query_terms)
         Inamen::FishermenNameCounts.build_verse_result(
           edition.lines,
@@ -356,11 +356,12 @@ class DiscoveryScan
       end
   end
 
-  def self.prepare_verses_for_display!(edition, verse_result, rows: nil)
+  def self.prepare_verses_for_display!(edition, verse_result, rows: nil, offset: 0,
+                                       limit: Inamen::VerseMatchQuery::DISPLAY_LIMIT)
     return verse_result unless verse_result
 
     align_verse_summary_with_counts!(verse_result, rows) if rows
-    Inamen::VerseMatchQuery.prepare_display!(edition, verse_result)
+    Inamen::VerseMatchQuery.prepare_display!(edition, verse_result, offset: offset, limit: limit)
     verse_result
   end
 
@@ -379,12 +380,17 @@ class DiscoveryScan
   end
 
   def self.word_count_terms(params)
-    if params.from_feature == "fishermen_gospels"
+    if fishermen_discover_query?(params)
       include_only_terms(params.query_terms)
     else
       Inamen::TokenQuery.parse_terms(params.query_terms)
     end
   end
+
+  def self.fishermen_discover_query?(params)
+    Inamen::FeatureDiscoverPresets.fishermen_gospels_query?(params.query_terms)
+  end
+  private_class_method :fishermen_discover_query?
 
   def self.include_only_terms(query_terms)
     lines = query_terms.to_s.each_line.filter_map do |line|
@@ -519,11 +525,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v27", *shared_cache_components(params, edition)]
+    ["discovery_counts/v28", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v27", *shared_cache_components(params, edition)]
+    ["discovery_verses/v28", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)

@@ -44,9 +44,22 @@ class DiscoveriesController < ApplicationController
       rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
       @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
       @edition.warm!
-      DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: rows)
-      render partial: "verse_results", locals: { edition: @edition, verse_result: @verse_result },
-             layout: false
+      offset = [params[:offset].to_i, 0].max
+      limit = Inamen::VerseMatchQuery::DISPLAY_LIMIT
+      DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: rows, offset: offset, limit: limit)
+      if params[:offset].present?
+        render partial: "verse_result_rows",
+               locals: {
+                 edition: @edition,
+                 verse_result: @verse_result,
+                 offset: offset,
+                 limit: limit
+               },
+               layout: false
+      else
+        render partial: "verse_results", locals: { edition: @edition, verse_result: @verse_result },
+               layout: false
+      end
       return
     end
 

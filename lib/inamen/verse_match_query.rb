@@ -62,15 +62,19 @@ module Inamen
         Result.new(summary: summary, verses: verses, hits: [])
       end
 
-      def prepare_display!(edition, result)
+      def prepare_display!(edition, result, offset: 0, limit: DISPLAY_LIMIT)
         return result unless result&.verses&.any?
-        return result if result.verses.first.html_excerpt.present?
+
+        rows = result.verses[offset, limit] || []
+        return result if rows.empty?
+        return result if rows.all? { |row| row.html_excerpt.present? }
 
         db = edition.db
         canon_verse_total = CanonIndex.verse_ordinals_for(db).length
 
-        result.verses.first(DISPLAY_LIMIT).each_with_index do |row, index|
+        rows.each_with_index do |row, index|
           row.html_excerpt = VerseHighlighter.render_edition_row(edition, row)
+          hit_index = offset + index + 1
           hit = Hit.new(
             book: row.book,
             chapter: row.chapter,
@@ -78,12 +82,12 @@ module Inamen
             bucket: row.bucket,
             word_index: row.highlight_indices.first || 1,
             word_count: 1,
-            search_index: index + 1
+            search_index: hit_index
           )
           row.details = hit_details(
             db,
             hit,
-            hit_index: index + 1,
+            hit_index: hit_index,
             verse_row: row,
             summary: result.summary,
             canon_verse_total: canon_verse_total
@@ -96,9 +100,9 @@ module Inamen
       def format_reference(book, chapter, verse, bucket = Inamen::CorpusStore::BUCKET_VERSE_TEXT)
         case bucket
         when Inamen::CorpusStore::BUCKET_PSALM_HEADING
-          "#{book} #{chapter} (superscription)"
+          "#{book} #{chapter} (sup.)"
         when Inamen::CorpusStore::BUCKET_COLOPHON
-          "#{book} (colophon)"
+          "#{book} #{chapter} (col.)"
         else
           "#{book} #{chapter}:#{verse}"
         end

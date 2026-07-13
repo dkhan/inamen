@@ -37,6 +37,13 @@ module Inamen
         highlight_tokens(tokens, highlight_indices)
       end
 
+      def bucket_text(db, book:, chapter:, verse: 0, bucket:)
+        tokens = tokens_for_verse(db, book: book, chapter: chapter, verse: verse, bucket: bucket)
+        return nil if tokens.empty?
+
+        tokens.map { |token| token[:token_raw] }.join(" ")
+      end
+
       def highlight_text(text, highlight_indices)
         return escape_html(text) if highlight_indices.blank?
 

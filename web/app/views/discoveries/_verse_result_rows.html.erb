@@ -1,0 +1,15 @@
+<% offset ||= 0 %>
+<% limit ||= discovery_verse_results_display_limit %>
+<% discovery_verse_results_rows(verse_result, offset: offset, limit: limit).each do |row| %>
+  <li class="discovery-verse-item">
+    <%= link_to discovery_verse_reference(row),
+        discovery_scripture_chapter_path(edition, row),
+        class: "discovery-verse-ref" %>
+    <span class="discovery-verse-text"><%= discovery_verse_row_html(row) %></span>
+    <button type="button"
+        class="discovery-verse-details-button"
+        aria-label="Match details"
+        title="Match details"
+        data-verse-details="<%= h(discovery_verse_row_details(row).to_json) %>">☰</button>
+  </li>
+<% end %>
