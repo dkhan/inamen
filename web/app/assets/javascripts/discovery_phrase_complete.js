@@ -5,6 +5,8 @@
 
   let dictionary = null;
   let dictionaryPromise = null;
+  let dictionaryPromiseUrl = null;
+  let dictionaryLoadedUrl = null;
   let normWords = null;
 
   function panel() {
@@ -14,6 +16,10 @@
   function dictionaryUrl() {
     const root = panel();
     return root ? root.dataset.dictionaryUrl : null;
+  }
+
+  function dictionaryCacheKey(url) {
+    return `${DICTIONARY_CACHE_KEY}:${url}`;
   }
 
   function normalizeApostrophe(text) {
@@ -42,42 +48,57 @@
   }
 
   function loadDictionary() {
-    if (dictionary) return Promise.resolve(dictionary);
-    if (dictionaryPromise) return dictionaryPromise;
-
     const url = dictionaryUrl();
     if (!url) return Promise.resolve([]);
 
-    const cached = sessionStorage.getItem(DICTIONARY_CACHE_KEY);
+    if (dictionary && dictionaryLoadedUrl === url) return Promise.resolve(dictionary);
+    if (dictionaryPromise && dictionaryPromiseUrl === url) return dictionaryPromise;
+
+    dictionary = null;
+    normWords = null;
+    dictionaryLoadedUrl = null;
+
+    const cacheKey = dictionaryCacheKey(url);
+    const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
         dictionary = JSON.parse(cached);
         normWords = buildNormWords(dictionary);
+        dictionaryLoadedUrl = url;
         return Promise.resolve(dictionary);
       } catch (_error) {
-        sessionStorage.removeItem(DICTIONARY_CACHE_KEY);
+        sessionStorage.removeItem(cacheKey);
       }
     }
 
+    dictionaryPromiseUrl = url;
     dictionaryPromise = fetch(url, { headers: { Accept: "application/json" } })
       .then((response) => response.json())
       .then((payload) => {
-        dictionary = payload.words || [];
-        normWords = buildNormWords(dictionary);
+        const words = payload.words || [];
+        if (dictionaryUrl() !== url) return words;
+
+        dictionary = words;
+        normWords = buildNormWords(words);
+        dictionaryLoadedUrl = url;
         try {
-          sessionStorage.setItem(DICTIONARY_CACHE_KEY, JSON.stringify(dictionary));
+          sessionStorage.setItem(cacheKey, JSON.stringify(words));
         } catch (_error) {
           /* ignore quota errors */
         }
-        return dictionary;
+        return words;
       })
       .catch(() => {
+        if (dictionaryUrl() !== url) return [];
+
         dictionary = [];
         normWords = new Map();
+        dictionaryLoadedUrl = url;
         return dictionary;
       })
       .finally(() => {
         dictionaryPromise = null;
+        dictionaryPromiseUrl = null;
       });
 
     return dictionaryPromise;
