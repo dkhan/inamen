@@ -4,10 +4,16 @@ class SavedFeature < ApplicationRecord
   URL_PREFIX = "saved_"
   DEFAULT_DESCRIPTION = "Saved from Discover"
 
+  # Measures a saved feature can track. "occurrences" counts every token match;
+  # "verses" counts distinct matching verses.
+  UNIT_OCCURRENCES = "occurrences"
+  UNIT_VERSES = "verses"
+  UNITS = [UNIT_OCCURRENCES, UNIT_VERSES].freeze
+
   validates :name, presence: true
   validates :edition_id, presence: true
   validates :scope_label, presence: true
-  validates :unit, presence: true
+  validates :unit, presence: true, inclusion: { in: UNITS }
   validates :expected_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :saved_actual_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :mode, presence: true
@@ -18,6 +24,10 @@ class SavedFeature < ApplicationRecord
 
   def url_id
     "#{URL_PREFIX}#{id}"
+  end
+
+  def verses?
+    unit == UNIT_VERSES
   end
 
   def display_description

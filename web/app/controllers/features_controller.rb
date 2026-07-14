@@ -3,8 +3,6 @@
 class FeaturesController < ApplicationController
   include EditionSelectable
 
-  DEFAULT_FEATURE_UNIT = "occurrences"
-
   before_action :load_saved_feature, only: %i[edit update destroy]
   before_action :ensure_saved_feature!, only: %i[edit update destroy]
 
@@ -26,25 +24,26 @@ class FeaturesController < ApplicationController
       return
     end
 
-    @count_options = feature_count_options(@discover_query)
-    unit = DEFAULT_FEATURE_UNIT
-    @actual_count = @count_options[unit].to_i
-
     selection = Inamen::SearchSelection.from_params(resolved_search_selection(@discover_query))
     phrases = @discover_query["search_phrases"] || {}
 
     @saved_feature = SavedFeature.new(
       edition_id: current_edition_id,
       scope_label: selection.label,
-      unit: unit,
-      expected_count: @actual_count,
-      saved_actual_count: @actual_count,
+      unit: SavedFeature::UNIT_OCCURRENCES,
       mode: @discover_query["mode"].presence || "word_count",
       search_selection: resolved_search_selection(@discover_query),
       search_phrases: phrases,
       from_feature: @discover_query["from_feature"],
       details: SavedFeature.build_details_from_phrases(phrases)
     )
+
+    # Read both measures from the existing (cached) scan results so the dialog can
+    # switch between them client-side without re-running the search.
+    @measure_counts = measure_counts(@saved_feature.to_scan_params)
+    actual = @measure_counts[@saved_feature.unit].to_i
+    @saved_feature.saved_actual_count = actual
+    @saved_feature.expected_count = actual
   end
 
   def create
@@ -54,14 +53,17 @@ class FeaturesController < ApplicationController
       @saved_feature.scope_label = SavedFeature.scope_label_for(@saved_feature.search_selection)
     end
 
+    # Persist only the values for the selected measure, recomputed from the cached
+    # search results so the stored numbers are authoritative (e.g. verses => 153).
+    apply_measure_count!(@saved_feature)
+
     if @saved_feature.save
       redirect_to features_path(edition: @saved_feature.edition_id), notice: "Feature \"#{@saved_feature.name}\" saved."
       return
     end
 
     @discover_query = stored_discover_query
-    @count_options = feature_count_options(@discover_query)
-    @actual_count = @saved_feature.saved_actual_count
+    @measure_counts = measure_counts(@saved_feature.to_scan_params)
     render :new, status: :unprocessable_entity
   end
 
@@ -146,46 +148,69 @@ class FeaturesController < ApplicationController
     :pending
   end
 
-  # Reads the cached scan results for the stored Discover query and returns the
-  # measurable totals keyed by unit, e.g. { "occurrences" => 158, "verses" => 153 }.
-  # "verses" is only included when a verse scan is cached.
-  def feature_count_options(query)
-    scan_params = discover_scan_params(query)
-
-    counts = DiscoveryScan.read_counts_cached(@edition, scan_params) || []
-    occurrences = DiscoveryScan.word_count_table_total(counts)
-    occurrences = params[:actual_count].to_i if occurrences.zero? && params[:actual_count].present?
-
-    options = { DEFAULT_FEATURE_UNIT => occurrences }
-
-    if DiscoveryScan.verses_cached?(@edition, scan_params)
-      verse_result = DiscoveryScan.read_verses_cached(@edition, scan_params)
-      verses = verse_result&.summary&.verses
-      options["verses"] = verses if verses
-    end
-
-    options
-  end
-
-  def discover_scan_params(query)
-    DiscoveryScan.normalize(
-      mode: query["mode"].presence || "word_count",
-      search_selection: resolved_search_selection(query),
-      search_phrases: query["search_phrases"] || {},
-      from_feature: query["from_feature"]
-    )
-  end
-
   def savable_discover_query?(query)
     return false if query.blank?
 
     query["mode"].to_s == "word_count" && query["search_phrases"].present?
   end
 
+  # Both measurable totals for the current scan, keyed by unit,
+  # e.g. { "occurrences" => 158, "verses" => 153 }.
+  def measure_counts(scan_params)
+    occurrences = measure_count(scan_params, SavedFeature::UNIT_OCCURRENCES).to_i
+    if occurrences.zero? && params[:actual_count].to_i.positive?
+      occurrences = params[:actual_count].to_i
+    end
+
+    {
+      SavedFeature::UNIT_OCCURRENCES => occurrences,
+      SavedFeature::UNIT_VERSES => measure_count(scan_params, SavedFeature::UNIT_VERSES).to_i
+    }
+  end
+
+  # Total for a single measure from the existing search results, or nil when the
+  # results are unavailable. Reuses DiscoveryScan's counting; never recounts here.
+  def measure_count(scan_params, unit)
+    if unit == SavedFeature::UNIT_VERSES
+      verse_result = read_or_run_verses(scan_params)
+      verse_result && DiscoveryScan.verse_count_total(verse_result)
+    else
+      rows = read_or_run_counts(scan_params)
+      rows && DiscoveryScan.word_count_table_total(rows)
+    end
+  rescue ArgumentError, TypeError
+    nil
+  end
+
+  def apply_measure_count!(saved_feature)
+    return unless SavedFeature::UNITS.include?(saved_feature.unit)
+
+    count = measure_count(saved_feature.to_scan_params, saved_feature.unit)
+    return if count.nil?
+
+    saved_feature.saved_actual_count = count
+    saved_feature.expected_count = count
+  end
+
+  def read_or_run_counts(scan_params)
+    rows = DiscoveryScan.read_counts_cached(@edition, scan_params)
+    return rows if rows
+
+    DiscoveryScan.run_counts(@edition, scan_params, force: false) if @edition.corpus_ready?
+  end
+
+  def read_or_run_verses(scan_params)
+    verse_result = DiscoveryScan.read_verses_cached(@edition, scan_params)
+    return verse_result if verse_result
+
+    DiscoveryScan.run_verses(@edition, scan_params, force: false) if @edition.corpus_ready?
+  end
+
   def saved_feature_params
     raw = params.require(:saved_feature)
     attrs = raw.permit(
       :name,
+      :description,
       :edition_id,
       :scope_label,
       :unit,

@@ -31,34 +31,39 @@
       <%= form.text_field :name, required: true, autofocus: true, class: "form-input", placeholder: "My Jesus scan" %>
     </div>
 
+    <div class="form-field">
+      <%= form.label :description, "Description", class: "form-label" %>
+      <%= form.text_field :description, class: "form-input",
+          placeholder: SavedFeature::DEFAULT_DESCRIPTION %>
+    </div>
+
     <%= form.hidden_field :edition_id %>
     <%= form.hidden_field :scope_label %>
     <%= form.hidden_field :mode %>
-    <%= form.hidden_field :saved_actual_count, data: { feature_actual_field: true } %>
-    <%= form.hidden_field :expected_count, data: { feature_expected_field: true } %>
     <%= form.hidden_field :from_feature if @saved_feature.from_feature.present? %>
     <%= hidden_field_tag "saved_feature[search_selection_json]", @saved_feature.search_selection.to_json %>
     <%= hidden_field_tag "saved_feature[search_phrases_json]", @saved_feature.search_phrases.to_json %>
 
     <div class="form-field">
       <%= form.label :unit, "Measure", class: "form-label" %>
-      <%= form.select :unit,
-          options_for_select(@count_options.keys.map { |u| [u.capitalize, u] }, @saved_feature.unit),
+      <%= form.select :unit, feature_measure_options(@saved_feature.unit),
           {}, class: "form-input input-narrow", data: { feature_unit_select: true } %>
     </div>
 
-    <dl class="stats" data-feature-counts="<%= @count_options.to_json %>">
+    <dl class="stats" data-feature-counts="<%= @measure_counts.to_json %>">
       <div>
         <dt>Actual</dt>
         <dd>
-          <span data-feature-actual><%= format_feature_count(@saved_feature.saved_actual_count) %></span>
+          <%= form.number_field :saved_actual_count, readonly: true,
+              class: "form-input input-narrow", data: { feature_actual_field: true } %>
           <span data-feature-unit-label><%= @saved_feature.unit %></span>
         </dd>
       </div>
       <div>
         <dt>Expected</dt>
         <dd>
-          <span data-feature-expected><%= format_feature_count(@saved_feature.expected_count) %></span>
+          <%= form.number_field :expected_count, readonly: true, required: true,
+              class: "form-input input-narrow", data: { feature_expected_field: true } %>
           <span data-feature-unit-label><%= @saved_feature.unit %></span>
         </dd>
       </div>

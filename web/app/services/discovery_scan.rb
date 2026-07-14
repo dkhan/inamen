@@ -462,6 +462,12 @@ class DiscoveryScan
     end
   end
 
+  # Total number of distinct matching verses for a cached/computed verse result.
+  # Reuses the summary produced by the verse scan (no extra counting).
+  def self.verse_count_total(verse_result)
+    verse_result&.summary&.verses.to_i
+  end
+
   def self.align_verse_summary_with_counts!(verse_result, rows)
     return verse_result unless verse_result&.summary
 

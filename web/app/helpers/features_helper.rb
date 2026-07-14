@@ -70,6 +70,10 @@ module FeaturesHelper
     new_feature_path(edition: edition, actual_count: actual_count)
   end
 
+  def feature_measure_options(selected = nil)
+    options_for_select(SavedFeature::UNITS.map { |unit| [unit.capitalize, unit] }, selected)
+  end
+
   def saved_feature_row?(row)
     SavedFeature.url_id?(row.id)
   end
