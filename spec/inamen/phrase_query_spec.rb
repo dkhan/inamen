@@ -31,7 +31,7 @@ RSpec.describe Inamen::PhraseQuery do
       expect(spellings).to eq("Jesus Christ" => 196)
     end
 
-    it "counts phrases with wildcards in individual words" do
+    it "counts phrases with wildcards in individual words, including possessives" do
       count, spellings = described_class.count(
         db,
         pattern: "Jesus Chris*",
@@ -39,8 +39,8 @@ RSpec.describe Inamen::PhraseQuery do
         case_sensitive: false
       )
 
-      expect(count).to eq(196)
-      expect(spellings).to eq("Jesus Christ" => 196)
+      expect(count).to eq(198)
+      expect(spellings).to eq("Jesus Christ" => 196, "Jesus Christ\u{2019}s" => 2)
     end
 
     it "does not match separated words in a verse" do

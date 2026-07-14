@@ -16,12 +16,7 @@ module Inamen
           next [] unless attrs
           next [] if attrs[:disabled]
 
-          patterns =
-            if attrs[:exclude] && bulk_antimention_exclude?(attrs[:pattern])
-              [attrs[:pattern]]
-            else
-              TokenPattern.split_phrase_patterns(attrs[:pattern])
-            end
+          patterns = TokenPattern.split_phrase_patterns(attrs[:pattern])
 
           patterns.map do |pattern|
             QueryTerm.new(
@@ -67,10 +62,6 @@ module Inamen
         SearchSelection.from_legacy(scope: scope, bucket: bucket)
       end
 
-      def bulk_antimention_exclude?(pattern)
-        pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN|JESUS)/i)
-      end
-
       def scan_with_word_stream(word_stream, terms, selection, scope_label)
         Array(terms).map do |term|
           count, spellings = count_term_with_word_stream(word_stream, term, selection)
@@ -88,10 +79,6 @@ module Inamen
       end
 
       def count_term_with_word_stream(word_stream, term, selection)
-        if bulk_antimention_exclude?(term.pattern)
-          return count_bulk_antimention(term, selection: selection, word_stream: word_stream)
-        end
-
         if PhraseQuery.phrase?(term.pattern)
           positions = word_stream.phrase_positions(
             term.pattern,
@@ -149,10 +136,6 @@ module Inamen
       end
 
       def count_term(db, term, selection:)
-        if bulk_antimention_exclude?(term.pattern)
-          return count_bulk_antimention(term, selection: selection, db: db)
-        end
-
         if PhraseQuery.phrase?(term.pattern)
           PhraseQuery.count(
             db,
@@ -170,40 +153,6 @@ module Inamen
           count_wildcard(rows, term)
         else
           count_exact(db, term, selection: selection)
-        end
-      end
-
-      def count_bulk_antimention(term, selection:, db: nil, word_stream: nil)
-        parts = bulk_antimention_parts(term.pattern)
-        total = 0
-        spellings = Hash.new(0)
-
-        parts.each do |part|
-          subterm = QueryTerm.new(
-            pattern: part,
-            case_sensitive: term.case_sensitive,
-            exclude: term.exclude
-          )
-          count, part_spellings =
-            if word_stream
-              count_term_with_word_stream(word_stream, subterm, selection)
-            else
-              count_term(db, subterm, selection: selection)
-            end
-          total += count
-          part_spellings.each { |raw, part_count| spellings[raw] += part_count }
-        end
-
-        [total, spellings.sort_by { |raw, count| [-count, raw] }.to_h]
-      end
-
-      def bulk_antimention_parts(pattern)
-        if pattern.to_s.match?(/\AANTIMENTIONS OF JESUS/i)
-          JesusMentionsAntimentions.antimention_parts(pattern)
-        elsif pattern.to_s.match?(/\AANTIMENTIONS OF (JAMES|JOHN)/i)
-          FishermenGospelsKjs.antimention_parts(pattern)
-        else
-          [pattern.to_s]
         end
       end
 

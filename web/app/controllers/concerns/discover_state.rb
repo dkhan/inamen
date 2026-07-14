@@ -8,8 +8,7 @@ module DiscoverState
   DISCOVER_SERVER_EPOCH_KEY = :discover_server_epoch
 
   included do
-    helper_method :discover_path_with_state, :stored_discover_query, :use_discover_query_token_in_urls?,
-                  :merge_fishermen_preset_excludes?
+    helper_method :discover_path_with_state, :stored_discover_query, :use_discover_query_token_in_urls?
   end
 
   def reset_discover_query_if_server_restarted!
@@ -79,16 +78,15 @@ module DiscoverState
     return false if stored.blank?
 
     phrases = stored["search_phrases"]
-    return true if phrases.is_a?(Hash) && Inamen::FeatureDiscoverPresets.raw_has_exclude_phrases?(phrases)
-    return true if phrases.is_a?(Hash) && phrases.values.any? do |row|
-      Inamen::FeatureDiscoverPresets.bulky_antimention_phrase?(row["phrase"] || row[:phrase])
+    return false unless phrases.is_a?(Hash)
+    return true if phrases.length > 4
+
+    # Keep complex queries (any exclude phrase) behind a token so shared URLs
+    # stay clean. Generic — no feature identity involved.
+    phrases.values.any? do |row|
+      value = row["exclude"] || row[:exclude]
+      value.to_s == "1" || value == true || value.to_s.casecmp("true").zero?
     end
-
-    phrases.is_a?(Hash) && phrases.length > 4
-  end
-
-  def merge_fishermen_preset_excludes?
-    false
   end
 
   private
@@ -111,27 +109,5 @@ module DiscoverState
 
   def discover_server_epoch
     Rails.application.config.discover_server_epoch
-  end
-
-  def discover_raw_search_phrases_param
-    return nil unless params[:search_phrases].present?
-
-    if params[:search_phrases].is_a?(ActionController::Parameters)
-      params[:search_phrases].permit!.to_h
-    else
-      params[:search_phrases].to_h
-    end
-  end
-
-  # Prefer URL/form phrases over session so a fishermen feature link rehydrates
-  # antimentions even when the stored query was previously simplified.
-  def fishermen_merge_raw_search_phrases
-    if request.post? && action_name == "scan" && params[:search_phrases].present?
-      discover_raw_search_phrases_param
-    elsif params[:search_phrases].present?
-      discover_raw_search_phrases_param
-    else
-      stored_discover_query&.dig("search_phrases")
-    end
   end
 end

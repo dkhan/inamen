@@ -40,7 +40,6 @@
     <%= form.hidden_field :edition_id %>
     <%= form.hidden_field :scope_label %>
     <%= form.hidden_field :mode %>
-    <%= form.hidden_field :from_feature if @saved_feature.from_feature.present? %>
     <%= hidden_field_tag "saved_feature[search_selection_json]", @saved_feature.search_selection.to_json %>
     <%= hidden_field_tag "saved_feature[search_phrases_json]", @saved_feature.search_phrases.to_json %>
 

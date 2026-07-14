@@ -1,37 +1,26 @@
 # frozen_string_literal: true
 
-# Builds Discover URLs that reproduce a catalog feature as a word-count scan.
+# Builds Discover URLs for the two built-in file-stats totals. Every other
+# feature is a user-defined saved feature and is linked into Discover via its
+# stored search criteria (see FeaturesHelper#feature_discover_path_for).
 class FeatureDiscoverLink
+  # Maps each built-in file-stats feature to the row it highlights in the
+  # Discover file-stats table.
+  HIGHLIGHTS = {
+    "combined_total" => "combined_total",
+    "file_character_total" => "file_characters"
+  }.freeze
+
   class << self
     def query_for(feature_id, edition_id:)
-      return nil unless Inamen::FeatureDiscoverPresets.discoverable?(feature_id)
+      highlight = HIGHLIGHTS[feature_id.to_s]
+      return nil unless highlight
 
-      mode = Inamen::FeatureDiscoverPresets.discover_mode_for(feature_id)
-      query = {
+      {
         edition: edition_id.to_s,
-        mode: mode
+        mode: "file_stats",
+        highlight: highlight
       }
-
-      highlight = Inamen::FeatureDiscoverPresets.discover_highlight_for(feature_id)
-      query[:highlight] = highlight if highlight
-
-      return query if mode == "file_stats"
-
-      query[:auto_scan] = "1"
-      phrases = Inamen::FeatureDiscoverPresets.phrase_entries_for(feature_id)
-
-      query[:search_phrases] = phrases.each_with_index.to_h do |phrase, index|
-        row = { phrase: phrase[:phrase] }
-        row[:case_sensitive] = "1" if phrase[:case_sensitive]
-        row[:exclude] = "1" if phrase[:exclude]
-        row[:disabled] = "1" if phrase[:disabled]
-        [index.to_s, row]
-      end
-
-      query[:search_selection] = Inamen::FeatureDiscoverPresets.selection_query_for(feature_id)
-      query[:from_feature] = feature_id
-
-      query
     end
   end
 end

@@ -65,8 +65,13 @@ RSpec.describe Inamen::TokenPattern do
       expect(described_class.matches?("*jesus*", token_raw: "Ephesus", token_norm: "ephesus", case_sensitive: false)).to be(false)
     end
 
-    it "does not let wildcards match across punctuation inside a token" do
-      expect(described_class.matches?("jesus*", token_raw: "Jesus\u{2019}s", token_norm: "jesus\u{2019}s", case_sensitive: false)).to be(false)
+    it "lets wildcards span possessive apostrophes so Peter* matches Peter’s" do
+      expect(described_class.matches?("jesus*", token_raw: "Jesus\u{2019}s", token_norm: "jesus\u{2019}s", case_sensitive: false)).to be(true)
+      expect(described_class.matches?("peter*", token_raw: "Peter\u{2019}s", token_norm: "peter\u{2019}s", case_sensitive: false)).to be(true)
+    end
+
+    it "does not let wildcards match across other punctuation inside a token" do
+      expect(described_class.matches?("jesus*", token_raw: "jesus.christ", token_norm: "jesus.christ", case_sensitive: false)).to be(false)
     end
 
     it "builds SQL prefilters from wildcard patterns" do

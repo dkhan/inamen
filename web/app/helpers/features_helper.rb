@@ -39,13 +39,14 @@ module FeaturesHelper
   def feature_discover_path_for(feature_id, edition:)
     if SavedFeature.url_id?(feature_id)
       saved_feature = SavedFeature.find_by_url_id!(feature_id)
-      scan_params = saved_feature.to_scan_params
+      # Load only the generic search criteria into Discover. The resulting scan
+      # carries no feature identity, so editing/rerunning never touches the
+      # original saved feature.
       store_query = {
         "mode" => saved_feature.mode,
         "search_selection" => saved_feature.search_selection,
         "search_phrases" => saved_feature.search_phrases
       }
-      store_query["from_feature"] = scan_params.from_feature if scan_params.from_feature.present?
       token = DiscoverQueryStore.write(nil, store_query)
       return discoveries_path(edition: saved_feature.edition_id, dq: token, auto_scan: "1")
     end

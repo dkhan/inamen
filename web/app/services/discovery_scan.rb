@@ -6,7 +6,6 @@ require "digest"
 class DiscoveryScan
   Params = Struct.new(
     :mode, :divisible_by, :search_selection, :min_count, :min_group_size, :match_by, :query_terms,
-    :from_feature,
     keyword_init: true
   )
 
@@ -50,8 +49,7 @@ class DiscoveryScan
       min_count: min_count.positive? ? min_count : 7,
       min_group_size: min_group_size >= 2 ? min_group_size : 2,
       match_by: MATCH_BY.include?(raw[:match_by].to_s) ? raw[:match_by].to_s : "norm",
-      query_terms: query_terms,
-      from_feature: raw[:from_feature].presence
+      query_terms: query_terms
     )
   end
 
@@ -175,7 +173,7 @@ class DiscoveryScan
 
   def self.run_counts(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
-    return [] if p.mode == "word_count" && !metric_only_word_count?(p) && !valid_search_terms?(edition, p.query_terms)
+    return [] if p.mode == "word_count" && !valid_search_terms?(edition, p.query_terms)
 
     key = counts_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -188,7 +186,7 @@ class DiscoveryScan
   def self.run_verses(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
     return nil if p.mode != "word_count"
-    return nil if !metric_only_word_count?(p) && !valid_search_terms?(edition, p.query_terms)
+    return nil unless valid_search_terms?(edition, p.query_terms)
 
     key = verses_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -201,7 +199,7 @@ class DiscoveryScan
   def self.enqueue_verses!(edition, params, force: false)
     p = params.is_a?(Params) ? params : normalize(params)
     return unless p.mode == "word_count"
-    return unless metric_only_word_count?(p) || valid_search_terms?(edition, p.query_terms)
+    return unless valid_search_terms?(edition, p.query_terms)
     return if verses_cached?(edition, p) && !force
     return if verses_running?(edition, p)
 
@@ -261,37 +259,10 @@ class DiscoveryScan
     end
   end
 
-  def self.empty_verse_result(params)
-    scope_label = Inamen::FeatureDiscoverPresets.selection_for(params.from_feature).label
-    Inamen::VerseMatchQuery::Result.new(
-      summary: Inamen::VerseMatchQuery::Summary.new(
-        occurrences: 0,
-        verses: 0,
-        chapters: 0,
-        books: 0,
-        scope_label: scope_label
-      ),
-      verses: [],
-      hits: []
-    )
-  end
-
   def self.compute_word_count_rows(edition, params)
-    return [] unless enabled_search_terms?(params.query_terms) || metric_only_word_count?(params)
+    return [] unless enabled_search_terms?(params.query_terms)
 
-    if fishermen_discover_query?(params)
-      return compute_fishermen_word_count_rows(edition, params)
-    end
-
-    if chapter_word_count_discover_query?(params)
-      return compute_chapter_word_count_rows(edition, params)
-    end
-
-    if (metric = special_metric_discover_query?(params))
-      return compute_special_metric_word_count_rows(edition, params, metric)
-    end
-
-    terms = word_count_terms(params)
+    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
 
     rows = Inamen::TokenQuery.scan(
       edition.db,
@@ -310,140 +281,80 @@ class DiscoveryScan
       )
     end
 
-    return rows if params.from_feature.blank?
+    deduplicate_exclusion_overlaps!(edition, params, rows)
+    rows
+  end
 
-    Inamen::FeatureDiscoverPresets.adjust_rows!(
-      params.from_feature,
-      edition,
-      rows,
-      search_selection: params.search_selection,
-      query_terms: params.query_terms
+  # Rewrites each exclusion row's count so the table total subtracts each matched
+  # base occurrence at most once. An exclusion removes an included occurrence when
+  # their text ranges overlap; when several exclusions cover the same occurrence
+  # it is removed once (attributed to the first exclusion row). Deduplication is
+  # by base-occurrence range, never by verse. Generic — no feature conditions.
+  def self.deduplicate_exclusion_overlaps!(edition, params, rows)
+    stream = edition.word_stream_index
+    return rows unless stream
+    return rows unless rows.any?(&:exclude)
+
+    selection = params.search_selection
+    include_occurrences = rows.reject(&:exclude).flat_map { |row| row_match_ranges(stream, row, selection) }
+    exclude_rows = rows.select(&:exclude)
+    counts = deduplicated_exclusion_counts(
+      include_occurrences,
+      exclude_rows.map { |row| row_match_ranges(stream, row, selection) }
     )
+    exclude_rows.each_with_index { |row, index| row.count = counts[index] }
+    rows
   end
 
-  def self.compute_chapter_word_count_rows(edition, params)
-    preset = Inamen::FeatureDiscoverPresets.preset_for(params.from_feature)
-    counts = chapter_word_counts_for_feature(params.from_feature, edition.lines)
-    scope_label = Inamen::FeatureDiscoverPresets.selection_for(params.from_feature).label
+  # Pure counting core. `include_occurrences` is an array of position Ranges (one
+  # per matched base occurrence). `exclude_row_ranges` is an array (per exclusion
+  # row) of the position Ranges that row matched. Returns, per exclusion row, the
+  # number of base occurrences it is the first to cover — so summing the result
+  # counts each excluded occurrence exactly once.
+  def self.deduplicated_exclusion_counts(include_occurrences, exclude_row_ranges)
+    occurrence_by_position = {}
+    include_occurrences.each_with_index do |range, occurrence_id|
+      range.each { |pos| occurrence_by_position[pos] ||= occurrence_id }
+    end
 
-    preset.chapter_refs.each_with_index.map do |(book, chapter), index|
-      phrase = preset.phrases[index]
-      count = chapter_ref_count(counts, book, chapter, edition.lines)
-      WordCountRow.new(
-        pattern: phrase.phrase,
-        case_sensitive: phrase.case_sensitive,
-        count: count,
-        wildcard: false,
-        scope: scope_label,
-        spellings: {},
-        exclude: false
-      )
+    removed = Set.new
+    exclude_row_ranges.map do |ranges|
+      covered = Set.new
+      ranges.each do |range|
+        range.each do |pos|
+          occurrence_id = occurrence_by_position[pos]
+          covered << occurrence_id unless occurrence_id.nil?
+        end
+      end
+      fresh = covered - removed
+      removed.merge(fresh)
+      fresh.size
     end
   end
 
-  def self.compute_special_metric_word_count_rows(edition, params, metric)
-    case metric
-    when :jesus_boundary_first7_nt
-      preset = Inamen::FeatureDiscoverPresets.preset_for(params.from_feature)
-      scope_label = Inamen::FeatureDiscoverPresets.selection_for(params.from_feature).label
-      phrase = preset.phrases.first
-      count = Inamen::BibleBoundaryPatterns.jesus_boundary_first7_nt(edition.lines, db: edition.db)
-      [
-        WordCountRow.new(
-          pattern: phrase.phrase,
-          case_sensitive: phrase.case_sensitive,
-          count: count,
-          wildcard: false,
-          scope: scope_label,
-          spellings: {},
-          exclude: false
-        )
-      ]
+  # The position ranges a row matches: one range per occurrence. Single-token
+  # patterns span one position; phrase patterns span the whole phrase.
+  def self.row_match_ranges(stream, row, selection)
+    pattern = row.pattern
+    if Inamen::PhraseQuery.phrase?(pattern)
+      length = Inamen::PhraseQuery.phrase_words(pattern).length
+      stream.phrase_positions(pattern, case_sensitive: row.case_sensitive, selection: selection)
+            .map { |start| (start...(start + length)) }
     else
-      []
+      stream.positions_for(pattern, case_sensitive: row.case_sensitive, selection: selection)
+            .map { |pos| (pos...(pos + 1)) }
     end
   end
-
-  def self.chapter_word_counts_for_feature(feature_id, lines)
-    case feature_id.to_s
-    when "ot_first_last_chapter_words"
-      Inamen::BibleBoundaryPatterns.ot_first_last_chapter_word_count(lines)
-    when "first_last_chapter_words"
-      Inamen::BibleBoundaryPatterns.first_last_chapter_word_count(lines)
-    else
-      {}
-    end
-  end
-
-  def self.chapter_ref_count(counts, book, chapter, lines)
-    case [book, chapter]
-    when ["Genesis", 1] then counts[:genesis]
-    when ["Malachi", 4] then counts[:malachi]
-    when ["Revelation", 22] then counts[:revelation]
-    else
-      Inamen::BibleBoundaryPatterns.chapter_word_count(lines, book: book, chapter: chapter)
-    end
-  end
-  private_class_method :chapter_word_counts_for_feature, :chapter_ref_count
-
-  def self.compute_fishermen_word_count_rows(edition, params)
-    scope_label = Inamen::FeatureDiscoverPresets.selection_for("fishermen_gospels").label
-    stub_rows = phrase_entries_from_query_terms(params.query_terms).reject(&:disabled).reject(&:exclude).map do |entry|
-      WordCountRow.new(
-        pattern: entry.phrase,
-        case_sensitive: entry.case_sensitive,
-        count: 0,
-        wildcard: entry.phrase.include?("*"),
-        scope: scope_label,
-        spellings: {},
-        exclude: false
-      )
-    end
-
-    Inamen::FeatureDiscoverPresets.adjust_rows!(
-      "fishermen_gospels",
-      edition,
-      stub_rows,
-      search_selection: params.search_selection,
-      query_terms: params.query_terms
-    )
-  end
+  private_class_method :deduplicate_exclusion_overlaps!, :row_match_ranges
 
   def self.compute_verse_result(edition, params)
-    verse_result =
-      if fishermen_discover_query?(params)
-        exclusions = Inamen::FeatureDiscoverPresets.fishermen_exclusions_from_query_terms(params.query_terms)
-        Inamen::FishermenNameCounts.build_verse_result(
-          edition.lines,
-          scope: :gospels,
-          search_selection: params.search_selection,
-          james_exclusions: exclusions[:james],
-          john_exclusions: exclusions[:john],
-          word_stream: edition.word_stream_index,
-          edition: edition
-        )
-      else
-        result =
-          if params.from_feature == "jesus_mentions" &&
-             Inamen::FeatureDiscoverPresets.jesus_antimention_only_query?(params.query_terms)
-            Inamen::FeatureDiscoverPresets.build_jesus_antimention_verse_result(
-              edition.db,
-              search_selection: params.search_selection
-            )
-          else
-            terms = Inamen::TokenQuery.parse_terms(params.query_terms)
-            Inamen::VerseMatchQuery.scan(
-              edition.db,
-              terms: terms,
-              search_selection: params.search_selection,
-              word_stream: edition.word_stream_index
-            )
-          end
-        if params.from_feature.present?
-          result = Inamen::FeatureDiscoverPresets.adjust_verse_result!(params.from_feature, result)
-        end
-        result
-      end
+    terms = Inamen::TokenQuery.parse_terms(params.query_terms)
+    Inamen::VerseMatchQuery.scan(
+      edition.db,
+      terms: terms,
+      search_selection: params.search_selection,
+      word_stream: edition.word_stream_index
+    )
   end
 
   def self.prepare_verses_for_display!(edition, verse_result, rows: nil, offset: 0,
@@ -474,46 +385,6 @@ class DiscoveryScan
     verse_result.summary.occurrences = word_count_table_total(rows)
     verse_result
   end
-
-  def self.word_count_terms(params)
-    if fishermen_discover_query?(params)
-      include_only_terms(params.query_terms)
-    else
-      Inamen::TokenQuery.parse_terms(params.query_terms)
-    end
-  end
-
-  def self.fishermen_discover_query?(params)
-    return true if params.from_feature.to_s == "fishermen_gospels"
-
-    Inamen::FeatureDiscoverPresets.fishermen_gospels_query?(params.query_terms)
-  end
-
-  def self.chapter_word_count_discover_query?(params)
-    preset = Inamen::FeatureDiscoverPresets.preset_for(params.from_feature)
-    preset&.chapter_refs&.any?
-  end
-
-  def self.special_metric_discover_query?(params)
-    Inamen::FeatureDiscoverPresets.preset_for(params.from_feature)&.special_metric
-  end
-
-  def self.metric_only_word_count?(params)
-    Inamen::FeatureDiscoverPresets.metric_only_preset?(params.from_feature)
-  end
-  private_class_method :fishermen_discover_query?, :chapter_word_count_discover_query?,
-                       :special_metric_discover_query?, :metric_only_word_count?
-
-  def self.include_only_terms(query_terms)
-    lines = query_terms.to_s.each_line.filter_map do |line|
-      attrs = Inamen::TokenPattern.parse_query_line(line)
-      next if attrs.nil? || attrs[:disabled] || attrs[:exclude]
-
-      line.strip
-    end
-    Inamen::TokenQuery.parse_terms(lines.join("\n"))
-  end
-  private_class_method :include_only_terms
 
   def self.cached?(edition, params)
     p = params.is_a?(Params) ? params : normalize(params)
@@ -627,7 +498,6 @@ class DiscoveryScan
       match_by: p.match_by,
       query_terms: p.query_terms
     }
-    payload[:from_feature] = p.from_feature if p.from_feature.present?
     payload
   end
 
@@ -637,11 +507,11 @@ class DiscoveryScan
   end
 
   def self.counts_cache_key_for(edition, params)
-    ["discovery_counts/v29", *shared_cache_components(params, edition)]
+    ["discovery_counts/v31", *shared_cache_components(params, edition)]
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v29", *shared_cache_components(params, edition)]
+    ["discovery_verses/v31", *shared_cache_components(params, edition)]
   end
 
   def self.shared_cache_components(params, edition)
@@ -660,8 +530,7 @@ class DiscoveryScan
       p.divisible_by,
       p.search_selection.cache_key,
       p.min_count,
-      p.min_group_size,
-      p.from_feature
+      p.min_group_size
     ]
   end
 end

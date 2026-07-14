@@ -40,13 +40,6 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if Inamen::FeatureDiscoverPresets.chapter_word_count_preset?(@scan_params.from_feature)
-      render partial: "verse_results",
-             locals: { edition: @edition, verse_result: DiscoveryScan.empty_verse_result(@scan_params) },
-             layout: false
-      return
-    end
-
     if DiscoveryScan.verses_cached?(@edition, @scan_params)
       rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
       @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
@@ -162,12 +155,6 @@ class DiscoveriesController < ApplicationController
     if hash[:search_phrases].blank? && hash[:query_terms].blank? && stored_discover_query&.dig("query_terms").present?
       hash[:query_terms] = stored_discover_query["query_terms"]
     end
-    unless hash[:from_feature].present?
-      terms = DiscoveryScan.query_terms_from_raw(hash)
-      inferred = Inamen::FeatureDiscoverPresets.resolve_from_feature(nil, query_terms: terms)
-      hash[:from_feature] = inferred if inferred.present?
-    end
-    hash.delete(:from_feature) unless params[:auto_scan] == "1" || hash[:from_feature].present?
     DiscoveryScan.normalize(hash)
   end
 
@@ -203,9 +190,6 @@ class DiscoveriesController < ApplicationController
       phrases = discover_search_phrases_hash(params[:search_phrases])
       query[:search_phrases] = phrases if phrases.present?
     end
-    if @scan_params.from_feature.present?
-      query[:from_feature] = @scan_params.from_feature
-    end
     query.except(:auto_scan, :dq, :query_terms)
   end
 
@@ -225,13 +209,10 @@ class DiscoveriesController < ApplicationController
       min_group_size: params[:min_group_size],
       match_by: params[:match_by],
       query_terms: params[:query_terms],
-      search_phrases: params[:search_phrases],
-      from_feature: params[:from_feature].presence || stored&.dig("from_feature")
+      search_phrases: params[:search_phrases]
     }
 
-    if params[:from_feature].present? && params[:search_selection].blank?
-      hash[:search_selection] = Inamen::FeatureDiscoverPresets.selection_query_for(params[:from_feature])
-    elsif hash[:search_selection].blank? && stored&.dig("search_selection").present?
+    if hash[:search_selection].blank? && stored&.dig("search_selection").present?
       hash[:search_selection] = stored["search_selection"]
     end
 
@@ -293,14 +274,10 @@ class DiscoveriesController < ApplicationController
   end
 
   def run_or_enqueue_verses!(edition, scan_params, force: false)
-    return if Inamen::FeatureDiscoverPresets.chapter_word_count_preset?(scan_params.from_feature)
-
     DiscoveryScan.enqueue_verses!(edition, scan_params, force: force)
   end
 
   def invalid_word_count_phrases?
-    return false if Inamen::FeatureDiscoverPresets.metric_only_preset?(@scan_params.from_feature)
-
     phrases = current_search_phrases_hash
     return false unless DiscoveryScan.phrase_entries_for_validation(@scan_params.query_terms, raw_phrases: phrases).any?
 

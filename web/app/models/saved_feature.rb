@@ -45,17 +45,10 @@ class SavedFeature < ApplicationRecord
   end
 
   def to_scan_params
-    inferred_feature = from_feature.presence
-    unless inferred_feature.present?
-      terms = DiscoveryScan.query_terms_from_phrases(search_phrases)
-      inferred_feature = Inamen::FeatureDiscoverPresets.resolve_from_feature(nil, query_terms: terms)
-    end
-
     DiscoveryScan.normalize(
       mode: mode,
       search_selection: search_selection,
-      search_phrases: search_phrases,
-      from_feature: inferred_feature
+      search_phrases: search_phrases
     )
   end
 

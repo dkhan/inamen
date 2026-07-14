@@ -68,11 +68,6 @@ RSpec.describe "KJV editions" do
           expect(result.count).to eq(4_241_503)
           expect(Inamen::KjvEditions.expected_feature_count(edition_id, "file_character_total")).to eq(4_233_726)
         end
-
-        it "matches the reference catalog on jesus_boundary_same_verse after normalization" do
-          result = Inamen::Features.run("jesus_boundary_same_verse", lines: @lines, db: nil, path: path)
-          expect(result.count).to eq(2401)
-        end
       end
     end
   end

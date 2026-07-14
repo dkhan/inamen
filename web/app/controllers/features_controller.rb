@@ -34,7 +34,6 @@ class FeaturesController < ApplicationController
       mode: @discover_query["mode"].presence || "word_count",
       search_selection: resolved_search_selection(@discover_query),
       search_phrases: phrases,
-      from_feature: @discover_query["from_feature"],
       details: SavedFeature.build_details_from_phrases(phrases)
     )
 
@@ -217,7 +216,6 @@ class FeaturesController < ApplicationController
       :expected_count,
       :saved_actual_count,
       :mode,
-      :from_feature,
       :notes,
       :kjvcode_url,
       :search_selection_json,

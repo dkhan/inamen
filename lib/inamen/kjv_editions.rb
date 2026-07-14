@@ -11,12 +11,7 @@ module Inamen
     }.freeze
 
     # Edition-specific pass targets when Concord text differs from the reference KJV.txt catalog.
-    FEATURE_OVERRIDES = {
-      "concord" => {
-        "the_amen_nt_concealed" => 981,
-        "god_pure_nt" => 1369
-      }
-    }.freeze
+    FEATURE_OVERRIDES = {}.freeze
 
     # Features that intentionally differ from the reference catalog (shown as MISS, not a regression).
     CATALOG_DIFFERS = {

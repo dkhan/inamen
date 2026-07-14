@@ -7,8 +7,9 @@ module Inamen
     CASE_SUFFIX = /\|cs\z/i
     DISABLED_SUFFIX = /\|disabled\z/i
     EXCLUDE_SUFFIX = /\|exclude\z/i
-    # Letters, digits, hyphen — not punctuation, space, or newline.
-    WILDCARD_FRAGMENT = "(?:[\\p{L}\\p{M}0-9\\-]*)"
+    # Letters, digits, hyphen, and apostrophes — so a `*` spans possessive tokens
+    # (e.g. Peter* matches Peter’s). Not other punctuation, space, or newline.
+    WILDCARD_FRAGMENT = "(?:[\\p{L}\\p{M}0-9\\-'\u{2019}]*)"
     TRAILING_POSSESSIVE = /['\u{2019}]\z/
 
     class << self

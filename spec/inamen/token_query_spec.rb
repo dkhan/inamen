@@ -125,7 +125,7 @@ RSpec.describe Inamen::TokenQuery do
       expect(row.spellings).to eq("Jesus Christ" => 196)
     end
 
-    it "counts phrases with wildcards in words" do
+    it "counts phrases with wildcards in words, including possessives" do
       rows = described_class.scan(
         db,
         terms: [described_class::QueryTerm.new(pattern: "Jesus Chris*", case_sensitive: false)],
@@ -133,8 +133,8 @@ RSpec.describe Inamen::TokenQuery do
         bucket: :default
       )
       row = rows.first
-      expect(row.count).to eq(196)
-      expect(row.spellings).to eq("Jesus Christ" => 196)
+      expect(row.count).to eq(198)
+      expect(row.spellings).to eq("Jesus Christ" => 196, "Jesus Christ\u{2019}s" => 2)
     end
 
     it "counts pipe-separated terms from one input line" do
@@ -167,49 +167,6 @@ RSpec.describe Inamen::TokenQuery do
       rows = described_class.scan(db, terms: terms, scope: :whole_bible, bucket: :default)
       expect(rows.map(&:pattern)).to eq(%w[seven cities])
       expect(rows.map(&:count)).to all(be_positive)
-    end
-
-    it "does not split fishermen antimention exclude rows into hundreds of terms" do
-      phrase = "ANTIMENTIONS OF JOHN (THE APOSTLE, SON OF ZEBEDEE) | John the Baptist | John was cast"
-      terms = described_class.parse_terms("#{phrase}|exclude\n")
-      expect(terms.length).to eq(1)
-      expect(terms.first.pattern).to eq(phrase)
-      expect(terms.first.exclude).to be(true)
-    end
-
-    it "counts bulk jesus antimention exclude rows as the sum of phrase parts" do
-      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
-      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
-
-      full_db = Inamen::CorpusStore.open(db_path)
-      selection = Inamen::SearchSelection.default
-      phrase = Inamen::JesusMentionsAntimentions.exclude_phrase
-      terms = described_class.parse_terms("#{phrase}|cs|exclude\n")
-      rows = described_class.scan(full_db, terms: terms, search_selection: selection)
-
-      expect(rows.length).to eq(1)
-      expect(rows.first.count).to eq(3)
-    ensure
-      full_db&.close
-    end
-
-    it "totals 980 for jesus includes minus antimention exclude" do
-      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
-      skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
-
-      full_db = Inamen::CorpusStore.open(db_path)
-      selection = Inamen::SearchSelection.default
-      possessive = Inamen::FeatureDiscoverPresets::JESUS_POSSESSIVE
-      query = [
-        "Jesus|JESUS|#{possessive}|cs",
-        "#{Inamen::JesusMentionsAntimentions.exclude_phrase}|cs|exclude"
-      ].join("\n")
-      rows = described_class.scan(full_db, terms: described_class.parse_terms(query), search_selection: selection)
-      total = rows.sum { |row| row.exclude ? -row.count : row.count }
-
-      expect(total).to eq(980)
-    ensure
-      full_db&.close
     end
 
     it "matches lexicon counts when using the word-stream fast path" do
