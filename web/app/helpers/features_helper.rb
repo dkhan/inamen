@@ -48,7 +48,7 @@ module FeaturesHelper
         "search_phrases" => saved_feature.search_phrases
       }
       token = DiscoverQueryStore.write(nil, store_query)
-      return discoveries_path(edition: saved_feature.edition_id, dq: token, auto_scan: "1")
+      return discoveries_path(edition: edition, dq: token, auto_scan: "1")
     end
 
     query = FeatureDiscoverLink.query_for(feature_id, edition_id: edition)
@@ -73,6 +73,19 @@ module FeaturesHelper
 
   def feature_measure_options(selected = nil)
     options_for_select(SavedFeature::UNITS.map { |unit| [unit.capitalize, unit] }, selected)
+  end
+
+  FEATURE_TYPE_LABELS = {
+    "bible" => "Bible", "general_text" => "General text", "both" => "Both"
+  }.freeze
+
+  def feature_type_options(selected = nil)
+    options = SavedFeature.feature_types.keys.map { |key| [feature_type_label(key), key] }
+    options_for_select(options, selected)
+  end
+
+  def feature_type_label(value)
+    FEATURE_TYPE_LABELS.fetch(value.to_s, value.to_s.tr("_", " ").capitalize)
   end
 
   def saved_feature_row?(row)

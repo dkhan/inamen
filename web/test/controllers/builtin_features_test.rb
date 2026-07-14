@@ -11,12 +11,11 @@ class BuiltinFeaturesTest < ActionDispatch::IntegrationTest
   def create_saved_feature(name: "My Peter scan", phrase: "peter")
     SavedFeature.create!(
       name: name,
-      edition_id: EDITION_ID,
+      original_edition_id: EDITION_ID,
       scope_label: "All texts",
       unit: SavedFeature::UNIT_OCCURRENCES,
       mode: "word_count",
       expected_count: 153,
-      saved_actual_count: 153,
       search_selection: { "submitted" => "1" },
       search_phrases: { "0" => { "phrase" => phrase } }
     )
@@ -83,12 +82,12 @@ class BuiltinFeaturesTest < ActionDispatch::IntegrationTest
 
     row = nil
     DiscoveryScan.stub(:enabled_search_terms?, true) do
-      DiscoveryScan.stub(:counts_cached?, true) do
-        DiscoveryScan.stub(:read_counts_cached, [DiscoveryScan::WordCountRow.new(
+      DiscoveryScan.stub(:valid_search_terms?, true) do
+        DiscoveryScan.stub(:run_counts, [DiscoveryScan::WordCountRow.new(
           pattern: "peter", case_sensitive: false, count: 153, wildcard: false,
           scope: "All texts", spellings: {}, exclude: false
         )]) do
-          row = SavedFeatureCatalog.row_for(feature, edition, index: true)
+          row = SavedFeatureCatalog.row_for(feature, edition)
         end
       end
     end

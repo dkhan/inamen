@@ -1,19 +1,27 @@
 # frozen_string_literal: true
 
-# Runs discovery scans for user-saved features.
+# Verifies user-saved features against any edition and persists the per-edition
+# result in feature_editions. The verification path is fully generic — it reuses
+# DiscoveryScan for every feature and edition, with no edition- or feature-
+# specific branches. A feature's expected value and original edition are never
+# modified here.
 class SavedFeatureCatalog
   class << self
-    def row_for(saved_feature, edition, index: false)
-      actual = index ? index_count(saved_feature, edition) : run_count(saved_feature, edition)
+    def rows_for_edition(edition, force: false)
+      SavedFeature.order(:name).map { |saved_feature| row_for(saved_feature, edition, force: force) }
+    end
+
+    def row_for(saved_feature, edition, force: false)
+      record = verified_edition(saved_feature, edition, force: force)
       FeatureCatalog::ResultRow.new(
         id: saved_feature.url_id,
         name: saved_feature.name,
         description: saved_feature.display_description,
-        count: actual,
+        count: record.actual,
         expected: saved_feature.expected_count,
         unit: saved_feature.unit,
         scope: saved_feature.scope_label,
-        match: actual == saved_feature.expected_count,
+        match: record.status_match?,
         kjvcode_expected: nil,
         kjvcode_match: nil,
         kjvcode_url: saved_feature.kjvcode_url.presence,
@@ -22,87 +30,59 @@ class SavedFeatureCatalog
       )
     end
 
-    def rows_for_edition(edition, index: false)
-      SavedFeature.where(edition_id: edition.edition_id).order(:name).map do |saved_feature|
-        row_for(saved_feature, edition, index: index)
+    # One FeatureEdition per edition, computed on demand. Used by the feature
+    # show page to display actuals/status across all editions.
+    def results_for_all_editions(saved_feature, force: false)
+      EditionContext.all_ids.map do |edition_id|
+        verified_edition(saved_feature, EditionContext.new(edition_id), force: force)
       end
     end
 
-    def index_count(saved_feature, edition)
-      return saved_feature.saved_actual_count unless edition.edition_id == saved_feature.edition_id
+    # Returns the persisted FeatureEdition for (feature, edition), reusing a cached
+    # verified result when present, otherwise running the generic validation and
+    # saving the actual value + MATCH/MISS status. Never touches the feature's
+    # expected value or original edition; unique per (feature, edition).
+    def verified_edition(saved_feature, edition, force: false)
+      record = FeatureEdition.find_or_initialize_by(
+        feature_id: saved_feature.id, edition_id: edition.edition_id
+      )
+      return record if !force && record.persisted? && record.processing_verified?
 
-      scan_params = saved_feature.to_scan_params
-      return saved_feature.saved_actual_count unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
-
-      total = cached_total(saved_feature, edition, scan_params)
-      return saved_feature.saved_actual_count if total.nil?
-
-      if total != saved_feature.saved_actual_count
-        clear_total_cache(saved_feature, edition, scan_params)
-        return saved_feature.saved_actual_count
-      end
-
-      total
-    rescue ArgumentError, TypeError
-      saved_feature.saved_actual_count
-    end
-
-    def run_count(saved_feature, edition)
-      return saved_feature.saved_actual_count unless edition.edition_id == saved_feature.edition_id
-
-      scan_params = saved_feature.to_scan_params
-      return saved_feature.saved_actual_count unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
-
-      total = cached_total(saved_feature, edition, scan_params)
-      if total
-        if total != saved_feature.saved_actual_count
-          clear_total_cache(saved_feature, edition, scan_params)
-        else
-          return total
-        end
-      end
-
-      return saved_feature.saved_actual_count unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
-
-      run_total(saved_feature, edition, scan_params)
-    rescue ArgumentError, TypeError
-      saved_feature.saved_actual_count
+      actual = compute_actual(saved_feature, edition, force: force)
+      record.actual = actual
+      record.status = actual == saved_feature.expected_count ? FeatureEdition::STATUS_MATCH : FeatureEdition::STATUS_MISS
+      record.verified_at = Time.current
+      record.processing_state = :verified
+      record.error = nil
+      record.save!
+      record
+    rescue ActiveRecord::RecordNotUnique
+      # Another request created it concurrently — reuse the persisted row.
+      FeatureEdition.find_by(feature_id: saved_feature.id, edition_id: edition.edition_id) || record
+    rescue ArgumentError, TypeError => e
+      record.processing_state = :failed
+      record.error = e.message
+      record.actual ||= 0
+      record.status ||= FeatureEdition::STATUS_MISS
+      record.save
+      record
     end
 
     private
 
-    # Reads the cached total for the feature's measure (verses vs occurrences),
-    # or nil when that measure's results are not cached.
-    def cached_total(saved_feature, edition, scan_params)
-      if saved_feature.verses?
-        return nil unless DiscoveryScan.verses_cached?(edition, scan_params)
+    # Generic occurrence/verse count for a feature's search run against an
+    # edition. Reuses the same counting path as Discover — no special cases.
+    def compute_actual(saved_feature, edition, force: false)
+      scan_params = saved_feature.to_scan_params
+      return 0 unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
+      return 0 unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
 
-        verse_result = DiscoveryScan.read_verses_cached(edition, scan_params)
-        verse_result && DiscoveryScan.verse_count_total(verse_result)
-      else
-        return nil unless DiscoveryScan.counts_cached?(edition, scan_params)
-
-        rows = DiscoveryScan.read_counts_cached(edition, scan_params)
-        rows && DiscoveryScan.word_count_table_total(rows)
-      end
-    end
-
-    # Runs the scan for the feature's measure and returns the fresh total.
-    def run_total(saved_feature, edition, scan_params)
       edition.warm! if edition.corpus_ready?
 
       if saved_feature.verses?
-        DiscoveryScan.verse_count_total(DiscoveryScan.run_verses(edition, scan_params, force: false))
+        DiscoveryScan.verse_count_total(DiscoveryScan.run_verses(edition, scan_params, force: force))
       else
-        DiscoveryScan.word_count_table_total(DiscoveryScan.run_counts(edition, scan_params, force: false))
-      end
-    end
-
-    def clear_total_cache(saved_feature, edition, scan_params)
-      if saved_feature.verses?
-        DiscoveryScan.clear_verses_cache!(edition, scan_params)
-      else
-        DiscoveryScan.clear_counts_cache!(edition, scan_params)
+        DiscoveryScan.word_count_table_total(DiscoveryScan.run_counts(edition, scan_params, force: force))
       end
     end
   end

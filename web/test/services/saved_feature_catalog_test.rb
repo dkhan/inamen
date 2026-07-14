@@ -2,32 +2,27 @@
 
 require "test_helper"
 
-# Loading an existing saved feature must recompute its "Actual" count using the
-# feature's own measure: occurrences features from the word-count rows, verses
-# features from the verse scan total.
+# SavedFeatureCatalog verifies a feature against any edition and persists the
+# per-edition result in feature_editions, generically (occurrences vs verses),
+# without touching the feature's expected value or original edition.
 class SavedFeatureCatalogTest < ActiveSupport::TestCase
   WordRow = Struct.new(:count, :exclude, :overlap, keyword_init: true)
 
-  EDITION_ID = "kjv_normalized"
-
-  def edition
-    @edition ||= begin
-      double = Struct.new(:edition_id).new(EDITION_ID)
-      def double.corpus_ready? = true
-      def double.warm! = nil
-      double
-    end
+  def edition(id)
+    double = Struct.new(:edition_id).new(id)
+    def double.corpus_ready? = true
+    def double.warm! = nil
+    double
   end
 
-  def saved_feature(unit:, actual:)
-    SavedFeature.new(
+  def saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
+    SavedFeature.create!(
       name: "Peter",
-      edition_id: EDITION_ID,
+      original_edition_id: original,
       scope_label: "All texts",
       unit: unit,
       mode: "word_count",
-      expected_count: actual,
-      saved_actual_count: actual,
+      expected_count: expected,
       search_selection: { "submitted" => "1" },
       search_phrases: { "0" => { "phrase" => "peter" } }
     )
@@ -48,65 +43,86 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     DiscoveryScan.stub(name, value) { with_stubs(list[1..], &block) }
   end
 
-  test "occurrences feature counts matching tokens (index)" do
-    rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
-    feature = saved_feature(unit: "occurrences", actual: 158)
-
-    row = with_stubs(
-      enabled_search_terms?: true,
-      counts_cached?: true,
-      read_counts_cached: rows
-    ) { SavedFeatureCatalog.row_for(feature, edition, index: true) }
-
-    assert_equal 158, row.count
-    assert_equal "occurrences", row.unit
-    assert row.match
-  end
-
-  test "verses feature counts matching verses, not tokens (index)" do
-    feature = saved_feature(unit: "verses", actual: 153)
-
-    row = with_stubs(
-      enabled_search_terms?: true,
-      verses_cached?: true,
-      read_verses_cached: verse_result(153)
-    ) { SavedFeatureCatalog.row_for(feature, edition, index: true) }
-
-    assert_equal 153, row.count
-    assert_equal "verses", row.unit
-    assert row.match
-  end
-
-  test "verses feature reruns the verse scan when not cached (run)" do
-    feature = saved_feature(unit: "verses", actual: 153)
-
-    row = with_stubs(
-      enabled_search_terms?: true,
-      verses_cached?: false,
-      valid_search_terms?: true,
-      run_verses: verse_result(153)
-    ) { SavedFeatureCatalog.row_for(feature, edition, index: false) }
-
-    assert_equal 153, row.count
-    assert row.match
-  end
-
-  test "the same query yields different totals per measure" do
+  test "occurrences feature is verified and persisted for an edition" do
+    feature = saved_feature(unit: "occurrences", expected: 158)
     rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
 
-    occurrences_row = with_stubs(
-      enabled_search_terms?: true,
-      counts_cached?: true,
-      read_counts_cached: rows
-    ) { SavedFeatureCatalog.row_for(saved_feature(unit: "occurrences", actual: 158), edition, index: true) }
+    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+    end
 
-    verses_row = with_stubs(
-      enabled_search_terms?: true,
-      verses_cached?: true,
-      read_verses_cached: verse_result(153)
-    ) { SavedFeatureCatalog.row_for(saved_feature(unit: "verses", actual: 153), edition, index: true) }
+    assert record.persisted?
+    assert_equal 158, record.actual
+    assert record.status_match?
+    assert record.processing_verified?
+    assert_equal "kjv_normalized", record.edition_id
+  end
 
-    assert_equal 158, occurrences_row.count
-    assert_equal 153, verses_row.count
+  test "verses feature counts matching verses, not tokens" do
+    feature = saved_feature(unit: "verses", expected: 153)
+
+    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+      SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+    end
+
+    assert_equal 153, record.actual
+    assert record.status_match?
+  end
+
+  test "a mismatch is recorded as MISS" do
+    feature = saved_feature(unit: "occurrences", expected: 999)
+    rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
+
+    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+    end
+
+    assert_equal 158, record.actual
+    assert record.status_miss?
+    refute record.match?
+  end
+
+  test "cached results are reused without recomputing" do
+    feature = saved_feature(unit: "occurrences", expected: 158)
+    rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
+
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+    end
+
+    # No stubs here: if it recomputed it would hit the (stubless) scan path; it
+    # must instead return the cached FeatureEdition.
+    assert_no_difference "FeatureEdition.count" do
+      record = SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+      assert_equal 158, record.actual
+    end
+  end
+
+  test "verifying against a different edition adds a separate record, no duplicates" do
+    feature = saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
+    rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
+
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
+      SavedFeatureCatalog.verified_edition(feature, edition("concord"))
+      SavedFeatureCatalog.verified_edition(feature, edition("concord")) # again → no dupe
+    end
+
+    assert_equal 2, feature.feature_editions.count
+    assert_equal %w[concord kjv_normalized], feature.feature_editions.pluck(:edition_id).sort
+  end
+
+  test "verification never changes the feature's expected value or original edition" do
+    feature = saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
+    rows = [WordRow.new(count: 42, exclude: false, overlap: false)]
+
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      SavedFeatureCatalog.verified_edition(feature, edition("concord"))
+    end
+
+    feature.reload
+    assert_equal 158, feature.expected_count
+    assert_equal "kjv_normalized", feature.original_edition_id
+    assert_equal 42, feature.feature_editions.find_by(edition_id: "concord").actual
   end
 end

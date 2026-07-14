@@ -38,11 +38,13 @@
           placeholder: SavedFeature::DEFAULT_DESCRIPTION %>
     </div>
 
+    <div class="form-field">
+      <%= form.label :feature_type, "Feature type", class: "form-label" %>
+      <%= form.select :feature_type, feature_type_options(@saved_feature.feature_type),
+          {}, required: true, class: "form-input input-narrow" %>
+    </div>
+
     <dl class="stats">
-      <div>
-        <dt>Actual</dt>
-        <dd><%= format_feature_count(@row.count) %> <%= @saved_feature.unit %></dd>
-      </div>
       <div>
         <dt>Expected</dt>
         <dd>
@@ -51,12 +53,8 @@
         </dd>
       </div>
       <div>
-        <dt>Status</dt>
-        <dd><%= feature_match_badge(@row.count == @saved_feature.expected_count) %></dd>
-      </div>
-      <div>
-        <dt>Edition</dt>
-        <dd><code><%= @saved_feature.edition_id %></code></dd>
+        <dt>Unit</dt>
+        <dd><%= @saved_feature.unit %></dd>
       </div>
       <div>
         <dt>Scope</dt>
@@ -76,6 +74,10 @@
       <p class="hint">Optional link to a related pattern on kjvcode.com.</p>
     </div>
   </section>
+
+  <% if @edition_results.present? %>
+    <%= render "edition_results", results: @edition_results, saved_feature: @saved_feature %>
+  <% end %>
 
   <% if @saved_feature.details.present? %>
     <section class="panel">

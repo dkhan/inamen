@@ -26,16 +26,16 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
-  def feature_params(unit:, description: nil)
+  def feature_params(unit:, description: nil, feature_type: "bible")
     saved_feature = {
       name: "Peter (#{unit})",
-      edition_id: EDITION_ID,
+      original_edition_id: EDITION_ID,
+      feature_type: feature_type,
       scope_label: "All texts",
       unit: unit,
       mode: "word_count",
-      # Intentionally wrong values: the server must overwrite them from the
-      # cached search results for the selected measure.
-      saved_actual_count: "999",
+      # Intentionally wrong value: the server must overwrite it from the cached
+      # search results for the selected measure.
       expected_count: "999",
       search_selection_json: { "submitted" => "1" }.to_json,
       search_phrases_json: { "0" => { "phrase" => "peter" } }.to_json
@@ -63,8 +63,10 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_includes counts, "\"occurrences\":158"
     assert_includes counts, "\"verses\":153"
     # Actual/Expected are read-only.
-    assert_select "input[name=?][readonly]", "saved_feature[saved_actual_count]"
+    assert_select "input[name=?][readonly]", "saved_feature[actual]"
     assert_select "input[name=?][readonly]", "saved_feature[expected_count]"
+    # Feature type is a required selectable field.
+    assert_select "select[name=?]", "saved_feature[feature_type]"
   end
 
   test "create saves the occurrences total for the occurrences measure" do
@@ -76,8 +78,11 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
 
     feature = SavedFeature.order(:id).last
     assert_equal "occurrences", feature.unit
-    assert_equal 158, feature.saved_actual_count
     assert_equal 158, feature.expected_count
+    # The actual for the original edition is persisted as a FeatureEdition.
+    record = feature.feature_editions.find_by(edition_id: EDITION_ID)
+    assert_equal 158, record.actual
+    assert record.status_match?
     assert_redirected_to features_path(edition: EDITION_ID)
   end
 
@@ -91,8 +96,8 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     feature = SavedFeature.order(:id).last
     assert_equal "verses", feature.unit
     # 153 (verses), not 158 (occurrences), even though the form posted 999.
-    assert_equal 153, feature.saved_actual_count
     assert_equal 153, feature.expected_count
+    assert_equal 153, feature.feature_editions.find_by(edition_id: EDITION_ID).actual
   end
 
   test "create saves the description entered in the dialog" do
@@ -116,24 +121,55 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "saved_feature[description]"
   end
 
-  test "loading a saved verses feature reports the verse total" do
-    feature = nil
+  test "loading a saved verses feature reports the verse total from its FeatureEdition" do
     DiscoveryScan.stub(:read_verses_cached, verse_result(153)) do
       post features_path, params: feature_params(unit: "verses")
     end
     feature = SavedFeature.order(:id).last
 
-    edition = EditionContext.new(EDITION_ID)
-    row = nil
+    # The origin-edition FeatureEdition was persisted on create; row_for reuses it.
+    row = SavedFeatureCatalog.row_for(feature, EditionContext.new(EDITION_ID))
+
+    assert_equal 153, row.count
+    assert row.match
+  end
+
+  test "features index verifies all saved features against the selected edition" do
+    # A feature whose original edition is kjv_normalized, with no concord result yet.
+    DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+      post features_path, params: feature_params(unit: "occurrences")
+    end
+    feature = SavedFeature.order(:id).last
+    assert_nil feature.feature_editions.find_by(edition_id: "concord")
+
+    rows = [DiscoveryScan::WordCountRow.new(pattern: "peter", case_sensitive: false, count: 140,
+                                            wildcard: false, scope: "x", spellings: {}, exclude: false)]
     DiscoveryScan.stub(:enabled_search_terms?, true) do
-      DiscoveryScan.stub(:verses_cached?, true) do
-        DiscoveryScan.stub(:read_verses_cached, verse_result(153)) do
-          row = SavedFeatureCatalog.row_for(feature, edition, index: true)
+      DiscoveryScan.stub(:valid_search_terms?, true) do
+        DiscoveryScan.stub(:run_counts, rows) do
+          get features_path(edition: "concord")
         end
       end
     end
 
-    assert_equal 153, row.count
-    assert row.match
+    assert_response :success
+    record = feature.feature_editions.find_by(edition_id: "concord")
+    assert_not_nil record, "a FeatureEdition is created for the selected edition"
+    assert_equal 140, record.actual
+    # Expected value and original edition are untouched by cross-edition verification.
+    assert_equal 158, feature.reload.expected_count
+    assert_equal EDITION_ID, feature.original_edition_id
+  end
+
+  test "feature type is stored on create and editable on update" do
+    DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+      post features_path, params: feature_params(unit: "occurrences", feature_type: "general_text")
+    end
+    feature = SavedFeature.order(:id).last
+    assert_equal "general_text", feature.feature_type
+
+    patch feature_path(feature.url_id, edition: EDITION_ID),
+          params: { saved_feature: { feature_type: "both" } }
+    assert_equal "both", feature.reload.feature_type
   end
 end

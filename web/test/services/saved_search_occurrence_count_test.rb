@@ -61,12 +61,11 @@ class SavedSearchOccurrenceCountTest < ActiveSupport::TestCase
   def saved_feature
     SavedFeature.create!(
       name: "Overlapping-exclusion occurrence search",
-      edition_id: EDITION_ID,
+      original_edition_id: EDITION_ID,
       scope_label: "4 books",
       unit: SavedFeature::UNIT_OCCURRENCES,
       mode: "word_count",
       expected_count: EXPECTED,
-      saved_actual_count: EXPECTED,
       search_selection: SEARCH_SELECTION,
       search_phrases: SEARCH_PHRASES
     )
@@ -87,12 +86,11 @@ class SavedSearchOccurrenceCountTest < ActiveSupport::TestCase
     feature = saved_feature
 
     with_memory_cache do
-      # Prime the shared counts cache the way a real request would, so the
-      # Features-table index count reads the recomputed value (not a fallback).
-      DiscoveryScan.run_counts(edition, feature.to_scan_params)
-
-      index_row = SavedFeatureCatalog.row_for(feature, edition, index: true)  # Features table
-      show_row  = SavedFeatureCatalog.row_for(feature, edition, index: false) # Feature Show
+      # Features table and Feature Show both verify via FeatureEdition; Discover
+      # recomputes directly. All must agree.
+      index_rows = SavedFeatureCatalog.rows_for_edition(edition) # Features table
+      index_row = index_rows.find { |row| row.id == feature.url_id }
+      show_row  = SavedFeatureCatalog.row_for(feature, edition)  # Feature Show
       discover_total = DiscoveryScan.word_count_table_total(
         DiscoveryScan.compute_word_count_rows(edition, feature.to_scan_params)
       )
@@ -102,8 +100,9 @@ class SavedSearchOccurrenceCountTest < ActiveSupport::TestCase
       assert_equal EXPECTED, discover_total
       assert index_row.match, "Features table shows MATCH"
       assert show_row.match, "Feature Show shows MATCH"
-      assert_equal feature.saved_actual_count, discover_total,
+      assert_equal feature.expected_count, discover_total,
                    "loading into Discover reproduces the count used for matching"
+      assert_equal EXPECTED, feature.feature_editions.find_by(edition_id: EDITION_ID).actual
     end
   end
 

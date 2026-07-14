@@ -6,7 +6,7 @@
 
 <div class="page-header">
   <p class="breadcrumb">
-    <%= link_to "Discover", discoveries_path(edition: @saved_feature.edition_id) %>
+    <%= link_to "Discover", discoveries_path(edition: @saved_feature.original_edition_id) %>
     / Save feature
   </p>
   <h1>Save feature</h1>
@@ -37,7 +37,13 @@
           placeholder: SavedFeature::DEFAULT_DESCRIPTION %>
     </div>
 
-    <%= form.hidden_field :edition_id %>
+    <div class="form-field">
+      <%= form.label :feature_type, "Feature type", class: "form-label" %>
+      <%= form.select :feature_type, feature_type_options(@saved_feature.feature_type),
+          {}, required: true, class: "form-input input-narrow" %>
+    </div>
+
+    <%= form.hidden_field :original_edition_id %>
     <%= form.hidden_field :scope_label %>
     <%= form.hidden_field :mode %>
     <%= hidden_field_tag "saved_feature[search_selection_json]", @saved_feature.search_selection.to_json %>
@@ -53,7 +59,7 @@
       <div>
         <dt>Actual</dt>
         <dd>
-          <%= form.number_field :saved_actual_count, readonly: true,
+          <%= form.number_field :actual, readonly: true,
               class: "form-input input-narrow", data: { feature_actual_field: true } %>
           <span data-feature-unit-label><%= @saved_feature.unit %></span>
         </dd>
@@ -69,12 +75,8 @@
       <div>
         <dt>Status</dt>
         <dd>
-          <%= feature_match_badge(@saved_feature.saved_actual_count == @saved_feature.expected_count) %>
+          <%= feature_match_badge(@saved_feature.actual == @saved_feature.expected_count) %>
         </dd>
-      </div>
-      <div>
-        <dt>Edition</dt>
-        <dd><code><%= @saved_feature.edition_id %></code></dd>
       </div>
       <div>
         <dt>Scope</dt>
@@ -108,6 +110,6 @@
 
   <div class="form-actions">
     <%= form.submit "Save", class: "button button-primary" %>
-    <%= link_to "Cancel", discoveries_path(edition: @saved_feature.edition_id), class: "button button-secondary" %>
+    <%= link_to "Cancel", discoveries_path(edition: @saved_feature.original_edition_id), class: "button button-secondary" %>
   </div>
 <% end %>

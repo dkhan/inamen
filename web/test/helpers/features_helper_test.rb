@@ -8,12 +8,11 @@ class FeaturesHelperTest < ActionView::TestCase
   def create_saved_feature
     SavedFeature.create!(
       name: "My Peter scan",
-      edition_id: EDITION_ID,
+      original_edition_id: EDITION_ID,
       scope_label: "All texts",
       unit: SavedFeature::UNIT_OCCURRENCES,
       mode: "word_count",
       expected_count: 153,
-      saved_actual_count: 153,
       search_selection: { "submitted" => "1" },
       search_phrases: { "0" => { "phrase" => "peter" } }
     )

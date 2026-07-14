@@ -1,0 +1,27 @@
+<% results = local_assigns.fetch(:results) %>
+<% saved_feature = local_assigns.fetch(:saved_feature) %>
+<section class="panel">
+  <h2>Verification by edition</h2>
+  <table class="features-table">
+    <thead>
+      <tr>
+        <th>Edition</th>
+        <th class="num">Actual</th>
+        <th class="num">Expected</th>
+        <th>Status</th>
+        <th>Verified</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% results.each do |record| %>
+        <tr>
+          <td><code><%= record.edition_id %></code></td>
+          <td class="num"><%= record.actual.nil? ? "—" : format_feature_count(record.actual) %></td>
+          <td class="num"><%= format_feature_count(saved_feature.expected_count) %></td>
+          <td><%= feature_match_badge(record.status_match?) %></td>
+          <td><%= record.verified_at ? record.verified_at.strftime("%Y-%m-%d %H:%M") : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>

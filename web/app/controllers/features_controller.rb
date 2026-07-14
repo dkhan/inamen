@@ -9,7 +9,8 @@ class FeaturesController < ApplicationController
   def index
     @catalog = Inamen::Features.catalog
     @status = page_status
-    @saved_rows = SavedFeatureCatalog.rows_for_edition(@edition, index: true)
+    # All saved features, verified against the currently selected edition.
+    @saved_rows = SavedFeatureCatalog.rows_for_edition(@edition)
 
     return unless @status == :ready
 
@@ -28,9 +29,10 @@ class FeaturesController < ApplicationController
     phrases = @discover_query["search_phrases"] || {}
 
     @saved_feature = SavedFeature.new(
-      edition_id: current_edition_id,
+      original_edition_id: current_edition_id,
       scope_label: selection.label,
       unit: SavedFeature::UNIT_OCCURRENCES,
+      feature_type: SavedFeature.feature_types[:bible],
       mode: @discover_query["mode"].presence || "word_count",
       search_selection: resolved_search_selection(@discover_query),
       search_phrases: phrases,
@@ -41,7 +43,7 @@ class FeaturesController < ApplicationController
     # switch between them client-side without re-running the search.
     @measure_counts = measure_counts(@saved_feature.to_scan_params)
     actual = @measure_counts[@saved_feature.unit].to_i
-    @saved_feature.saved_actual_count = actual
+    @saved_feature.actual = actual
     @saved_feature.expected_count = actual
   end
 
@@ -52,12 +54,14 @@ class FeaturesController < ApplicationController
       @saved_feature.scope_label = SavedFeature.scope_label_for(@saved_feature.search_selection)
     end
 
-    # Persist only the values for the selected measure, recomputed from the cached
-    # search results so the stored numbers are authoritative (e.g. verses => 153).
-    apply_measure_count!(@saved_feature)
+    # Set the expected value from the selected measure, recomputed from the cached
+    # search results so the stored number is authoritative (e.g. verses => 153).
+    actual = apply_measure_count!(@saved_feature)
 
     if @saved_feature.save
-      redirect_to features_path(edition: @saved_feature.edition_id), notice: "Feature \"#{@saved_feature.name}\" saved."
+      record_original_edition_actual!(@saved_feature, actual)
+      redirect_to features_path(edition: @saved_feature.original_edition_id),
+                  notice: "Feature \"#{@saved_feature.name}\" saved."
       return
     end
 
@@ -68,24 +72,25 @@ class FeaturesController < ApplicationController
 
   def edit
     @row = SavedFeatureCatalog.row_for(@saved_feature, @edition)
+    @edition_results = SavedFeatureCatalog.results_for_all_editions(@saved_feature)
   end
 
   def update
     if @saved_feature.update(saved_feature_update_params)
-      redirect_to feature_path(@saved_feature.url_id, edition: @saved_feature.edition_id),
+      redirect_to feature_path(@saved_feature.url_id, edition: current_edition_id),
                   notice: "Feature \"#{@saved_feature.name}\" updated."
       return
     end
 
     @row = SavedFeatureCatalog.row_for(@saved_feature, @edition)
+    @edition_results = SavedFeatureCatalog.results_for_all_editions(@saved_feature)
     render :edit, status: :unprocessable_entity
   end
 
   def destroy
-    edition_id = @saved_feature.edition_id
     name = @saved_feature.name
     @saved_feature.destroy!
-    redirect_to features_path(edition: edition_id), notice: "Feature \"#{name}\" deleted."
+    redirect_to features_path(edition: current_edition_id), notice: "Feature \"#{name}\" deleted."
   end
 
   def verify
@@ -102,6 +107,8 @@ class FeaturesController < ApplicationController
 
     if edition.corpus_ready?
       FeatureCatalog.run_all(edition, force: force)
+      # Verify saved features against this edition too (generic, per-edition).
+      SavedFeatureCatalog.rows_for_edition(edition, force: force)
       redirect_to features_path(edition: edition_id)
       return
     end
@@ -117,6 +124,7 @@ class FeaturesController < ApplicationController
     if SavedFeature.url_id?(params[:id])
       @saved_feature = SavedFeature.find_by_url_id!(params[:id])
       @row = SavedFeatureCatalog.row_for(@saved_feature, @edition)
+      @edition_results = SavedFeatureCatalog.results_for_all_editions(@saved_feature)
       return
     end
 
@@ -181,14 +189,34 @@ class FeaturesController < ApplicationController
     nil
   end
 
+  # Sets the feature's expected value from the selected measure and returns the
+  # computed actual for the original edition (persisted as a FeatureEdition).
   def apply_measure_count!(saved_feature)
-    return unless SavedFeature::UNITS.include?(saved_feature.unit)
+    return nil unless SavedFeature::UNITS.include?(saved_feature.unit)
 
     count = measure_count(saved_feature.to_scan_params, saved_feature.unit)
-    return if count.nil?
+    return nil if count.nil?
 
-    saved_feature.saved_actual_count = count
     saved_feature.expected_count = count
+    saved_feature.actual = count
+    count
+  end
+
+  # Records the origin-edition verification result without recomputing.
+  def record_original_edition_actual!(saved_feature, actual)
+    return if actual.nil?
+
+    status = actual == saved_feature.expected_count ? FeatureEdition::STATUS_MATCH : FeatureEdition::STATUS_MISS
+    FeatureEdition.create!(
+      feature_id: saved_feature.id,
+      edition_id: saved_feature.original_edition_id,
+      actual: actual,
+      status: status,
+      verified_at: Time.current,
+      processing_state: :verified
+    )
+  rescue ActiveRecord::RecordNotUnique
+    nil
   end
 
   def read_or_run_counts(scan_params)
@@ -210,11 +238,11 @@ class FeaturesController < ApplicationController
     attrs = raw.permit(
       :name,
       :description,
-      :edition_id,
+      :original_edition_id,
+      :feature_type,
       :scope_label,
       :unit,
       :expected_count,
-      :saved_actual_count,
       :mode,
       :notes,
       :kjvcode_url,
@@ -228,7 +256,7 @@ class FeaturesController < ApplicationController
   end
 
   def saved_feature_update_params
-    params.require(:saved_feature).permit(:name, :description, :expected_count, :notes, :kjvcode_url)
+    params.require(:saved_feature).permit(:name, :description, :feature_type, :expected_count, :notes, :kjvcode_url)
   end
 
   def load_saved_feature

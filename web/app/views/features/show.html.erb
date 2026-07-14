@@ -46,29 +46,54 @@
 
 <% if @row %>
   <section class="panel">
-    <dl class="stats">
-      <div>
-        <dt>Actual</dt>
-        <dd><%= format_feature_count(@row.count) %> <%= @row.unit %></dd>
-      </div>
-      <div>
-        <dt>Expected</dt>
-        <dd><%= format_feature_count(@row.expected) %></dd>
-      </div>
-      <div>
-        <dt>Status</dt>
-        <dd><%= feature_discover_status_link(@row.id, match: @row.match, edition: @edition.edition_id) %></dd>
-      </div>
-      <div>
-        <dt>Scope</dt>
-        <dd><%= @saved_feature ? @row.scope : @row.scope.tr("_", " ") %></dd>
-      </div>
-      <div>
-        <dt>Edition</dt>
-        <dd><code><%= @edition.edition_id %></code></dd>
-      </div>
-    </dl>
+    <% if @saved_feature %>
+      <dl class="stats">
+        <div>
+          <dt>Expected</dt>
+          <dd><%= format_feature_count(@row.expected) %> <%= @row.unit %></dd>
+        </div>
+        <div>
+          <dt>Unit</dt>
+          <dd><%= @row.unit %></dd>
+        </div>
+        <div>
+          <dt>Feature type</dt>
+          <dd><%= feature_type_label(@saved_feature.feature_type) %></dd>
+        </div>
+        <div>
+          <dt>Scope</dt>
+          <dd><%= @row.scope %></dd>
+        </div>
+      </dl>
+    <% else %>
+      <dl class="stats">
+        <div>
+          <dt>Actual</dt>
+          <dd><%= format_feature_count(@row.count) %> <%= @row.unit %></dd>
+        </div>
+        <div>
+          <dt>Expected</dt>
+          <dd><%= format_feature_count(@row.expected) %></dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd><%= feature_discover_status_link(@row.id, match: @row.match, edition: @edition.edition_id) %></dd>
+        </div>
+        <div>
+          <dt>Scope</dt>
+          <dd><%= @row.scope.tr("_", " ") %></dd>
+        </div>
+        <div>
+          <dt>Edition</dt>
+          <dd><code><%= @edition.edition_id %></code></dd>
+        </div>
+      </dl>
+    <% end %>
   </section>
+
+  <% if @saved_feature && @edition_results.present? %>
+    <%= render "edition_results", results: @edition_results, saved_feature: @saved_feature %>
+  <% end %>
 
   <% if @row.kjvcode_expected %>
     <section class="panel">

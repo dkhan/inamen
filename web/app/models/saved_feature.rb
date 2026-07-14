@@ -10,12 +10,24 @@ class SavedFeature < ApplicationRecord
   UNIT_VERSES = "verses"
   UNITS = [UNIT_OCCURRENCES, UNIT_VERSES].freeze
 
+  # What kind of corpus a feature is meant to be verified against.
+  FEATURE_TYPES = { bible: "bible", general_text: "general_text", both: "both" }.freeze
+
+  enum :feature_type, FEATURE_TYPES, default: :bible
+
+  # Per-edition verification results (actual/status) live here, so one feature can
+  # be verified against many editions without touching its expected value.
+  has_many :feature_editions, foreign_key: :feature_id, inverse_of: :saved_feature, dependent: :destroy
+
+  # Transient actual count for the create form; persisted in a FeatureEdition.
+  attr_accessor :actual
+
   validates :name, presence: true
-  validates :edition_id, presence: true
+  validates :original_edition_id, presence: true
+  validates :feature_type, presence: true
   validates :scope_label, presence: true
   validates :unit, presence: true, inclusion: { in: UNITS }
   validates :expected_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :saved_actual_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :mode, presence: true
   validates :search_selection, presence: true
   validates :search_phrases, presence: true
