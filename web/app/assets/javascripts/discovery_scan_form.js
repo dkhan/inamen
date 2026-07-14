@@ -3,14 +3,64 @@
 
   let scanTimer = null;
   let pendingFocusInput = null;
-  let mouseDownTarget = null;
-
-  document.addEventListener("mousedown", (event) => {
-    mouseDownTarget = event.target;
-  });
 
   function form() {
     return document.getElementById("discovery-filters-form");
+  }
+
+  function isBusy(discoveryForm) {
+    return discoveryForm.dataset.scanBusy === "true";
+  }
+
+  function busyControls(discoveryForm) {
+    const controls = Array.from(
+      discoveryForm.querySelectorAll("input, select, textarea, button")
+    );
+    const edition = document.getElementById("edition");
+    if (edition) controls.push(edition);
+    return controls;
+  }
+
+  function isTextEntry(el) {
+    if (el.tagName === "TEXTAREA") return true;
+    if (el.tagName !== "INPUT") return false;
+    return ["text", "search", "number", "email", "url", "tel", "password"].includes(el.type);
+  }
+
+  // Lock every control read-only while a scan is running and until results and
+  // verses have loaded. Text inputs use readOnly (still submitted); other
+  // controls are disabled.
+  function setBusy(discoveryForm, busy) {
+    if (isBusy(discoveryForm) === busy) return;
+    if (busy) {
+      discoveryForm.dataset.scanBusy = "true";
+    } else {
+      delete discoveryForm.dataset.scanBusy;
+    }
+    discoveryForm.setAttribute("aria-busy", busy ? "true" : "false");
+    busyControls(discoveryForm).forEach((el) => {
+      if (el.type === "hidden") return;
+      if (isTextEntry(el)) {
+        el.readOnly = busy;
+      } else {
+        el.disabled = busy;
+      }
+    });
+  }
+
+  // On (re)load, lock the form when the page is still computing counts or when
+  // verse matches are still being fetched; unlock once everything is ready.
+  function refreshBusyFromPage(discoveryForm) {
+    if (discoveryForm.dataset.status === "computing") {
+      setBusy(discoveryForm, true);
+      return;
+    }
+    const verses = document.getElementById("discovery-verse-results");
+    if (verses && !verses.querySelector("[data-verses-ready]")) {
+      setBusy(discoveryForm, true);
+      return;
+    }
+    setBusy(discoveryForm, false);
   }
 
   function isWordCountMode(discoveryForm) {
@@ -64,20 +114,6 @@
         target.closest(".search-phrase-options") !== null ||
         target.dataset.searchPhraseOption !== undefined)
     );
-  }
-
-  function focusTarget(element) {
-    if (!(element instanceof HTMLElement)) return false;
-    const panel = document.getElementById("search-phrases-panel");
-    if (!panel || !panel.contains(element)) return false;
-    if (element.closest(".search-phrase-options")) return true;
-    if (element.classList.contains("search-phrase-input")) return true;
-    if (element.closest("[data-search-phrase-row]")) return true;
-    return false;
-  }
-
-  function focusMovedWithinPhrases(related) {
-    return focusTarget(related);
   }
 
   function cancelScheduledScan() {
@@ -165,9 +201,13 @@
     discoveryForm.method = "post";
     discoveryForm.dataset.scanPending = "true";
     discoveryForm.requestSubmit();
+    // requestSubmit() has already serialized the form data synchronously, so it
+    // is safe to lock the controls now for immediate read-only feedback.
+    setBusy(discoveryForm, true);
   }
 
   function scheduleScan(discoveryForm, options = {}) {
+    if (isBusy(discoveryForm)) return;
     if (options.rememberFocus || options.trigger) {
       pendingFocusInput = options.trigger ?? pendingFocusInput;
     }
@@ -190,24 +230,6 @@
       event.preventDefault();
       scheduleScan(discoveryForm, { rememberFocus: true, trigger: event.target });
     });
-
-    discoveryForm.addEventListener(
-      "focusout",
-      (event) => {
-        if (!isScanField(event.target)) return;
-
-        const input = event.target;
-        window.setTimeout(() => {
-          const nextFocus = document.activeElement;
-          const related = event.relatedTarget || mouseDownTarget;
-          if (focusMovedWithinPhrases(related) || focusMovedWithinPhrases(nextFocus)) return;
-          if (input instanceof HTMLInputElement && input.classList.contains("search-phrase-input")) {
-            scheduleScan(discoveryForm);
-          }
-        }, 0);
-      },
-      true
-    );
 
     discoveryForm.addEventListener("change", (event) => {
       if (!isPhraseCheckbox(event.target)) return;
@@ -235,10 +257,15 @@
       cancelScheduledScan();
     });
 
+    document.addEventListener("discovery:verses-loaded", () => {
+      setBusy(discoveryForm, false);
+    });
+
     if (discoveryForm.dataset.resultsReady === "true") {
       markScanned(discoveryForm);
     }
 
+    refreshBusyFromPage(discoveryForm);
     initAutoScan(discoveryForm);
   }
 

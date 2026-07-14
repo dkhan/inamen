@@ -57,6 +57,12 @@ body {
   align-items: start;
 }
 
+.discovery-layout[data-scan-busy] {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: progress;
+}
+
 .discovery-search-within {
   min-width: 0;
 }

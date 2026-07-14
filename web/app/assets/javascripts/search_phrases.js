@@ -125,7 +125,7 @@
       clearButton.addEventListener("click", () => {
         input.value = "";
         input.focus();
-        document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
+        document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
       });
     }
 
@@ -136,7 +136,6 @@
         row.remove();
         reindexRows(root);
         document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
-        document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
       });
     }
   }
@@ -168,7 +167,6 @@
     const input = row.querySelector(".search-phrase-input");
     if (input) input.focus();
     document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
-    document.dispatchEvent(new CustomEvent("discovery:schedule-scan"));
   }
 
   function init() {

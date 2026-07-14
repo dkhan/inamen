@@ -24,7 +24,9 @@
       const html = await response.text();
       root.innerHTML = html;
 
-      if (!versesReady(root)) {
+      if (versesReady(root)) {
+        document.dispatchEvent(new CustomEvent("discovery:verses-loaded"));
+      } else {
         window.setTimeout(loadVerses, POLL_MS);
       }
     } catch (_error) {

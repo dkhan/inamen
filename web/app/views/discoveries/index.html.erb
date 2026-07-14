@@ -41,6 +41,7 @@
       class: "discovery-layout",
       data: {
         scan_action: scan_discoveries_path,
+        status: @status,
         results_ready: (@status == :ready ? "true" : nil),
         auto_scan: (auto_scan ? "true" : nil)
       }.compact do %>
@@ -105,7 +106,7 @@
   <section class="panel notice">
     <p><strong>No results yet.</strong>
       <% if word_count_mode %>
-        Enter a search phrase and press <em>Enter</em>, click away, or toggle <em>Case Sensitive</em> to scan.
+        Enter a search phrase and press <em>Enter</em>, or toggle a checkbox, to scan.
         Separate multiple terms in one box with <code>|</code> (e.g. <code>six|seven</code>).
       <% elsif file_stats_mode %>
         Select <em>File stats</em> to view the whole-file word breakdown for the 7<sup>7</sup> feature.

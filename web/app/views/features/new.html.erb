@@ -1,6 +1,7 @@
 <% content_for :title, "Save feature — Inamen" %>
 <% content_for :head do %>
   <%= javascript_include_tag "notes_editor", defer: true %>
+  <%= javascript_include_tag "feature_save_form", defer: true %>
 <% end %>
 
 <div class="page-header">
@@ -32,23 +33,33 @@
 
     <%= form.hidden_field :edition_id %>
     <%= form.hidden_field :scope_label %>
-    <%= form.hidden_field :unit %>
     <%= form.hidden_field :mode %>
-    <%= form.hidden_field :saved_actual_count %>
+    <%= form.hidden_field :saved_actual_count, data: { feature_actual_field: true } %>
+    <%= form.hidden_field :expected_count, data: { feature_expected_field: true } %>
     <%= form.hidden_field :from_feature if @saved_feature.from_feature.present? %>
     <%= hidden_field_tag "saved_feature[search_selection_json]", @saved_feature.search_selection.to_json %>
     <%= hidden_field_tag "saved_feature[search_phrases_json]", @saved_feature.search_phrases.to_json %>
 
-    <dl class="stats">
+    <div class="form-field">
+      <%= form.label :unit, "Measure", class: "form-label" %>
+      <%= form.select :unit,
+          options_for_select(@count_options.keys.map { |u| [u.capitalize, u] }, @saved_feature.unit),
+          {}, class: "form-input input-narrow", data: { feature_unit_select: true } %>
+    </div>
+
+    <dl class="stats" data-feature-counts="<%= @count_options.to_json %>">
       <div>
         <dt>Actual</dt>
-        <dd><%= format_feature_count(@saved_feature.saved_actual_count) %> <%= @saved_feature.unit %></dd>
+        <dd>
+          <span data-feature-actual><%= format_feature_count(@saved_feature.saved_actual_count) %></span>
+          <span data-feature-unit-label><%= @saved_feature.unit %></span>
+        </dd>
       </div>
       <div>
         <dt>Expected</dt>
         <dd>
-          <%= form.number_field :expected_count, min: 0, required: true, class: "form-input input-narrow" %>
-          <%= @saved_feature.unit %>
+          <span data-feature-expected><%= format_feature_count(@saved_feature.expected_count) %></span>
+          <span data-feature-unit-label><%= @saved_feature.unit %></span>
         </dd>
       </div>
       <div>
