@@ -77,8 +77,6 @@ class SavedFeatureCatalog
       return 0 unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
       return 0 unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
 
-      edition.warm! if edition.corpus_ready?
-
       if saved_feature.verses?
         DiscoveryScan.verse_count_total(DiscoveryScan.run_verses(edition, scan_params, force: force))
       else

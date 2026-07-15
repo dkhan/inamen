@@ -20,7 +20,6 @@ module DiscoverState
     session.delete(LEGACY_DISCOVER_QUERY_KEY)
     session[DISCOVER_SERVER_EPOCH_KEY] = current
     remove_instance_variable(:@stored_discover_query) if defined?(@stored_discover_query)
-    @stored_discover_query = nil
     # A dq token in the URL may be a fresh feature-link payload; do not block loading it.
     @discover_query_fresh = params[:dq].blank?
   end

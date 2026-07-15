@@ -161,6 +161,27 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_equal EDITION_ID, feature.original_edition_id
   end
 
+  test "feature show edition status links open Discover for that edition and saved search" do
+    DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+      post features_path, params: feature_params(unit: "occurrences")
+    end
+    feature = SavedFeature.order(:id).last
+    FeatureEdition.create!(
+      feature_id: feature.id,
+      edition_id: "concord",
+      actual: 140,
+      status: FeatureEdition::STATUS_MISS,
+      processing_state: :verified,
+      verified_at: Time.current
+    )
+
+    get feature_path(feature.url_id, edition: EDITION_ID)
+
+    assert_response :success
+    assert_select "a.feature-discover-status-link[href*='edition=concord'][href*='dq='][href*='auto_scan=1']",
+                  text: /miss/i
+  end
+
   test "feature type is stored on create and editable on update" do
     DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
       post features_path, params: feature_params(unit: "occurrences", feature_type: "general_text")

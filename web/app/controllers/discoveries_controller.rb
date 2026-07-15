@@ -9,7 +9,6 @@ class DiscoveriesController < ApplicationController
   after_action :persist_discover_query, only: %i[index verses]
 
   def index
-    @edition.warm! if @scan_params.mode == "word_count"
     maybe_run_feature_auto_scan!
     @status = page_status
 
@@ -29,7 +28,7 @@ class DiscoveriesController < ApplicationController
   end
 
   def dictionary
-    @edition.warm!
+    @edition.word_stream_index
     expires_in 7.days, public: false
     render json: { words: @edition.dictionary_words }
   end
@@ -43,7 +42,6 @@ class DiscoveriesController < ApplicationController
     if DiscoveryScan.verses_cached?(@edition, @scan_params)
       rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
       @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
-      @edition.warm!
       offset = [params[:offset].to_i, 0].max
       limit = Inamen::VerseMatchQuery::DISPLAY_LIMIT
       DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: rows, offset: offset, limit: limit)
@@ -106,7 +104,6 @@ class DiscoveriesController < ApplicationController
     end
 
     if scan_params.mode == "word_count" && edition.corpus_ready?
-      edition.warm!
       DiscoveryScan.run_counts(edition, scan_params, force: params[:refresh] == "1")
       run_or_enqueue_verses!(edition, scan_params, force: params[:refresh] == "1")
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
@@ -162,11 +159,10 @@ class DiscoveriesController < ApplicationController
     return unless params[:auto_scan] == "1"
     return unless @scan_params.mode == "word_count"
     return if DiscoveryScan.counts_cached?(@edition, @scan_params)
-    return if invalid_word_count_phrases?
     return unless @edition.corpus_ready?
 
-    DiscoveryScan.run_counts(@edition, @scan_params, force: false)
-    run_or_enqueue_verses!(@edition, @scan_params)
+    DiscoveryScan.run_counts(@edition, @scan_params, force: false, validate: false)
+    run_or_enqueue_verses!(@edition, @scan_params, validate: false)
   end
 
   def persist_discover_query
@@ -273,8 +269,8 @@ class DiscoveriesController < ApplicationController
     end
   end
 
-  def run_or_enqueue_verses!(edition, scan_params, force: false)
-    DiscoveryScan.enqueue_verses!(edition, scan_params, force: force)
+  def run_or_enqueue_verses!(edition, scan_params, force: false, validate: true)
+    DiscoveryScan.enqueue_verses!(edition, scan_params, force: force, validate: validate)
   end
 
   def invalid_word_count_phrases?

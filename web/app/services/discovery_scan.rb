@@ -119,7 +119,14 @@ class DiscoveryScan
     return entries.any? unless stream
 
     entries.any? do |entry|
-      completer = Inamen::PhraseCompleter.from_word_stream(stream, case_sensitive: entry.case_sensitive)
+      completer =
+        if edition.respond_to?(:phrase_completer)
+          edition.phrase_completer(case_sensitive: entry.case_sensitive)
+        else
+          Inamen::PhraseCompleter.from_word_stream(stream, case_sensitive: entry.case_sensitive)
+        end
+      next false unless completer
+
       completer.can_search?(entry.phrase)
     end
   end
@@ -171,9 +178,9 @@ class DiscoveryScan
     run(edition, params, force: force)
   end
 
-  def self.run_counts(edition, params, force: false)
+  def self.run_counts(edition, params, force: false, validate: true)
     p = params.is_a?(Params) ? params : normalize(params)
-    return [] if p.mode == "word_count" && !valid_search_terms?(edition, p.query_terms)
+    return [] if validate && p.mode == "word_count" && !valid_search_terms?(edition, p.query_terms)
 
     key = counts_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -183,10 +190,10 @@ class DiscoveryScan
     end
   end
 
-  def self.run_verses(edition, params, force: false)
+  def self.run_verses(edition, params, force: false, validate: true)
     p = params.is_a?(Params) ? params : normalize(params)
     return nil if p.mode != "word_count"
-    return nil unless valid_search_terms?(edition, p.query_terms)
+    return nil if validate && !valid_search_terms?(edition, p.query_terms)
 
     key = verses_cache_key_for(edition, p)
     Rails.cache.delete(key) if force
@@ -196,10 +203,10 @@ class DiscoveryScan
     end
   end
 
-  def self.enqueue_verses!(edition, params, force: false)
+  def self.enqueue_verses!(edition, params, force: false, validate: true)
     p = params.is_a?(Params) ? params : normalize(params)
     return unless p.mode == "word_count"
-    return unless valid_search_terms?(edition, p.query_terms)
+    return if validate && !valid_search_terms?(edition, p.query_terms)
     return if verses_cached?(edition, p) && !force
     return if verses_running?(edition, p)
 
@@ -267,8 +274,7 @@ class DiscoveryScan
     rows = Inamen::TokenQuery.scan(
       edition.db,
       terms: terms,
-      search_selection: params.search_selection,
-      word_stream: edition.word_stream_index
+      search_selection: params.search_selection
     ).map do |row|
       WordCountRow.new(
         pattern: row.pattern,
@@ -291,9 +297,10 @@ class DiscoveryScan
   # it is removed once (attributed to the first exclusion row). Deduplication is
   # by base-occurrence range, never by verse. Generic — no feature conditions.
   def self.deduplicate_exclusion_overlaps!(edition, params, rows)
+    return rows unless rows.any?(&:exclude)
+
     stream = edition.word_stream_index
     return rows unless stream
-    return rows unless rows.any?(&:exclude)
 
     selection = params.search_selection
     include_occurrences = rows.reject(&:exclude).flat_map { |row| row_match_ranges(stream, row, selection) }
@@ -352,8 +359,7 @@ class DiscoveryScan
     Inamen::VerseMatchQuery.scan(
       edition.db,
       terms: terms,
-      search_selection: params.search_selection,
-      word_stream: edition.word_stream_index
+      search_selection: params.search_selection
     )
   end
 

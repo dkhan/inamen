@@ -18,7 +18,13 @@
           <td><code><%= record.edition_id %></code></td>
           <td class="num"><%= record.actual.nil? ? "—" : format_feature_count(record.actual) %></td>
           <td class="num"><%= format_feature_count(saved_feature.expected_count) %></td>
-          <td><%= feature_match_badge(record.status_match?) %></td>
+          <td>
+            <%= feature_discover_status_link(
+                  saved_feature.url_id,
+                  match: record.status_match?,
+                  edition: record.edition_id
+                ) %>
+          </td>
           <td><%= record.verified_at ? record.verified_at.strftime("%Y-%m-%d %H:%M") : "—" %></td>
         </tr>
       <% end %>
