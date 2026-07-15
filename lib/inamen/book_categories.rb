@@ -5,21 +5,26 @@ module Inamen
   module BookCategories
     OT = :ot
     NT = :nt
+    AP = :apocrypha
 
     Category = Struct.new(:id, :label, :testament, :books, keyword_init: true)
     Testament = Struct.new(:id, :label, :categories, keyword_init: true)
 
   class << self
       def all_books
-        @all_books ||= BookStatsReport::CANON.map(&:first).freeze
+        @all_books ||= BibleBooks::ALL.freeze
       end
 
       def ot_books
-        @ot_books ||= all_books.first(39).freeze
+        @ot_books ||= BibleBooks::OT.freeze
       end
 
       def nt_books
-        @nt_books ||= all_books.drop(39).freeze
+        @nt_books ||= BibleBooks::NT.freeze
+      end
+
+      def apocrypha_books
+        @apocrypha_books ||= BibleBooks::APOCRYPHA.freeze
       end
 
       def book_set
@@ -33,7 +38,8 @@ module Inamen
       def tree
         @tree ||= [
           Testament.new(id: OT, label: "Old Testament", categories: ot_category_defs),
-          Testament.new(id: NT, label: "New Testament", categories: nt_category_defs)
+          Testament.new(id: NT, label: "New Testament", categories: nt_category_defs),
+          Testament.new(id: AP, label: "Apocrypha", categories: apocrypha_category_defs)
         ].freeze
       end
 
@@ -60,6 +66,12 @@ module Inamen
           category(:pauline_epistles, "Pauline Epistles", NT, 44, 58),
           category(:general_epistles, "General Epistles", NT, 58, 65),
           category(:apocalyptic, "Apocalyptic", NT, 65, 66)
+        ].freeze
+      end
+
+      def apocrypha_category_defs
+        [
+          Category.new(id: :books, label: "Books", testament: AP, books: apocrypha_books)
         ].freeze
       end
 

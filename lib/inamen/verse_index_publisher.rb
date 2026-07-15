@@ -4,42 +4,43 @@ require "digest"
 require "fileutils"
 
 module Inamen
-  # Builds and resolves prebuilt chapter-indexed verse maps shipped beside bundled editions.
+  # Builds and resolves prebuilt chapter-indexed verse maps for editions.
   module VerseIndexPublisher
     VERSE_INDEX_REVISION = "1"
 
     module_function
 
     def prebuilt_root
-      File.join(KjvEditions::ROOT, "verse_indices")
+      File.expand_path("../../data/verse_indices", __dir__)
     end
 
     def index_filename(edition_id, checksum_prefix)
       "#{edition_id}-#{checksum_prefix}-#{VERSE_INDEX_REVISION}.marshal"
     end
 
-    def prebuilt_path(edition_id, text_path: nil)
-      text_path ||= KjvEditions::EDITIONS.fetch(edition_id)
+    def prebuilt_path(edition_id, text_path:)
       File.join(prebuilt_root, index_filename(edition_id, CorpusPublisher.checksum_prefix(text_path)))
     end
 
-    def prebuilt_available?(edition_id)
-      File.file?(prebuilt_path(edition_id))
+    def prebuilt_available?(edition_id, text_path:)
+      File.file?(prebuilt_path(edition_id, text_path: text_path))
     end
 
-    def build_prebuilt!(edition_id, force: false)
-      dest = prebuilt_path(edition_id)
+    def build_prebuilt!(edition_id, text_path:, lines: nil, force: false)
+      dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
       FileUtils.mkdir_p(prebuilt_root)
-      lines = KjvEditions.lines_for(edition_id)
+      lines ||= File.readlines(text_path, chomp: true)
       index = VerseIndex.build_chapter_index(lines)
       File.binwrite(dest, Marshal.dump(index))
       dest
     end
 
-    def build_all_prebuilt!(force: false)
-      KjvEditions::EDITIONS.keys.map { |id| build_prebuilt!(id, force: force) }
+    def build_all_prebuilt!(editions, force: false)
+      editions.map do |edition|
+        build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, lines: edition.lines, force: force)
+      end
     end
 
     def load_prebuilt!(path)

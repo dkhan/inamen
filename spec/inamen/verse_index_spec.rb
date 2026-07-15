@@ -3,7 +3,7 @@
 require "spec_helper"
 
 RSpec.describe Inamen::VerseIndex do
-  let(:lines) { Inamen::KjvEditions.lines_for("kjv_normalized") }
+  let(:lines) { File.readlines(File.expand_path("../../data/KJV.txt", __dir__), chomp: true) }
 
   before { described_class.clear_cache! }
 

@@ -98,6 +98,27 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     end
   end
 
+  test "concurrent verification reuses row created after initial lookup" do
+    feature = saved_feature(unit: "occurrences", expected: 158)
+    rows = [WordRow.new(count: 158, exclude: false, overlap: false)]
+    existing = FeatureEdition.create!(
+      feature_id: feature.id,
+      edition_id: "kjv_normalized",
+      actual: 158,
+      status: FeatureEdition::STATUS_MATCH,
+      processing_state: :verified,
+      verified_at: Time.current
+    )
+    duplicate = FeatureEdition.new(feature_id: feature.id, edition_id: "kjv_normalized")
+
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: rows) do
+      FeatureEdition.stub(:find_or_initialize_by, duplicate) do
+        record = SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"), force: true)
+        assert_equal existing, record
+      end
+    end
+  end
+
   test "verifying against a different edition adds a separate record, no duplicates" do
     feature = saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
     rows = [WordRow.new(count: 158, exclude: false, overlap: false)]

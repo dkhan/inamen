@@ -13,6 +13,6 @@ class ApplicationController < ActionController::Base
   private
 
   def current_edition_id
-    session[:edition_id].presence || EditionSelectable::DEFAULT_EDITION_ID
+    session[:edition_id].presence || EditionContext.default_id
   end
 end

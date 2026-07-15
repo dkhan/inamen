@@ -9,27 +9,26 @@ module Inamen
     module_function
 
     def prebuilt_root
-      File.join(KjvEditions::ROOT, "word_streams")
+      File.expand_path("../../data/word_streams", __dir__)
     end
 
     def index_filename(edition_id, checksum_prefix)
       "#{edition_id}-#{checksum_prefix}-#{CorpusStore::INDEXER_REVISION}-ws#{WordStreamIndex::FORMAT_VERSION}.marshal"
     end
 
-    def prebuilt_path(edition_id, text_path: nil)
-      text_path ||= KjvEditions::EDITIONS.fetch(edition_id)
+    def prebuilt_path(edition_id, text_path:)
       File.join(prebuilt_root, index_filename(edition_id, CorpusPublisher.checksum_prefix(text_path)))
     end
 
-    def prebuilt_available?(edition_id)
-      File.file?(prebuilt_path(edition_id))
+    def prebuilt_available?(edition_id, text_path:)
+      File.file?(prebuilt_path(edition_id, text_path: text_path))
     end
 
-    def build_prebuilt!(edition_id, corpus_path: nil, force: false)
-      dest = prebuilt_path(edition_id)
+    def build_prebuilt!(edition_id, text_path:, corpus_path: nil, force: false)
+      dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
-      corpus_path ||= CorpusPublisher.prebuilt_path(edition_id)
+      corpus_path ||= CorpusPublisher.prebuilt_path(edition_id, text_path: text_path)
       raise ArgumentError, "Corpus not found for #{edition_id}: #{corpus_path}" unless File.file?(corpus_path)
 
       FileUtils.mkdir_p(prebuilt_root)
@@ -43,11 +42,11 @@ module Inamen
       dest
     end
 
-    def build_all_prebuilt!(force: false)
-      KjvEditions::EDITIONS.keys.map do |edition_id|
-        corpus_path = CorpusPublisher.prebuilt_path(edition_id)
-        CorpusPublisher.build_prebuilt!(edition_id, force: force) unless File.file?(corpus_path) && !force
-        build_prebuilt!(edition_id, corpus_path: corpus_path, force: force)
+    def build_all_prebuilt!(editions, force: false)
+      editions.map do |edition|
+        corpus_path = CorpusPublisher.prebuilt_path(edition.edition_id, text_path: edition.corpus_text_path)
+        CorpusPublisher.build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, lines: edition.lines, force: force) unless File.file?(corpus_path) && !force
+        build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, corpus_path: corpus_path, force: force)
       end
     end
 

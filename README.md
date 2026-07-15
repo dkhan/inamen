@@ -4,7 +4,7 @@
 
 **Inamen** analyzes plain-text documents for **documented numeric and structural patterns** — features whose definitions are explicit, reproducible, and testable. It reports which patterns match, which miss, and what else in the text might be worth studying.
 
-**Today** the engine is built around the Christian Bible. The reference corpus is `data/KJV.txt` (`kjv_normalized`), with a second bundled edition (`concord`, Cambridge Concord layout). Eighteen catalogued features align where possible with [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
+**Today** the engine is built around imported Bible plain-text editions. Eighteen catalogued features align where possible with [KJV Code](https://kjvcode.com) / King James Pure Bible Search (KJPBS).
 
 **Long term**, the same engine should work on **any text, in any tradition** — not only Bibles. That requires pluggable parsers, tokenizers, and corpus-specific feature catalogs. The current code is Bible/KJV-specific; the architecture is feature-driven so new corpora can plug in behind the same verify-and-discover API.
 
@@ -20,7 +20,7 @@
 | **Tokenization** | Unicode words; hyphens; straight and curly apostrophes ([`Tokenizer`](lib/inamen/tokenizer.rb)) |
 | **7⁷ total** | Bucketed counts sum to **823,543 = 7⁷** on the reference file |
 | **Feature catalog** | 18 named features ([`Features::CATALOG`](lib/inamen/features.rb)): boundary words, Jesus/Peter/Paul patterns, KJV Code alignments, file totals, and more |
-| **Editions** | `kjv_normalized` (`KJV.txt`), `concord` (Concord text + normalization for chapter-opening capitalization) |
+| **Editions** | Local plain-text Bible editions imported through `bin/rails editions:import FILE=... TYPE=bible NAME=...` |
 | **Corpus index** | SQLite `tokens` table (~790k scannable rows) plus materialized `token_counts` for fast discovery |
 | **Lexicon** | In-memory count cache per Search Within selection ([`Lexicon`](lib/inamen/lexicon.rb)); sub-100ms word-count scans on a warm corpus |
 | **CLI** | [`bin/inamen`](bin/inamen) — summary, features, indexing, divisibility scan, debug tools |
@@ -152,8 +152,7 @@ Without prebuilt corpora, the first Features verification or Discover scan **bui
 Corpus filenames include the text checksum and indexer revision, e.g.:
 
 ```
-data/corpora/kjv_normalized-73f86fc083e56c48-7.sqlite
-data/corpora/concord-a67031a2ae4db3bc-7.sqlite
+data/corpora/{edition_short_name}-{sha256_prefix}-{indexer_revision}.sqlite
 ```
 
 Runtime copies are only created in `web/tmp/corpora/` when no prebuilt file exists.
@@ -187,7 +186,7 @@ Full web setup, development workflow, and deploy notes: **[web/README.md](web/RE
 | `lib/inamen/corpus_store.rb` | SQLite schema, `tokens` + `token_counts` tables |
 | `lib/inamen/corpus_publisher.rb` | Prebuilt corpus paths and `corpora prebuild` |
 | `lib/inamen/lexicon.rb` | In-memory discovery count index |
-| `lib/inamen/kjv_editions.rb` | Bundled edition registry and Concord normalization |
+| `lib/inamen/bible_text_preprocessor.rb` | Local Bible import validation and preprocessing |
 | `lib/inamen/search_selection.rb` | KJPBS-style Search Within scope |
 | `data/KJV.txt` | Reference normalized KJV |
 | `data/corpora/` | Prebuilt SQLite indexes (generated; gitignored) |

@@ -11,26 +11,31 @@
     return `<div class="verse-details-line"><span class="verse-details-label">${label}</span><span>${value}</span></div>`;
   }
 
+  function formatOrdinal(current, total) {
+    if (current == null || total == null) return null;
+    return `${current} of ${total}`;
+  }
+
   function renderDetails(details) {
     const lines = [
       formatLine("Reference", `(${details.occurrence_in_search}) ${details.reference} [${details.occurrence_in_verse}]`),
       formatLine("Occurrence", `${details.occurrence_in_search} of ${details.occurrences_in_search}`),
       formatLine("Book", `${details.book_number} of ${details.total_books}`),
-      formatLine(
-        "Chapter",
-        details.nt_chapter_number
-          ? `${details.chapter_number} of ${details.total_chapters} / ${details.nt_chapter_number} of ${details.nt_total_chapters}`
-          : `${details.chapter_number} of ${details.total_chapters}`
-      ),
-      formatLine(
-        "Verse",
-        details.nt_verse_number
-          ? `${details.verse_number} of ${details.total_verses} / ${details.nt_verse_number} of ${details.nt_total_verses}`
-          : `${details.verse_number} of ${details.total_verses}`
-      ),
       formatLine("Word position", `${details.word_index}${details.word_count > 1 ? ` (${details.word_count} words)` : ""}`),
       formatLine("Search within", details.scope_label)
     ];
+
+    const chapter = formatOrdinal(details.chapter_number, details.total_chapters);
+    if (chapter) {
+      const ntChapter = formatOrdinal(details.nt_chapter_number, details.nt_total_chapters);
+      lines.splice(3, 0, formatLine("Chapter", ntChapter ? `${chapter} / ${ntChapter}` : chapter));
+    }
+
+    const verse = formatOrdinal(details.verse_number, details.total_verses);
+    if (verse) {
+      const ntVerse = formatOrdinal(details.nt_verse_number, details.nt_total_verses);
+      lines.splice(chapter ? 4 : 3, 0, formatLine("Verse", ntVerse ? `${verse} / ${ntVerse}` : verse));
+    }
 
     body().innerHTML = lines.join("");
     document.getElementById("verse-details-title").textContent = `Details — ${details.reference}`;

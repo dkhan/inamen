@@ -25,8 +25,8 @@ RSpec.describe Inamen::FileStatsReport do
 
   describe ".character_count_for" do
     it "returns UTF-8 codepoint length for a text file" do
-      path = Inamen::KjvEditions::EDITIONS.fetch("kjv_normalized")
-      skip "kjv_normalized missing" unless File.file?(path)
+      path = File.expand_path("../../data/KJV.txt", __dir__)
+      skip "sample text missing" unless File.file?(path)
 
       expect(described_class.character_count_for(path)).to eq(4_233_726)
     end

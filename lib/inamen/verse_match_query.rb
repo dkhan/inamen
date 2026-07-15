@@ -118,12 +118,16 @@ module Inamen
           occurrence_in_verse: verse_row.occurrence_count,
           book_number: CanonIndex.book_number(hit.book),
           total_books: CanonIndex::TOTAL_BOOKS,
-          chapter_number: CanonIndex.chapter_number(hit.book, hit.chapter),
-          total_chapters: CanonIndex::TOTAL_CHAPTERS,
           word_index: hit.word_index,
           word_count: hit.word_count,
           scope_label: summary.scope_label
         }
+
+        chapter_num = CanonIndex.chapter_number(hit.book, hit.chapter)
+        if chapter_num
+          details[:chapter_number] = chapter_num
+          details[:total_chapters] = CanonIndex::TOTAL_CHAPTERS
+        end
 
         if verse_num
           details[:verse_number] = verse_num

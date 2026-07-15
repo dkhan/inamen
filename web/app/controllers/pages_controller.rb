@@ -4,12 +4,13 @@ class PagesController < ApplicationController
   def home
     @engine_version = Inamen::VERSION
     @feature_count = Inamen::Features.catalog.size
-    @editions = Inamen::KjvEditions::EDITIONS.map do |id, path|
+    @editions = Edition.ordered.map do |edition|
       {
-        id: id,
-        filename: File.basename(path),
-        bytes: File.size(path),
-        sha256: Digest::SHA256.file(path).hexdigest[0, 16]
+        id: edition.short_name,
+        name: edition.name,
+        filename: edition.source_filename,
+        bytes: edition.byte_size,
+        sha256: edition.source_checksum[0, 16]
       }
     end
   end

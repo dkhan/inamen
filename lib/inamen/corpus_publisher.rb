@@ -4,12 +4,12 @@ require "digest"
 require "fileutils"
 
 module Inamen
-  # Builds and resolves prebuilt SQLite corpora shipped beside bundled plain-text editions.
+  # Builds and resolves prebuilt SQLite corpora for edition plain-text files.
   module CorpusPublisher
     module_function
 
     def prebuilt_root
-      File.join(KjvEditions::ROOT, "corpora")
+      File.expand_path("../../data/corpora", __dir__)
     end
 
     def checksum_prefix(path)
@@ -20,27 +20,28 @@ module Inamen
       "#{edition_id}-#{checksum_prefix}-#{CorpusStore::INDEXER_REVISION}.sqlite"
     end
 
-    def prebuilt_path(edition_id, text_path: nil)
-      text_path ||= KjvEditions::EDITIONS.fetch(edition_id)
+    def prebuilt_path(edition_id, text_path:)
       File.join(prebuilt_root, corpus_filename(edition_id, checksum_prefix(text_path)))
     end
 
-    def prebuilt_available?(edition_id)
-      File.file?(prebuilt_path(edition_id))
+    def prebuilt_available?(edition_id, text_path:)
+      File.file?(prebuilt_path(edition_id, text_path: text_path))
     end
 
-    def build_prebuilt!(edition_id, force: false)
-      dest = prebuilt_path(edition_id)
+    def build_prebuilt!(edition_id, text_path:, lines: nil, force: false)
+      dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
       FileUtils.mkdir_p(prebuilt_root)
-      lines = KjvEditions.lines_for(edition_id)
+      lines ||= File.readlines(text_path, chomp: true)
       CorpusStore.build!(lines, path: dest)
       dest
     end
 
-    def build_all_prebuilt!(force: false)
-      KjvEditions::EDITIONS.keys.map { |id| build_prebuilt!(id, force: force) }
+    def build_all_prebuilt!(editions, force: false)
+      editions.map do |edition|
+        build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, lines: edition.lines, force: force)
+      end
     end
   end
 end

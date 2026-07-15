@@ -10,7 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_000005) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_000006) do
+  create_table "editions", force: :cascade do |t|
+    t.integer "byte_size", null: false
+    t.string "corpus_type", default: "bible", null: false
+    t.datetime "created_at", null: false
+    t.datetime "imported_at", null: false
+    t.json "metadata", default: {}, null: false
+    t.string "name", null: false
+    t.string "short_name", null: false
+    t.string "source_checksum", null: false
+    t.string "source_filename", null: false
+    t.string "source_path", null: false
+    t.datetime "updated_at", null: false
+    t.index ["short_name"], name: "index_editions_on_short_name", unique: true
+  end
+
   create_table "feature_editions", force: :cascade do |t|
     t.integer "actual"
     t.datetime "created_at", null: false

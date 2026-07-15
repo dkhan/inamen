@@ -67,7 +67,7 @@ The app prefers these files over building into `tmp/corpora/` at runtime.
 
 ### Features (`/features`)
 
-- Select **kjv_normalized** or **concord**
+- Select any imported edition
 - Edition choice persists in session across Features and Discover
 - **Run verification** / **Recompute** — runs all 18 catalog features; sync when corpus exists, background job otherwise
 - Results cached one week under `tmp/cache/`
@@ -173,7 +173,7 @@ Visit `/features` and `/discover` — responses should be immediate if prebuilt 
 
 **Stale discovery or feature results** — click **Rescan** or **Recompute**, or clear `tmp/cache/`.
 
-**Concord vs kjv_normalized counts differ** — expected for some features (e.g. `file_character_total`). Concord uses edition-specific pass targets documented in `lib/inamen/kjv_editions.rb`.
+**No editions are available** — import a local plain-text Bible with `bin/rails editions:import FILE=... TYPE=bible NAME=...`.
 
 ---
 

@@ -35,7 +35,8 @@ RSpec.describe Inamen::VerseMatchQuery do
     end
 
     it "counts colophon and superscription occurrences but not as verses" do
-      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      text_path = File.expand_path("../../data/KJV.txt", __dir__)
+      db_path = Inamen::CorpusPublisher.prebuilt_path("sample", text_path: text_path)
       skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
 
       full_db = Inamen::CorpusStore.open(db_path)
@@ -50,7 +51,8 @@ RSpec.describe Inamen::VerseMatchQuery do
       full_db&.close
     end
     it "highlights every word in a multi-word phrase match" do
-      db_path = Inamen::CorpusPublisher.prebuilt_path("kjv_normalized")
+      text_path = File.expand_path("../../data/KJV.txt", __dir__)
+      db_path = Inamen::CorpusPublisher.prebuilt_path("sample", text_path: text_path)
       skip "corpus missing" unless File.file?(db_path) && File.size(db_path) > 1_000_000
 
       full_db = Inamen::CorpusStore.open(db_path)

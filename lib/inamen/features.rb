@@ -46,7 +46,7 @@ module Inamen
 
       def run(id, lines:, db: nil, path: nil, edition_id: nil, file_stats: nil)
         entry = fetch(id)
-        file_stats ||= FileStatsPublisher.load_for(edition_id) if edition_id
+        file_stats ||= FileStatsPublisher.load_for(edition_id, text_path: path) if edition_id && path
         count, details = compute(id, lines, db: db, path: path, file_stats: file_stats)
         FeatureResult.new(
           id: entry.id,
@@ -62,7 +62,7 @@ module Inamen
       end
 
       def run_all(lines:, db: nil, path: nil, edition_id: nil)
-        file_stats = FileStatsPublisher.load_for(edition_id) if edition_id
+        file_stats = FileStatsPublisher.load_for(edition_id, text_path: path) if edition_id && path
         CATALOG.map { |entry| run(entry.id, lines: lines, db: db, path: path, edition_id: edition_id, file_stats: file_stats) }
       end
 

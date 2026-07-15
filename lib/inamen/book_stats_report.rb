@@ -148,7 +148,7 @@ module Inamen
         nil
       when "JUDE." then "Jude"
       else
-        book_from_combined_title(s, blob)
+        book_from_combined_title(s, blob) || BibleBooks.canonical_name(s)
       end
     end
 

@@ -2,6 +2,7 @@
 
 require "sqlite3"
 require "fileutils"
+require "securerandom"
 
 require_relative "corpus_indexer"
 
@@ -20,24 +21,27 @@ module Inamen
 
     OT_BOOKS = BookStatsReport::CANON.first(39).map(&:first).freeze
     NT_BOOKS = BookStatsReport::CANON.drop(39).map(&:first).freeze
-    TESTAMENT_BY_BOOK = (
-      OT_BOOKS.to_h { |b| [b, "OT"] }.merge(NT_BOOKS.to_h { |b| [b, "NT"] })
-    ).freeze
+    TESTAMENT_BY_BOOK = BibleBooks::ALL.to_h { |book| [book, BibleBooks.testament_for(book)] }.freeze
 
     INSERT_BATCH_SIZE = 500
 
     class << self
       def build!(lines, path: DEFAULT_PATH)
-        FileUtils.mkdir_p(File.dirname(path))
-        File.delete(path) if File.exist?(path)
+        dir = File.dirname(path)
+        FileUtils.mkdir_p(dir)
+        tmp_path = File.join(dir, ".#{File.basename(path)}.#{Process.pid}.#{SecureRandom.hex(6)}.tmp")
 
-        db = open_db(path)
+        db = open_db(tmp_path)
         create_schema!(db)
         insert_tokens!(db, lines)
         populate_token_counts!(db)
         record_build_metadata!(db, lines)
         db.close
+        replace_database!(tmp_path, path)
         path
+      ensure
+        db&.close
+        cleanup_database_files!(tmp_path) if tmp_path
       end
 
       def open(path = DEFAULT_PATH)
@@ -101,6 +105,18 @@ module Inamen
         end
       end
 
+      def replace_database!(tmp_path, path)
+        cleanup_database_files!(path)
+        FileUtils.mv(tmp_path, path)
+        cleanup_database_files!(tmp_path)
+      end
+
+      def cleanup_database_files!(path)
+        [path, "#{path}-wal", "#{path}-shm"].each do |candidate|
+          File.delete(candidate) if candidate && File.exist?(candidate)
+        end
+      end
+
       def schema_present?(db)
         db.get_first_value("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'tokens'")
       end
@@ -120,7 +136,7 @@ module Inamen
             word_index INTEGER NOT NULL,
             token_raw TEXT NOT NULL,
             token_norm TEXT NOT NULL,
-            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
+            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT', 'AP')),
             bucket TEXT NOT NULL,
             lineno INTEGER NOT NULL DEFAULT 0,
             UNIQUE (book, chapter, verse, bucket, lineno, word_index)
@@ -134,7 +150,7 @@ module Inamen
             token_norm TEXT NOT NULL,
             token_raw TEXT NOT NULL,
             bucket TEXT NOT NULL,
-            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
+            testament TEXT NOT NULL CHECK (testament IN ('OT', 'NT', 'AP')),
             book TEXT NOT NULL,
             count INTEGER NOT NULL,
             PRIMARY KEY (token_norm, token_raw, bucket, testament, book)

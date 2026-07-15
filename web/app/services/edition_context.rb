@@ -2,19 +2,31 @@
 
 require "fileutils"
 
-# Loads a bundled KJV edition and provides cached corpus DB access for feature runs.
+# Loads an edition row and provides cached corpus/index access for scans.
 class EditionContext
-  attr_reader :edition_id, :path
+  attr_reader :edition_id, :edition
 
   def initialize(edition_id)
     @edition_id = edition_id.to_s
-    @path = Inamen::KjvEditions::EDITIONS.fetch(@edition_id) do
-      raise ArgumentError, "Unknown edition: #{@edition_id.inspect}"
-    end
+    @edition = Edition.find_by!(short_name: @edition_id)
+  rescue ActiveRecord::RecordNotFound
+    raise ArgumentError, "Unknown edition: #{@edition_id.inspect}"
   end
 
   def self.all_ids
-    Inamen::KjvEditions::EDITIONS.keys
+    Edition.ordered.pluck(:short_name)
+  end
+
+  def self.default_id
+    Edition.default&.short_name
+  end
+
+  def path
+    edition.path
+  end
+
+  def corpus_text_path
+    edition.corpus_text_path
   end
 
   def filename
@@ -22,11 +34,15 @@ class EditionContext
   end
 
   def lines
-    @lines ||= Inamen::KjvEditions.read_lines(path)
+    @lines ||= edition.lines
+  end
+
+  def source_lines
+    @source_lines ||= edition.source_lines
   end
 
   def cache_key
-    "#{edition_id}:#{checksum_prefix}"
+    "#{edition_id}:#{corpus_checksum_prefix}"
   end
 
   def chapter_index
@@ -74,7 +90,7 @@ class EditionContext
   end
 
   def file_stats
-    @file_stats ||= Inamen::FileStatsPublisher.resolve(edition_id, lines: lines, text_path: path)
+    @file_stats ||= Inamen::FileStatsPublisher.resolve(edition_id, lines: source_lines, text_path: path)
   end
 
   def file_stats_prebuilt_path
@@ -102,24 +118,28 @@ class EditionContext
     @checksum_prefix ||= Inamen::CorpusPublisher.checksum_prefix(path)
   end
 
+  def corpus_checksum_prefix
+    @corpus_checksum_prefix ||= Inamen::CorpusPublisher.checksum_prefix(corpus_text_path)
+  end
+
   def verse_index_prebuilt_path
-    Inamen::VerseIndexPublisher.prebuilt_path(edition_id, text_path: path)
+    Inamen::VerseIndexPublisher.prebuilt_path(edition_id, text_path: corpus_text_path)
   end
 
   def word_stream_prebuilt_path
-    Pathname(Inamen::WordStreamPublisher.prebuilt_path(edition_id, text_path: path))
+    Pathname(Inamen::WordStreamPublisher.prebuilt_path(edition_id, text_path: corpus_text_path))
   end
 
   def lexicon_prebuilt_path
-    Pathname(Inamen::LexiconPublisher.prebuilt_path(edition_id))
+    Pathname(Inamen::LexiconPublisher.prebuilt_path(edition_id, text_path: corpus_text_path))
   end
 
   def canon_ordinals_prebuilt_path
-    Pathname(Inamen::CanonOrdinalsPublisher.prebuilt_path(edition_id))
+    Pathname(Inamen::CanonOrdinalsPublisher.prebuilt_path(edition_id, text_path: corpus_text_path))
   end
 
   def expected_count(feature_id)
-    Inamen::KjvEditions.expected_feature_count(edition_id, feature_id)
+    Inamen::Features.fetch(feature_id).expected_count
   end
 
   def db
@@ -143,12 +163,12 @@ class EditionContext
   end
 
   def corpus_db_path
-    prebuilt = Pathname(Inamen::CorpusPublisher.prebuilt_path(edition_id, text_path: path))
+    prebuilt = Pathname(Inamen::CorpusPublisher.prebuilt_path(edition_id, text_path: corpus_text_path))
     return prebuilt if prebuilt.file?
 
     @runtime_corpus_path ||= Rails.root.join(
       "tmp/corpora",
-      Inamen::CorpusPublisher.corpus_filename(edition_id, checksum_prefix)
+      Inamen::CorpusPublisher.corpus_filename(edition_id, corpus_checksum_prefix)
     )
   end
 
@@ -187,6 +207,8 @@ class EditionContext
     return unless path.file?
 
     data = Inamen::CanonOrdinalsPublisher.load_prebuilt!(path.to_s)
+    return unless data[:nt_first]
+
     Inamen::CanonIndex.install_prebuilt!(
       db,
       ordinals: data.fetch(:ordinals),

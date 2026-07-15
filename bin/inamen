@@ -19,19 +19,39 @@ def parse_scan_scope(raw)
   end
 end
 
-def kjv_lines
-  @kjv_lines ||= Inamen::KjvEditions.read_lines(kjv_input_path)
+def input_lines
+  @input_lines ||= File.readlines(input_path, chomp: true)
 end
 
-def kjv_input_path
-  @kjv_input_path ||= File.expand_path("../data/KJV.txt", __dir__)
+def input_path
+  @input_path
 end
 
 PSALM_HEADER = /\APSALM [0-9]+\z/
 
 if ARGV[0] == "kjvcode-align"
   require "inamen/kjvcode_alignment"
-  Inamen::KjvcodeAlignment.report(kjv_lines)
+  args = ARGV[1..] || []
+  i = 0
+  while i < args.length
+    case args[i]
+    when "--input", "-i"
+      i += 1
+      @input_path = File.expand_path(args[i])
+      @input_lines = nil
+    else
+      warn "Unknown option: #{args[i]}"
+      warn "Usage: #{$PROGRAM_NAME} kjvcode-align --input PATH"
+      exit 1
+    end
+    i += 1
+  end
+
+  unless input_path
+    warn "Usage: #{$PROGRAM_NAME} kjvcode-align --input PATH"
+    exit 1
+  end
+  Inamen::KjvcodeAlignment.report(input_lines)
   exit 0
 end
 
@@ -50,23 +70,13 @@ if ARGV[0] == "index"
       output = File.expand_path(args[i])
     when "--input", "-i"
       i += 1
-      @kjv_input_path = File.expand_path(args[i])
-      @kjv_lines = nil
-    when "--edition", "-e"
-      i += 1
-      edition = args[i].to_s
-      path = Inamen::KjvEditions::EDITIONS[edition]
-      unless path
-        warn "Unknown edition: #{edition} (choose: #{Inamen::KjvEditions::EDITIONS.keys.join(", ")})"
-        exit 1
-      end
-      @kjv_input_path = path
-      @kjv_lines = nil
+      @input_path = File.expand_path(args[i])
+      @input_lines = nil
     when "--force", "-f"
       force = true
     else
       warn "Unknown option: #{args[i]}"
-      warn "Usage: #{$PROGRAM_NAME} index [--input PATH | --edition ID] [--output PATH] [--force]"
+      warn "Usage: #{$PROGRAM_NAME} index [--input PATH] [--output PATH] [--force]"
       exit 1
     end
     i += 1
@@ -77,11 +87,16 @@ if ARGV[0] == "index"
     exit 1
   end
 
-  path = Inamen::CorpusStore.build!(kjv_lines, path: output)
+  unless input_path
+    warn "Usage: #{$PROGRAM_NAME} index --input PATH [--output PATH] [--force]"
+    exit 1
+  end
+
+  path = Inamen::CorpusStore.build!(input_lines, path: output)
   db = Inamen::CorpusStore.open(path)
   counts = Inamen::CorpusStore.bucket_counts(db)
   db.close
-  puts "Source: #{kjv_input_path}"
+  puts "Source: #{input_path}"
   puts "Corpus: #{path}"
   counts.each { |bucket, n| puts "#{bucket}: #{n}" }
   puts "scannable total: #{counts.values.sum}"
@@ -89,33 +104,8 @@ if ARGV[0] == "index"
 end
 
 if ARGV[0] == "corpora" && ARGV[1] == "prebuild"
-  require "inamen/corpus_publisher"
-  require "inamen/verse_index_publisher"
-  require "inamen/file_stats_publisher"
-  require "inamen/word_stream_publisher"
-  require "inamen/lexicon_publisher"
-  require "inamen/canon_ordinals_publisher"
-
-  force = ARGV.include?("--force") || ARGV.include?("-f")
-  Inamen::CorpusPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  Inamen::VerseIndexPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  Inamen::FileStatsPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  Inamen::WordStreamPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  Inamen::LexiconPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  Inamen::CanonOrdinalsPublisher.build_all_prebuilt!(force: force).each do |built_path|
-    puts built_path
-  end
-  exit 0
+  warn "Use the Rails task instead: cd web && bin/rails inamen:corpora:prebuild"
+  exit 1
 end
 
 if ARGV[0] == "scan"

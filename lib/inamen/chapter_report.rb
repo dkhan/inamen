@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "bible_books"
+
 module Inamen
   # Per-chapter stats from the KjvLineParser event stream (same counting rules as global totals).
   module ChapterReport
@@ -9,7 +11,7 @@ module Inamen
       n = name.to_s.strip
       return nil if n.empty?
 
-      BookStatsReport::CANON.find { |(book, _, _)| book.casecmp?(n) }&.first
+      BibleBooks.canonical_name(n)
     end
 
     # Returns hash: :book, :chapter, :verse_count, :verse_text_words, :combined, :divisible_by_7

@@ -11,53 +11,52 @@ module Inamen
     module_function
 
     def prebuilt_root
-      File.join(KjvEditions::ROOT, "file_stats")
+      File.expand_path("../../data/file_stats", __dir__)
     end
 
     def stats_filename(edition_id, checksum_prefix)
       "#{edition_id}-#{checksum_prefix}-#{FILE_STATS_REVISION}.marshal"
     end
 
-    def prebuilt_path(edition_id, text_path: nil)
-      text_path ||= KjvEditions::EDITIONS.fetch(edition_id)
+    def prebuilt_path(edition_id, text_path:)
       File.join(prebuilt_root, stats_filename(edition_id, CorpusPublisher.checksum_prefix(text_path)))
     end
 
-    def prebuilt_available?(edition_id)
-      File.file?(prebuilt_path(edition_id))
+    def prebuilt_available?(edition_id, text_path:)
+      File.file?(prebuilt_path(edition_id, text_path: text_path))
     end
 
-    def build_prebuilt!(edition_id, force: false)
-      dest = prebuilt_path(edition_id)
+    def build_prebuilt!(edition_id, text_path:, lines: nil, force: false)
+      dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
       FileUtils.mkdir_p(prebuilt_root)
-      text_path = KjvEditions::EDITIONS.fetch(edition_id)
-      lines = KjvEditions.lines_for(edition_id)
+      lines ||= File.readlines(text_path, chomp: true)
       result = FileStatsReport.build(lines, text_path: text_path)
       File.binwrite(dest, Marshal.dump(result))
       dest
     end
 
-    def build_all_prebuilt!(force: false)
-      KjvEditions::EDITIONS.keys.map { |id| build_prebuilt!(id, force: force) }
+    def build_all_prebuilt!(editions, force: false)
+      editions.map do |edition|
+        lines = edition.respond_to?(:source_lines) ? edition.source_lines : edition.lines
+        build_prebuilt!(edition.edition_id, text_path: edition.path, lines: lines, force: force)
+      end
     end
 
     def load_prebuilt!(path)
       Marshal.load(File.binread(path)) # rubocop:disable Security/MarshalLoad -- trusted prebuilt artifact
     end
 
-    def load_for(edition_id)
-      path = prebuilt_path(edition_id)
+    def load_for(edition_id, text_path:)
+      path = prebuilt_path(edition_id, text_path: text_path)
       return nil unless File.file?(path)
 
       load_prebuilt!(path)
     end
 
-    def resolve(edition_id, lines: nil, text_path: nil)
-      load_for(edition_id) || begin
-        lines ||= KjvEditions.lines_for(edition_id)
-        text_path ||= KjvEditions::EDITIONS.fetch(edition_id)
+    def resolve(edition_id, lines:, text_path:)
+      load_for(edition_id, text_path: text_path) || begin
         FileStatsReport.build(lines, text_path: text_path)
       end
     end

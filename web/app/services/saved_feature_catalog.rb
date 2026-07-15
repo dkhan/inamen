@@ -56,9 +56,9 @@ class SavedFeatureCatalog
       record.error = nil
       record.save!
       record
-    rescue ActiveRecord::RecordNotUnique
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
       # Another request created it concurrently — reuse the persisted row.
-      FeatureEdition.find_by(feature_id: saved_feature.id, edition_id: edition.edition_id) || record
+      FeatureEdition.find_by(feature_id: saved_feature.id, edition_id: edition.edition_id) || raise
     rescue ArgumentError, TypeError => e
       record.processing_state = :failed
       record.error = e.message

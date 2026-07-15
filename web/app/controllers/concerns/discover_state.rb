@@ -92,10 +92,15 @@ module DiscoverState
   private
 
   def load_stored_discover_query
+    if params[:dq].present?
+      token = params[:dq]
+      adopt_discover_query_token!(token)
+      return DiscoverQueryStore.fetch(token)
+    end
+
     return nil if @discover_query_fresh
 
-    token = params[:dq].presence || session[DISCOVER_QUERY_ID_KEY]
-    adopt_discover_query_token!(token) if params[:dq].present?
+    token = session[DISCOVER_QUERY_ID_KEY]
 
     query = DiscoverQueryStore.fetch(token)
     return query if query.present?

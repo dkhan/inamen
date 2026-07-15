@@ -3,16 +3,19 @@
 require "spec_helper"
 
 RSpec.describe Inamen::BookCategories do
-  it "lists all 66 canon books" do
-    expect(described_class.all_books.length).to eq(66)
+  it "lists Protestant canon plus Apocrypha books" do
+    expect(described_class.all_books.length).to eq(81)
+    expect(described_class.all_books).to include("Genesis", "Revelation", "Tobit")
   end
 
-  it "groups books into KJPBS-style categories" do
+  it "groups books into categories" do
     ot_books = described_class.tree.flat_map { |t| t.categories.flat_map(&:books) if t.id == :ot }.compact
     nt_books = described_class.tree.flat_map { |t| t.categories.flat_map(&:books) if t.id == :nt }.compact
+    apocrypha_books = described_class.tree.flat_map { |t| t.categories.flat_map(&:books) if t.id == :apocrypha }.compact
     expect(ot_books).to eq(described_class.ot_books)
     expect(nt_books).to eq(described_class.nt_books)
-    expect(ot_books + nt_books).to eq(described_class.all_books)
+    expect(apocrypha_books).to eq(described_class.apocrypha_books)
+    expect(ot_books + nt_books + apocrypha_books).to eq(described_class.all_books)
   end
 
   it "places Acts in NT Historical" do

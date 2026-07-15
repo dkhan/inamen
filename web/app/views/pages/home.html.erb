@@ -3,7 +3,7 @@
   <h1>Inamen</h1>
   <p class="lead">
     Discover and verify mathematical patterns in plain text.
-    KJV is the flagship corpus; two bundled editions ship with the engine today.
+    Editions are imported locally and indexed for fast discovery.
   </p>
 </div>
 
@@ -26,11 +26,12 @@
 </section>
 
 <section class="panel">
-  <h2>Bundled corpora</h2>
+  <h2>Editions</h2>
   <table>
     <thead>
       <tr>
         <th>Edition</th>
+        <th>Name</th>
         <th>File</th>
         <th>Size</th>
         <th>SHA-256 (prefix)</th>
@@ -40,6 +41,7 @@
       <% @editions.each do |edition| %>
         <tr>
           <td><code><%= edition[:id] %></code></td>
+          <td><%= edition[:name] %></td>
           <td><%= edition[:filename] %></td>
           <td><%= number_to_human_size(edition[:bytes]) %></td>
           <td><code><%= edition[:sha256] %></code></td>
@@ -61,5 +63,5 @@
 
 <section class="panel muted">
   <h2>Coming next</h2>
-  <p>Per-chapter heatmaps, edition comparison, and user uploads.</p>
+  <p>Per-chapter heatmaps, edition comparison, and saved result workflows.</p>
 </section>

@@ -215,7 +215,7 @@ class FeaturesController < ApplicationController
       verified_at: Time.current,
       processing_state: :verified
     )
-  rescue ActiveRecord::RecordNotUnique
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
     nil
   end
 

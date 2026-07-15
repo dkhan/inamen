@@ -10,20 +10,20 @@ module Inamen
     module_function
 
     def prebuilt_root
-      File.join(KjvEditions::ROOT, "lexicons")
+      File.expand_path("../../data/lexicons", __dir__)
     end
 
-    def prebuilt_path(edition_id, selection: SearchSelection.default)
-      checksum = CorpusPublisher.checksum_prefix(KjvEditions::EDITIONS.fetch(edition_id))
+    def prebuilt_path(edition_id, text_path:, selection: SearchSelection.default)
+      checksum = CorpusPublisher.checksum_prefix(text_path)
       scope = selection.cache_key
       File.join(prebuilt_root, "#{edition_id}-#{checksum}-#{scope}-v#{FORMAT_VERSION}.marshal")
     end
 
-    def build_prebuilt!(edition_id, force: false)
-      dest = prebuilt_path(edition_id)
+    def build_prebuilt!(edition_id, text_path:, corpus_path: nil, force: false)
+      dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
-      corpus_path = CorpusPublisher.prebuilt_path(edition_id)
+      corpus_path ||= CorpusPublisher.prebuilt_path(edition_id, text_path: text_path)
       raise ArgumentError, "Corpus not found for #{edition_id}" unless File.file?(corpus_path)
 
       FileUtils.mkdir_p(prebuilt_root)
@@ -35,11 +35,11 @@ module Inamen
       db&.close
     end
 
-    def build_all_prebuilt!(force: false)
-      KjvEditions::EDITIONS.keys.map do |edition_id|
-        corpus_path = CorpusPublisher.prebuilt_path(edition_id)
-        CorpusPublisher.build_prebuilt!(edition_id, force: force) unless File.file?(corpus_path) && !force
-        build_prebuilt!(edition_id, force: force)
+    def build_all_prebuilt!(editions, force: false)
+      editions.map do |edition|
+        corpus_path = CorpusPublisher.prebuilt_path(edition.edition_id, text_path: edition.corpus_text_path)
+        CorpusPublisher.build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, lines: edition.lines, force: force) unless File.file?(corpus_path) && !force
+        build_prebuilt!(edition.edition_id, text_path: edition.corpus_text_path, corpus_path: corpus_path, force: force)
       end
     end
 
