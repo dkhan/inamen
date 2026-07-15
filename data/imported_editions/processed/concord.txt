@@ -14437,11 +14437,15 @@ THEN Job answered the LORD, and said,
 16 After this lived Job an hundred and forty years, and saw his sons, and his sons’ sons, even four generations.
 17 So Job died, being old and full of days.
 Psalms
+PSALM 1
+BLESSED is the man that walketh not in the counsel of the ungodly, nor standeth in the way of sinners, nor sitteth in the seat of the scornful.
 2 But his delight is in the law of the LORD; and in his law doth he meditate day and night.
 3 And he shall be like a tree planted by the rivers of water, that bringeth forth his fruit in his season; his leaf also shall not wither; and whatsoever he doeth shall prosper.
 4 The ungodly are not so: but are like the chaff which the wind driveth away.
 5 Therefore the ungodly shall not stand in the judgment, nor sinners in the congregation of the righteous.
 6 For the LORD knoweth the way of the righteous: but the way of the ungodly shall perish.
+PSALM 2
+WHY do the heathen rage, and the people imagine a vain thing?
 2 The kings of the earth set themselves, and the rulers take counsel together, against the LORD, and against his anointed, saying,
 3 Let us break their bands asunder, and cast away their cords from us.
 4 He that sitteth in the heavens shall laugh: the Lord shall have them in derision.
@@ -14453,6 +14457,7 @@ Psalms
 10 Be wise now therefore, O ye kings: be instructed, ye judges of the earth.
 11 Serve the LORD with fear, and rejoice with trembling.
 12 Kiss the Son, lest he be angry, and ye perish from the way, when his wrath is kindled but a little. Blessed are all they that put their trust in him.
+PSALM 3
 A Psalm of David, when he fled from Absalom his son.
 LORD, how are they increased that trouble me! many are they that rise up against me.
 2 Many there be which say of my soul, There is no help for him in God. Selah.
@@ -14462,6 +14467,7 @@ LORD, how are they increased that trouble me! many are they that rise up against
 6 I will not be afraid of ten thousands of people, that have set themselves against me round about.
 7 Arise, O LORD; save me, O my God: for thou hast smitten all mine enemies upon the cheek bone; thou hast broken the teeth of the ungodly.
 8 Salvation belongeth unto the LORD: thy blessing is upon thy people. Selah.
+PSALM 4
 To the chief Musician on Neginoth, A Psalm of David.
 HEAR me when I call, O God of my righteousness: thou hast enlarged me when I was in distress; have mercy upon me, and hear my prayer.
 2 O ye sons of men, how long will ye turn my glory into shame? how long will ye love vanity, and seek after leasing? Selah.
@@ -14471,6 +14477,7 @@ HEAR me when I call, O God of my righteousness: thou hast enlarged me when I was
 6 There be many that say, Who will shew us any good? LORD, lift thou up the light of thy countenance upon us.
 7 Thou hast put gladness in my heart, more than in the time that their corn and their wine increased.
 8 I will both lay me down in peace, and sleep: for thou, LORD, only makest me dwell in safety.
+PSALM 5
 To the chief Musician upon Nehiloth, A Psalm of David.
 GIVE ear to my words, O LORD, consider my meditation.
 2 Hearken unto the voice of my cry, my King, and my God: for unto thee will I pray.
@@ -14484,6 +14491,7 @@ GIVE ear to my words, O LORD, consider my meditation.
 10 Destroy thou them, O God; let them fall by their own counsels; cast them out in the multitude of their transgressions; for they have rebelled against thee.
 11 But let all those that put their trust in thee rejoice: let them ever shout for joy, because thou defendest them: let them also that love thy name be joyful in thee.
 12 For thou, LORD, wilt bless the righteous; with favour wilt thou compass him as with a shield.
+PSALM 6
 To the chief Musician on Neginoth upon Sheminith, A Psalm of David.
 O LORD, rebuke me not in thine anger, neither chasten me in thy hot displeasure.
 2 Have mercy upon me, O LORD; for I am weak: O LORD, heal me; for my bones are vexed.
@@ -14495,6 +14503,7 @@ O LORD, rebuke me not in thine anger, neither chasten me in thy hot displeasure.
 8 Depart from me, all ye workers of iniquity; for the LORD hath heard the voice of my weeping.
 9 The LORD hath heard my supplication; the LORD will receive my prayer.
 10 Let all mine enemies be ashamed and sore vexed: let them return and be ashamed suddenly.
+PSALM 7
 Shiggaion of David, which he sang unto the LORD, concerning the words of Cush the Benjamite.
 O LORD my God, in thee do I put my trust: save me from all them that persecute me, and deliver me:
 2 Lest he tear my soul like a lion, rending it in pieces, while there is none to deliver.
@@ -14513,6 +14522,7 @@ O LORD my God, in thee do I put my trust: save me from all them that persecute m
 15 He made a pit, and digged it, and is fallen into the ditch which he made.
 16 His mischief shall return upon his own head, and his violent dealing shall come down upon his own pate.
 17 I will praise the LORD according to his righteousness: and will sing praise to the name of the LORD most high.
+PSALM 8
 To the chief Musician upon Gittith, A Psalm of David.
 O LORD our Lord, how excellent is thy name in all the earth! who hast set thy glory above the heavens.
 2 Out of the mouth of babes and sucklings hast thou ordained strength because of thine enemies, that thou mightest still the enemy and the avenger.
@@ -14523,6 +14533,7 @@ O LORD our Lord, how excellent is thy name in all the earth! who hast set thy gl
 7 All sheep and oxen, yea, and the beasts of the field;
 8 The fowl of the air, and the fish of the sea, and whatsoever passeth through the paths of the seas.
 9 O LORD our Lord, how excellent is thy name in all the earth!
+PSALM 9
 To the chief Musician upon Muth-labben, A Psalm of David.
 I WILL praise thee, O LORD, with my whole heart; I will shew forth all thy marvellous works.
 2 I will be glad and rejoice in thee: I will sing praise to thy name, O thou most High.
@@ -14544,6 +14555,8 @@ I WILL praise thee, O LORD, with my whole heart; I will shew forth all thy marve
 18 For the needy shall not alway be forgotten: the expectation of the poor shall not perish for ever.
 19 Arise, O LORD; let not man prevail: let the heathen be judged in thy sight.
 20 Put them in fear, O LORD: that the nations may know themselves to be but men. Selah.
+PSALM 10
+WHY standest thou afar off, O LORD? why hidest thou thyself in times of trouble?
 2 The wicked in his pride doth persecute the poor: let them be taken in the devices that they have imagined.
 3 For the wicked boasteth of his heart’s desire, and blesseth the covetous, whom the LORD abhorreth.
 4 The wicked, through the pride of his countenance, will not seek after God: God is not in all his thoughts.
@@ -14561,6 +14574,7 @@ I WILL praise thee, O LORD, with my whole heart; I will shew forth all thy marve
 16 The LORD is King for ever and ever: the heathen are perished out of his land.
 17 LORD, thou hast heard the desire of the humble: thou wilt prepare their heart, thou wilt cause thine ear to hear:
 18 To judge the fatherless and the oppressed, that the man of the earth may no more oppress.
+PSALM 11
 To the chief Musician, A Psalm of David.
 IN the LORD put I my trust: how say ye to my soul, Flee as a bird to your mountain?
 2 For, lo, the wicked bend their bow, they make ready their arrow upon the string, that they may privily shoot at the upright in heart.
@@ -14569,6 +14583,7 @@ IN the LORD put I my trust: how say ye to my soul, Flee as a bird to your mounta
 5 The LORD trieth the righteous: but the wicked and him that loveth violence his soul hateth.
 6 Upon the wicked he shall rain snares, fire and brimstone, and an horrible tempest: this shall be the portion of their cup.
 7 For the righteous LORD loveth righteousness; his countenance doth behold the upright.
+PSALM 12
 To the chief Musician upon Sheminith, A Psalm of David.
 HELP, LORD; for the godly man ceaseth; for the faithful fail from among the children of men.
 2 They speak vanity every one with his neighbour: with flattering lips and with a double heart do they speak.
@@ -14578,6 +14593,7 @@ HELP, LORD; for the godly man ceaseth; for the faithful fail from among the chil
 6 The words of the LORD are pure words: as silver tried in a furnace of earth, purified seven times.
 7 Thou shalt keep them, O LORD, thou shalt preserve them from this generation for ever.
 8 The wicked walk on every side, when the vilest men are exalted.
+PSALM 13
 To the chief Musician, A Psalm of David.
 HOW long wilt thou forget me, O LORD? for ever? how long wilt thou hide thy face from me?
 2 How long shall I take counsel in my soul, having sorrow in my heart daily? how long shall mine enemy be exalted over me?
@@ -14585,6 +14601,7 @@ HOW long wilt thou forget me, O LORD? for ever? how long wilt thou hide thy face
 4 Lest mine enemy say, I have prevailed against him; and those that trouble me rejoice when I am moved.
 5 But I have trusted in thy mercy; my heart shall rejoice in thy salvation.
 6 I will sing unto the LORD, because he hath dealt bountifully with me.
+PSALM 14
 To the chief Musician, A Psalm of David.
 THE fool hath said in his heart, There is no God. They are corrupt, they have done abominable works, there is none that doeth good.
 2 The LORD looked down from heaven upon the children of men, to see if there were any that did understand, and seek God.
@@ -14593,12 +14610,14 @@ THE fool hath said in his heart, There is no God. They are corrupt, they have do
 5 There were they in great fear: for God is in the generation of the righteous.
 6 Ye have shamed the counsel of the poor, because the LORD is his refuge.
 7 Oh that the salvation of Israel were come out of Zion! when the LORD bringeth back the captivity of his people, Jacob shall rejoice, and Israel shall be glad.
+PSALM 15
 A Psalm of David.
 LORD, who shall abide in thy tabernacle? who shall dwell in thy holy hill?
 2 He that walketh uprightly, and worketh righteousness, and speaketh the truth in his heart.
 3 He that backbiteth not with his tongue, nor doeth evil to his neighbour, nor taketh up a reproach against his neighbour.
 4 In whose eyes a vile person is contemned; but he honoureth them that fear the LORD. He that sweareth to his own hurt, and changeth not.
 5 He that putteth not out his money to usury, nor taketh reward against the innocent. He that doeth these things shall never be moved.
+PSALM 16
 Michtam of David.
 PRESERVE me, O God: for in thee do I put my trust.
 2 O my soul, thou hast said unto the LORD, Thou art my Lord: my goodness extendeth not to thee;
@@ -14611,6 +14630,7 @@ PRESERVE me, O God: for in thee do I put my trust.
 9 Therefore my heart is glad, and my glory rejoiceth: my flesh also shall rest in hope.
 10 For thou wilt not leave my soul in hell; neither wilt thou suffer thine Holy One to see corruption.
 11 Thou wilt shew me the path of life: in thy presence is fulness of joy; at thy right hand there are pleasures for evermore.
+PSALM 17
 A Prayer of David.
 HEAR the right, O LORD, attend unto my cry, give ear unto my prayer, that goeth not out of feigned lips.
 2 Let my sentence come forth from thy presence; let thine eyes behold the things that are equal.
@@ -14627,6 +14647,7 @@ HEAR the right, O LORD, attend unto my cry, give ear unto my prayer, that goeth 
 13 Arise, O LORD, disappoint him, cast him down: deliver my soul from the wicked, which is thy sword:
 14 From men which are thy hand, O LORD, from men of the world, which have their portion in this life, and whose belly thou fillest with thy hid treasure: they are full of children, and leave the rest of their substance to their babes.
 15 As for me, I will behold thy face in righteousness: I shall be satisfied, when I awake, with thy likeness.
+PSALM 18
 To the chief Musician, A Psalm of David, the servant of the LORD, who spake unto the LORD the words of this song in the day that the LORD delivered him from the hand of all his enemies, and from the hand of Saul: And he said,
 I WILL love thee, O LORD, my strength.
 2 The LORD is my rock, and my fortress, and my deliverer; my God, my strength, in whom I will trust; my buckler, and the horn of my salvation, and my high tower.
@@ -14678,6 +14699,7 @@ I WILL love thee, O LORD, my strength.
 48 He delivereth me from mine enemies: yea, thou liftest me up above those that rise up against me: thou hast delivered me from the violent man.
 49 Therefore will I give thanks unto thee, O LORD, among the heathen, and sing praises unto thy name.
 50 Great deliverance giveth he to his king; and sheweth mercy to his anointed, to David, and to his seed for evermore.
+PSALM 19
 To the chief Musician, A Psalm of David.
 THE heavens declare the glory of God; and the firmament sheweth his handywork.
 2 Day unto day uttereth speech, and night unto night sheweth knowledge.
@@ -14693,6 +14715,7 @@ THE heavens declare the glory of God; and the firmament sheweth his handywork.
 12 Who can understand his errors? cleanse thou me from secret faults.
 13 Keep back thy servant also from presumptuous sins; let them not have dominion over me: then shall I be upright, and I shall be innocent from the great transgression.
 14 Let the words of my mouth, and the meditation of my heart, be acceptable in thy sight, O LORD, my strength, and my redeemer.
+PSALM 20
 To the chief Musician, A Psalm of David.
 THE LORD hear thee in the day of trouble; the name of the God of Jacob defend thee;
 2 Send thee help from the sanctuary, and strengthen thee out of Zion;
@@ -14703,6 +14726,7 @@ THE LORD hear thee in the day of trouble; the name of the God of Jacob defend th
 7 Some trust in chariots, and some in horses: but we will remember the name of the LORD our God.
 8 They are brought down and fallen: but we are risen, and stand upright.
 9 Save, LORD: let the king hear us when we call.
+PSALM 21
 To the chief Musician, A Psalm of David.
 THE king shall joy in thy strength, O LORD; and in thy salvation how greatly shall he rejoice!
 2 Thou hast given him his heart’s desire, and hast not withholden the request of his lips. Selah.
@@ -14717,6 +14741,7 @@ THE king shall joy in thy strength, O LORD; and in thy salvation how greatly sha
 11 For they intended evil against thee: they imagined a mischievous device, which they are not able to perform.
 12 Therefore shalt thou make them turn their back, when thou shalt make ready thine arrows upon thy strings against the face of them.
 13 Be thou exalted, LORD, in thine own strength: so will we sing and praise thy power.
+PSALM 22
 To the chief Musician upon Aijeleth Shahar, A Psalm of David.
 MY God, my God, why hast thou forsaken me? why art thou so far from helping me, and from the words of my roaring?
 2 O my God, I cry in the daytime, but thou hearest not; and in the night season, and am not silent.
@@ -14749,6 +14774,7 @@ MY God, my God, why hast thou forsaken me? why art thou so far from helping me, 
 29 All they that be fat upon earth shall eat and worship: all they that go down to the dust shall bow before him: and none can keep alive his own soul.
 30 A seed shall serve him; it shall be accounted to the Lord for a generation.
 31 They shall come, and shall declare his righteousness unto a people that shall be born, that he hath done this.
+PSALM 23
 A Psalm of David.
 THE LORD is my shepherd; I shall not want.
 2 He maketh me to lie down in green pastures: he leadeth me beside the still waters.
@@ -14756,6 +14782,7 @@ THE LORD is my shepherd; I shall not want.
 4 Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.
 5 Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.
 6 Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever.
+PSALM 24
 A Psalm of David.
 THE earth is the LORD’S, and the fulness thereof; the world, and they that dwell therein.
 2 For he hath founded it upon the seas, and established it upon the floods.
@@ -14767,6 +14794,7 @@ THE earth is the LORD’S, and the fulness thereof; the world, and they that dwe
 8 Who is this King of glory? The LORD strong and mighty, the LORD mighty in battle.
 9 Lift up your heads, O ye gates; even lift them up, ye everlasting doors; and the King of glory shall come in.
 10 Who is this King of glory? The LORD of hosts, he is the King of glory. Selah.
+PSALM 25
 A Psalm of David.
 UNTO thee, O LORD, do I lift up my soul.
 2 O my God, I trust in thee: let me not be ashamed, let not mine enemies triumph over me.
@@ -14790,6 +14818,7 @@ UNTO thee, O LORD, do I lift up my soul.
 20 O keep my soul, and deliver me: let me not be ashamed; for I put my trust in thee.
 21 Let integrity and uprightness preserve me; for I wait on thee.
 22 Redeem Israel, O God, out of all his troubles.
+PSALM 26
 A Psalm of David.
 JUDGE me, O LORD; for I have walked in mine integrity: I have trusted also in the LORD; therefore I shall not slide.
 2 Examine me, O LORD, and prove me; try my reins and my heart.
@@ -14803,6 +14832,7 @@ JUDGE me, O LORD; for I have walked in mine integrity: I have trusted also in th
 10 In whose hands is mischief, and their right hand is full of bribes.
 11 But as for me, I will walk in mine integrity: redeem me, and be merciful unto me.
 12 My foot standeth in an even place: in the congregations will I bless the LORD.
+PSALM 27
 A Psalm of David.
 THE LORD is my light and my salvation; whom shall I fear? the LORD is the strength of my life; of whom shall I be afraid?
 2 When the wicked, even mine enemies and my foes, came upon me to eat up my flesh, they stumbled and fell.
@@ -14818,6 +14848,7 @@ THE LORD is my light and my salvation; whom shall I fear? the LORD is the streng
 12 Deliver me not over unto the will of mine enemies: for false witnesses are risen up against me, and such as breathe out cruelty.
 13 I had fainted, unless I had believed to see the goodness of the LORD in the land of the living.
 14 Wait on the LORD: be of good courage, and he shall strengthen thine heart: wait, I say, on the LORD.
+PSALM 28
 A Psalm of David.
 UNTO thee will I cry, O LORD my rock; be not silent to me: lest, if thou be silent to me, I become like them that go down into the pit.
 2 Hear the voice of my supplications, when I cry unto thee, when I lift up my hands toward thy holy oracle.
@@ -14828,6 +14859,7 @@ UNTO thee will I cry, O LORD my rock; be not silent to me: lest, if thou be sile
 7 The LORD is my strength and my shield; my heart trusted in him, and I am helped: therefore my heart greatly rejoiceth; and with my song will I praise him.
 8 The LORD is their strength, and he is the saving strength of his anointed.
 9 Save thy people, and bless thine inheritance: feed them also, and lift them up for ever.
+PSALM 29
 A Psalm of David.
 GIVE unto the LORD, O ye mighty, give unto the LORD glory and strength.
 2 Give unto the LORD the glory due unto his name; worship the LORD in the beauty of holiness.
@@ -14840,6 +14872,7 @@ GIVE unto the LORD, O ye mighty, give unto the LORD glory and strength.
 9 The voice of the LORD maketh the hinds to calve, and discovereth the forests: and in his temple doth every one speak of his glory.
 10 The LORD sitteth upon the flood; yea, the LORD sitteth King for ever.
 11 The LORD will give strength unto his people; the LORD will bless his people with peace.
+PSALM 30
 A Psalm and Song at the dedication of the house of David.
 I WILL extol thee, O LORD; for thou hast lifted me up, and hast not made my foes to rejoice over me.
 2 O LORD my God, I cried unto thee, and thou hast healed me.
@@ -14853,6 +14886,7 @@ I WILL extol thee, O LORD; for thou hast lifted me up, and hast not made my foes
 10 Hear, O LORD, and have mercy upon me: LORD, be thou my helper.
 11 Thou hast turned for me my mourning into dancing: thou hast put off my sackcloth, and girded me with gladness;
 12 To the end that my glory may sing praise to thee, and not be silent. O LORD my God, I will give thanks unto thee for ever.
+PSALM 31
 To the chief Musician, A Psalm of David.
 IN thee, O LORD, do I put my trust; let me never be ashamed: deliver me in thy righteousness.
 2 Bow down thine ear to me; deliver me speedily: be thou my strong rock, for an house of defence to save me.
@@ -14878,6 +14912,7 @@ IN thee, O LORD, do I put my trust; let me never be ashamed: deliver me in thy r
 22 For I said in my haste, I am cut off from before thine eyes: nevertheless thou heardest the voice of my supplications when I cried unto thee.
 23 O love the LORD, all ye his saints: for the LORD preserveth the faithful, and plentifully rewardeth the proud doer.
 24 Be of good courage, and he shall strengthen your heart, all ye that hope in the LORD.
+PSALM 32
 A Psalm of David, Maschil.
 BLESSED is he whose transgression is forgiven, whose sin is covered.
 2 Blessed is the man unto whom the LORD imputeth not iniquity, and in whose spirit there is no guile.
@@ -14890,6 +14925,8 @@ BLESSED is he whose transgression is forgiven, whose sin is covered.
 9 Be ye not as the horse, or as the mule, which have no understanding: whose mouth must be held in with bit and bridle, lest they come near unto thee.
 10 Many sorrows shall be to the wicked: but he that trusteth in the LORD, mercy shall compass him about.
 11 Be glad in the LORD, and rejoice, ye righteous: and shout for joy, all ye that are upright in heart.
+PSALM 33
+REJOICE in the LORD, O ye righteous: for praise is comely for the upright.
 2 Praise the LORD with harp: sing unto him with the psaltery and an instrument of ten strings.
 3 Sing unto him a new song; play skilfully with a loud noise.
 4 For the word of the LORD is right; and all his works are done in truth.
@@ -14911,6 +14948,7 @@ BLESSED is he whose transgression is forgiven, whose sin is covered.
 20 Our soul waiteth for the LORD: he is our help and our shield.
 21 For our heart shall rejoice in him, because we have trusted in his holy name.
 22 Let thy mercy, O LORD, be upon us, according as we hope in thee.
+PSALM 34
 A Psalm of David, when he changed his behaviour before Abimelech; who drove him away, and he departed.
 I WILL bless the LORD at all times: his praise shall continually be in my mouth.
 2 My soul shall make her boast in the LORD: the humble shall hear thereof, and be glad.
@@ -14934,6 +14972,7 @@ I WILL bless the LORD at all times: his praise shall continually be in my mouth.
 20 He keepeth all his bones: not one of them is broken.
 21 Evil shall slay the wicked: and they that hate the righteous shall be desolate.
 22 The LORD redeemeth the soul of his servants: and none of them that trust in him shall be desolate.
+PSALM 35
 A Psalm of David.
 PLEAD my cause, O LORD, with them that strive with me: fight against them that fight against me.
 2 Take hold of shield and buckler, and stand up for mine help.
@@ -14963,6 +15002,7 @@ PLEAD my cause, O LORD, with them that strive with me: fight against them that f
 26 Let them be ashamed and brought to confusion together that rejoice at mine hurt: let them be clothed with shame and dishonour that magnify themselves against me.
 27 Let them shout for joy, and be glad, that favour my righteous cause: yea, let them say continually, Let the LORD be magnified, which hath pleasure in the prosperity of his servant.
 28 And my tongue shall speak of thy righteousness and of thy praise all the day long.
+PSALM 36
 To the chief Musician, A Psalm of David the servant of the LORD.
 THE transgression of the wicked saith within my heart, that there is no fear of God before his eyes.
 2 For he flattereth himself in his own eyes, until his iniquity be found to be hateful.
@@ -14976,6 +15016,7 @@ THE transgression of the wicked saith within my heart, that there is no fear of 
 10 O continue thy lovingkindness unto them that know thee; and thy righteousness to the upright in heart.
 11 Let not the foot of pride come against me, and let not the hand of the wicked remove me.
 12 There are the workers of iniquity fallen: they are cast down, and shall not be able to rise.
+PSALM 37
 A Psalm of David.
 FRET not thyself because of evildoers, neither be thou envious against the workers of iniquity.
 2 For they shall soon be cut down like the grass, and wither as the green herb.
@@ -15017,6 +15058,7 @@ FRET not thyself because of evildoers, neither be thou envious against the worke
 38 But the transgressors shall be destroyed together: the end of the wicked shall be cut off.
 39 But the salvation of the righteous is of the LORD: he is their strength in the time of trouble.
 40 And the LORD shall help them, and deliver them: he shall deliver them from the wicked, and save them, because they trust in him.
+PSALM 38
 A Psalm of David, to bring to remembrance.
 O LORD, rebuke me not in thy wrath: neither chasten me in thy hot displeasure.
 2 For thine arrows stick fast in me, and thy hand presseth me sore.
@@ -15040,6 +15082,7 @@ O LORD, rebuke me not in thy wrath: neither chasten me in thy hot displeasure.
 20 They also that render evil for good are mine adversaries; because I follow the thing that good is.
 21 Forsake me not, O LORD: O my God, be not far from me.
 22 Make haste to help me, O Lord my salvation.
+PSALM 39
 To the chief Musician, even to Jeduthun, A Psalm of David.
 I SAID, I will take heed to my ways, that I sin not with my tongue: I will keep my mouth with a bridle, while the wicked is before me.
 2 I was dumb with silence, I held my peace, even from good; and my sorrow was stirred.
@@ -15054,6 +15097,7 @@ I SAID, I will take heed to my ways, that I sin not with my tongue: I will keep 
 11 When thou with rebukes dost correct man for iniquity, thou makest his beauty to consume away like a moth: surely every man is vanity. Selah.
 12 Hear my prayer, O LORD, and give ear unto my cry; hold not thy peace at my tears: for I am a stranger with thee, and a sojourner, as all my fathers were.
 13 O spare me, that I may recover strength, before I go hence, and be no more.
+PSALM 40
 To the chief Musician, A Psalm of David.
 I WAITED patiently for the LORD; and he inclined unto me, and heard my cry.
 2 He brought me up also out of an horrible pit, out of the miry clay, and set my feet upon a rock, and established my goings.
@@ -15072,6 +15116,7 @@ I WAITED patiently for the LORD; and he inclined unto me, and heard my cry.
 15 Let them be desolate for a reward of their shame that say unto me, Aha, aha.
 16 Let all those that seek thee rejoice and be glad in thee: let such as love thy salvation say continually, The LORD be magnified.
 17 But I am poor and needy; yet the Lord thinketh upon me: thou art my help and my deliverer; make no tarrying, O my God.
+PSALM 41
 To the chief Musician, A Psalm of David.
 BLESSED is he that considereth the poor: the LORD will deliver him in time of trouble.
 2 The LORD will preserve him, and keep him alive; and he shall be blessed upon the earth: and thou wilt not deliver him unto the will of his enemies.
@@ -15086,6 +15131,7 @@ BLESSED is he that considereth the poor: the LORD will deliver him in time of tr
 11 By this I know that thou favourest me, because mine enemy doth not triumph over me.
 12 And as for me, thou upholdest me in mine integrity, and settest me before thy face for ever.
 13 Blessed be the LORD God of Israel from everlasting, and to everlasting. Amen, and Amen.
+PSALM 42
 To the chief Musician, Maschil, for the sons of Korah.
 AS the hart panteth after the water brooks, so panteth my soul after thee, O God.
 2 My soul thirsteth for God, for the living God: when shall I come and appear before God?
@@ -15098,10 +15144,13 @@ AS the hart panteth after the water brooks, so panteth my soul after thee, O God
 9 I will say unto God my rock, Why hast thou forgotten me? why go I mourning because of the oppression of the enemy?
 10 As with a sword in my bones, mine enemies reproach me; while they say daily unto me, Where is thy God?
 11 Why art thou cast down, O my soul? and why art thou disquieted within me? hope thou in God: for I shall yet praise him, who is the health of my countenance, and my God.
+PSALM 43
+JUDGE me, O God, and plead my cause against an ungodly nation: O deliver me from the deceitful and unjust man.
 2 For thou art the God of my strength: why dost thou cast me off? why go I mourning because of the oppression of the enemy?
 3 O send out thy light and thy truth: let them lead me; let them bring me unto thy holy hill, and to thy tabernacles.
 4 Then will I go unto the altar of God, unto God my exceeding joy: yea, upon the harp will I praise thee, O God my God.
 5 Why art thou cast down, O my soul? and why art thou disquieted within me? hope in God: for I shall yet praise him, who is the health of my countenance, and my God.
+PSALM 44
 To the chief Musician for the sons of Korah, Maschil.
 WE have heard with our ears, O God, our fathers have told us, what work thou didst in their days, in the times of old.
 2 How thou didst drive out the heathen with thy hand, and plantedst them; how thou didst afflict the people, and cast them out.
@@ -15129,6 +15178,7 @@ WE have heard with our ears, O God, our fathers have told us, what work thou did
 24 Wherefore hidest thou thy face, and forgettest our affliction and our oppression?
 25 For our soul is bowed down to the dust: our belly cleaveth unto the earth.
 26 Arise for our help, and redeem us for thy mercies’ sake.
+PSALM 45
 To the chief Musician upon Shoshannim, for the sons of Korah, Maschil, A Song of loves.
 MY heart is inditing a good matter: I speak of the things which I have made touching the king: my tongue is the pen of a ready writer.
 2 Thou art fairer than the children of men: grace is poured into thy lips: therefore God hath blessed thee for ever.
@@ -15147,6 +15197,7 @@ MY heart is inditing a good matter: I speak of the things which I have made touc
 15 With gladness and rejoicing shall they be brought: they shall enter into the king’s palace.
 16 Instead of thy fathers shall be thy children, whom thou mayest make princes in all the earth.
 17 I will make thy name to be remembered in all generations: therefore shall the people praise thee for ever and ever.
+PSALM 46
 To the chief Musician for the sons of Korah, A Song upon Alamoth.
 GOD is our refuge and strength, a very present help in trouble.
 2 Therefore will not we fear, though the earth be removed, and though the mountains be carried into the midst of the sea;
@@ -15159,6 +15210,7 @@ GOD is our refuge and strength, a very present help in trouble.
 9 He maketh wars to cease unto the end of the earth; he breaketh the bow, and cutteth the spear in sunder; he burneth the chariot in the fire.
 10 Be still, and know that I am God: I will be exalted among the heathen, I will be exalted in the earth.
 11 The LORD of hosts is with us; the God of Jacob is our refuge. Selah.
+PSALM 47
 To the chief Musician, A Psalm for the sons of Korah.
 O CLAP your hands, all ye people; shout unto God with the voice of triumph.
 2 For the LORD most high is terrible; he is a great King over all the earth.
@@ -15169,6 +15221,7 @@ O CLAP your hands, all ye people; shout unto God with the voice of triumph.
 7 For God is the King of all the earth: sing ye praises with understanding.
 8 God reigneth over the heathen: God sitteth upon the throne of his holiness.
 9 The princes of the people are gathered together, even the people of the God of Abraham: for the shields of the earth belong unto God: he is greatly exalted.
+PSALM 48
 A Song and Psalm for the sons of Korah.
 GREAT is the LORD, and greatly to be praised in the city of our God, in the mountain of his holiness.
 2 Beautiful for situation, the joy of the whole earth, is mount Zion, on the sides of the north, the city of the great King.
@@ -15184,6 +15237,7 @@ GREAT is the LORD, and greatly to be praised in the city of our God, in the moun
 12 Walk about Zion, and go round about her: tell the towers thereof.
 13 Mark ye well her bulwarks, consider her palaces; that ye may tell it to the generation following.
 14 For this God is our God for ever and ever: he will be our guide even unto death.
+PSALM 49
 To the chief Musician, A Psalm for the sons of Korah.
 HEAR this, all ye people; give ear, all ye inhabitants of the world:
 2 Both low and high, rich and poor, together.
@@ -15205,6 +15259,7 @@ HEAR this, all ye people; give ear, all ye inhabitants of the world:
 18 Though while he lived he blessed his soul: and men will praise thee, when thou doest well to thyself.
 19 He shall go to the generation of his fathers; they shall never see light.
 20 Man that is in honour, and understandeth not, is like the beasts that perish.
+PSALM 50
 A Psalm of Asaph.
 THE mighty God, even the LORD, hath spoken, and called the earth from the rising of the sun unto the going down thereof.
 2 Out of Zion, the perfection of beauty, God hath shined.
@@ -15229,6 +15284,7 @@ THE mighty God, even the LORD, hath spoken, and called the earth from the rising
 21 These things hast thou done, and I kept silence; thou thoughtest that I was altogether such an one as thyself: but I will reprove thee, and set them in order before thine eyes.
 22 Now consider this, ye that forget God, lest I tear you in pieces, and there be none to deliver.
 23 Whoso offereth praise glorifieth me: and to him that ordereth his conversation aright will I shew the salvation of God.
+PSALM 51
 To the chief Musician, A Psalm of David, when Nathan the prophet came unto him, after he had gone in to Bath-sheba.
 HAVE mercy upon me, O God, according to thy lovingkindness: according unto the multitude of thy tender mercies blot out my transgressions.
 2 Wash me throughly from mine iniquity, and cleanse me from my sin.
@@ -15249,6 +15305,7 @@ HAVE mercy upon me, O God, according to thy lovingkindness: according unto the m
 17 The sacrifices of God are a broken spirit: a broken and a contrite heart, O God, thou wilt not despise.
 18 Do good in thy good pleasure unto Zion: build thou the walls of Jerusalem.
 19 Then shalt thou be pleased with the sacrifices of righteousness, with burnt offering and whole burnt offering: then shall they offer bullocks upon thine altar.
+PSALM 52
 To the chief Musician, Maschil, A Psalm of David, when Doeg the Edomite came and told Saul, and said unto him, David is come to the house of Ahimelech.
 WHY boastest thou thyself in mischief, O mighty man? the goodness of God endureth continually.
 2 Thy tongue deviseth mischiefs; like a sharp razor, working deceitfully.
@@ -15259,6 +15316,7 @@ WHY boastest thou thyself in mischief, O mighty man? the goodness of God enduret
 7 Lo, this is the man that made not God his strength; but trusted in the abundance of his riches, and strengthened himself in his wickedness.
 8 But I am like a green olive tree in the house of God: I trust in the mercy of God for ever and ever.
 9 I will praise thee for ever, because thou hast done it: and I will wait on thy name; for it is good before thy saints.
+PSALM 53
 To the chief Musician upon Mahalath, Maschil, A Psalm of David.
 THE fool hath said in his heart, There is no God. Corrupt are they, and have done abominable iniquity: there is none that doeth good.
 2 God looked down from heaven upon the children of men, to see if there were any that did understand, that did seek God.
@@ -15266,6 +15324,7 @@ THE fool hath said in his heart, There is no God. Corrupt are they, and have don
 4 Have the workers of iniquity no knowledge? who eat up my people as they eat bread: they have not called upon God.
 5 There were they in great fear, where no fear was: for God hath scattered the bones of him that encampeth against thee: thou hast put them to shame, because God hath despised them.
 6 Oh that the salvation of Israel were come out of Zion! When God bringeth back the captivity of his people, Jacob shall rejoice, and Israel shall be glad.
+PSALM 54
 To the chief Musician on Neginoth, Maschil, A Psalm of David, when the Ziphims came and said to Saul, Doth not David hide himself with us?
 SAVE me, O God, by thy name, and judge me by thy strength.
 2 Hear my prayer, O God; give ear to the words of my mouth.
@@ -15274,6 +15333,7 @@ SAVE me, O God, by thy name, and judge me by thy strength.
 5 He shall reward evil unto mine enemies: cut them off in thy truth.
 6 I will freely sacrifice unto thee: I will praise thy name, O LORD; for it is good.
 7 For he hath delivered me out of all trouble: and mine eye hath seen his desire upon mine enemies.
+PSALM 55
 To the chief Musician on Neginoth, Maschil, A Psalm of David.
 GIVE ear to my prayer, O God; and hide not thyself from my supplication.
 2 Attend unto me, and hear me: I mourn in my complaint, and make a noise;
@@ -15298,6 +15358,7 @@ GIVE ear to my prayer, O God; and hide not thyself from my supplication.
 21 The words of his mouth were smoother than butter, but war was in his heart: his words were softer than oil, yet were they drawn swords.
 22 Cast thy burden upon the LORD, and he shall sustain thee: he shall never suffer the righteous to be moved.
 23 But thou, O God, shalt bring them down into the pit of destruction: bloody and deceitful men shall not live out half their days; but I will trust in thee.
+PSALM 56
 To the chief Musician upon Jonath-elem-rechokim, Michtam of David, when the Philistines took him in Gath.
 BE merciful unto me, O God: for man would swallow me up; he fighting daily oppresseth me.
 2 Mine enemies would daily swallow me up: for they be many that fight against me, O thou most High.
@@ -15312,6 +15373,7 @@ BE merciful unto me, O God: for man would swallow me up; he fighting daily oppre
 11 In God have I put my trust: I will not be afraid what man can do unto me.
 12 Thy vows are upon me, O God: I will render praises unto thee.
 13 For thou hast delivered my soul from death: wilt not thou deliver my feet from falling, that I may walk before God in the light of the living?
+PSALM 57
 To the chief Musician, Al-taschith, Michtam of David, when he fled from Saul in the cave.
 BE merciful unto me, O God, be merciful unto me: for my soul trusteth in thee: yea, in the shadow of thy wings will I make my refuge, until these calamities be overpast.
 2 I will cry unto God most high; unto God that performeth all things for me.
@@ -15324,6 +15386,7 @@ BE merciful unto me, O God, be merciful unto me: for my soul trusteth in thee: y
 9 I will praise thee, O Lord, among the people: I will sing unto thee among the nations.
 10 For thy mercy is great unto the heavens, and thy truth unto the clouds.
 11 Be thou exalted, O God, above the heavens: let thy glory be above all the earth.
+PSALM 58
 To the chief Musician, Al-taschith, Michtam of David.
 DO ye indeed speak righteousness, O congregation? do ye judge uprightly, O ye sons of men?
 2 Yea, in heart ye work wickedness; ye weigh the violence of your hands in the earth.
@@ -15336,6 +15399,7 @@ DO ye indeed speak righteousness, O congregation? do ye judge uprightly, O ye so
 9 Before your pots can feel the thorns, he shall take them away as with a whirlwind, both living, and in his wrath.
 10 The righteous shall rejoice when he seeth the vengeance: he shall wash his feet in the blood of the wicked.
 11 So that a man shall say, Verily there is a reward for the righteous: verily he is a God that judgeth in the earth.
+PSALM 59
 To the chief Musician, Al-taschith, Michtam of David; when Saul sent, and they watched the house to kill him.
 DELIVER me from mine enemies, O my God: defend me from them that rise up against me.
 2 Deliver me from the workers of iniquity, and save me from bloody men.
@@ -15354,6 +15418,7 @@ DELIVER me from mine enemies, O my God: defend me from them that rise up against
 15 Let them wander up and down for meat, and grudge if they be not satisfied.
 16 But I will sing of thy power; yea, I will sing aloud of thy mercy in the morning: for thou hast been my defence and refuge in the day of my trouble.
 17 Unto thee, O my strength, will I sing: for God is my defence, and the God of my mercy.
+PSALM 60
 To the chief Musician upon Shushan-eduth, Michtam of David, to teach; when he strove with Aram-naharaim and with Aram-zobah, when Joab returned, and smote of Edom in the valley of salt twelve thousand.
 O GOD, thou hast cast us off, thou hast scattered us, thou hast been displeased; O turn thyself to us again.
 2 Thou hast made the earth to tremble; thou hast broken it: heal the breaches thereof; for it shaketh.
@@ -15367,6 +15432,7 @@ O GOD, thou hast cast us off, thou hast scattered us, thou hast been displeased;
 10 Wilt not thou, O God, which hadst cast us off? and thou, O God, which didst not go out with our armies?
 11 Give us help from trouble: for vain is the help of man.
 12 Through God we shall do valiantly: for he it is that shall tread down our enemies.
+PSALM 61
 To the chief Musician upon Neginah, A Psalm of David.
 HEAR my cry, O God; attend unto my prayer.
 2 From the end of the earth will I cry unto thee, when my heart is overwhelmed: lead me to the rock that is higher than I.
@@ -15376,6 +15442,7 @@ HEAR my cry, O God; attend unto my prayer.
 6 Thou wilt prolong the king’s life: and his years as many generations.
 7 He shall abide before God for ever: O prepare mercy and truth, which may preserve him.
 8 So will I sing praise unto thy name for ever, that I may daily perform my vows.
+PSALM 62
 To the chief Musician, to Jeduthun, A Psalm of David.
 TRULY my soul waiteth upon God: from him cometh my salvation.
 2 He only is my rock and my salvation; he is my defence; I shall not be greatly moved.
@@ -15389,6 +15456,7 @@ TRULY my soul waiteth upon God: from him cometh my salvation.
 10 Trust not in oppression, and become not vain in robbery: if riches increase, set not your heart upon them.
 11 God hath spoken once; twice have I heard this; that power belongeth unto God.
 12 Also unto thee, O Lord, belongeth mercy: for thou renderest to every man according to his work.
+PSALM 63
 A Psalm of David, when he was in the wilderness of Judah.
 O GOD, thou art my God; early will I seek thee: my soul thirsteth for thee, my flesh longeth for thee in a dry and thirsty land, where no water is;
 2 To see thy power and thy glory, so as I have seen thee in the sanctuary.
@@ -15401,6 +15469,7 @@ O GOD, thou art my God; early will I seek thee: my soul thirsteth for thee, my f
 9 But those that seek my soul, to destroy it, shall go into the lower parts of the earth.
 10 They shall fall by the sword: they shall be a portion for foxes.
 11 But the king shall rejoice in God; every one that sweareth by him shall glory: but the mouth of them that speak lies shall be stopped.
+PSALM 64
 To the chief Musician, A Psalm of David.
 HEAR my voice, O God, in my prayer: preserve my life from fear of the enemy.
 2 Hide me from the secret counsel of the wicked; from the insurrection of the workers of iniquity:
@@ -15412,6 +15481,7 @@ HEAR my voice, O God, in my prayer: preserve my life from fear of the enemy.
 8 So they shall make their own tongue to fall upon themselves: all that see them shall flee away.
 9 And all men shall fear, and shall declare the work of God; for they shall wisely consider of his doing.
 10 The righteous shall be glad in the LORD, and shall trust in him; and all the upright in heart shall glory.
+PSALM 65
 To the chief Musician, A Psalm and Song of David.
 PRAISE waiteth for thee, O God, in Sion: and unto thee shall the vow be performed.
 2 O thou that hearest prayer, unto thee shall all flesh come.
@@ -15426,6 +15496,7 @@ PRAISE waiteth for thee, O God, in Sion: and unto thee shall the vow be performe
 11 Thou crownest the year with thy goodness; and thy paths drop fatness.
 12 They drop upon the pastures of the wilderness: and the little hills rejoice on every side.
 13 The pastures are clothed with flocks; the valleys also are covered over with corn; they shout for joy, they also sing.
+PSALM 66
 To the chief Musician, A Song or Psalm.
 MAKE a joyful noise unto God, all ye lands:
 2 Sing forth the honour of his name: make his praise glorious.
@@ -15447,6 +15518,7 @@ MAKE a joyful noise unto God, all ye lands:
 18 If I regard iniquity in my heart, the Lord will not hear me:
 19 But verily God hath heard me; he hath attended to the voice of my prayer.
 20 Blessed be God, which hath not turned away my prayer, nor his mercy from me.
+PSALM 67
 To the chief Musician on Neginoth, A Psalm or Song.
 GOD be merciful unto us, and bless us; and cause his face to shine upon us; Selah.
 2 That thy way may be known upon earth, thy saving health among all nations.
@@ -15455,6 +15527,7 @@ GOD be merciful unto us, and bless us; and cause his face to shine upon us; Sela
 5 Let the people praise thee, O God; let all the people praise thee.
 6 Then shall the earth yield her increase; and God, even our own God, shall bless us.
 7 God shall bless us; and all the ends of the earth shall fear him.
+PSALM 68
 To the chief Musician, A Psalm or Song of David.
 LET God arise, let his enemies be scattered: let them also that hate him flee before him.
 2 As smoke is driven away, so drive them away: as wax melteth before the fire, so let the wicked perish at the presence of God.
@@ -15491,6 +15564,7 @@ LET God arise, let his enemies be scattered: let them also that hate him flee be
 33 To him that rideth upon the heavens of heavens, which were of old; lo, he doth send out his voice, and that a mighty voice.
 34 Ascribe ye strength unto God: his excellency is over Israel, and his strength is in the clouds.
 35 O God, thou art terrible out of thy holy places: the God of Israel is he that giveth strength and power unto his people. Blessed be God.
+PSALM 69
 To the chief Musician upon Shoshannim, A Psalm of David.
 SAVE me, O God; for the waters are come in unto my soul.
 2 I sink in deep mire, where there is no standing: I am come into deep waters, where the floods overflow me.
@@ -15528,12 +15602,15 @@ SAVE me, O God; for the waters are come in unto my soul.
 34 Let the heaven and earth praise him, the seas, and every thing that moveth therein.
 35 For God will save Zion, and will build the cities of Judah: that they may dwell there, and have it in possession.
 36 The seed also of his servants shall inherit it: and they that love his name shall dwell therein.
+PSALM 70
 To the chief Musician, A Psalm of David, to bring to remembrance.
 MAKE haste, O God, to deliver me; make haste to help me, O LORD.
 2 Let them be ashamed and confounded that seek after my soul: let them be turned backward, and put to confusion, that desire my hurt.
 3 Let them be turned back for a reward of their shame that say, Aha, aha.
 4 Let all those that seek thee rejoice and be glad in thee: and let such as love thy salvation say continually, Let God be magnified.
 5 But I am poor and needy: make haste unto me, O God: thou art my help and my deliverer; O LORD, make no tarrying.
+PSALM 71
+IN thee, O LORD, do I put my trust: let me never be put to confusion.
 2 Deliver me in thy righteousness, and cause me to escape: incline thine ear unto me, and save me.
 3 Be thou my strong habitation, whereunto I may continually resort: thou hast given commandment to save me; for thou art my rock and my fortress.
 4 Deliver me, O my God, out of the hand of the wicked, out of the hand of the unrighteous and cruel man.
@@ -15557,6 +15634,7 @@ MAKE haste, O God, to deliver me; make haste to help me, O LORD.
 22 I will also praise thee with the psaltery, even thy truth, O my God: unto thee will I sing with the harp, O thou Holy One of Israel.
 23 My lips shall greatly rejoice when I sing unto thee; and my soul, which thou hast redeemed.
 24 My tongue also shall talk of thy righteousness all the day long: for they are confounded, for they are brought unto shame, that seek my hurt.
+PSALM 72
 A Psalm for Solomon.
 GIVE the king thy judgments, O God, and thy righteousness unto the king’s son.
 2 He shall judge thy people with righteousness, and thy poor with judgment.
@@ -15578,6 +15656,7 @@ GIVE the king thy judgments, O God, and thy righteousness unto the king’s son.
 18 Blessed be the LORD God, the God of Israel, who only doeth wondrous things.
 19 And blessed be his glorious name for ever: and let the whole earth be filled with his glory; Amen, and Amen.
 20 The prayers of David the son of Jesse are ended.
+PSALM 73
 A Psalm of Asaph.
 TRULY God is good to Israel, even to such as are of a clean heart.
 2 But as for me, my feet were almost gone; my steps had well nigh slipped.
@@ -15607,6 +15686,7 @@ TRULY God is good to Israel, even to such as are of a clean heart.
 26 My flesh and my heart faileth: but God is the strength of my heart, and my portion for ever.
 27 For, lo, they that are far from thee shall perish: thou hast destroyed all them that go a whoring from thee.
 28 But it is good for me to draw near to God: I have put my trust in the Lord GOD, that I may declare all thy works.
+PSALM 74
 Maschil of Asaph.
 O GOD, why hast thou cast us off for ever? why doth thine anger smoke against the sheep of thy pasture?
 2 Remember thy congregation, which thou hast purchased of old; the rod of thine inheritance, which thou hast redeemed; this mount Zion, wherein thou hast dwelt.
@@ -15631,6 +15711,7 @@ O GOD, why hast thou cast us off for ever? why doth thine anger smoke against th
 21 O let not the oppressed return ashamed: let the poor and needy praise thy name.
 22 Arise, O God, plead thine own cause: remember how the foolish man reproacheth thee daily.
 23 Forget not the voice of thine enemies: the tumult of those that rise up against thee increaseth continually.
+PSALM 75
 To the chief Musician, Al-taschith, A Psalm or Song of Asaph.
 UNTO thee, O God, do we give thanks, unto thee do we give thanks: for that thy name is near thy wondrous works declare.
 2 When I shall receive the congregation I will judge uprightly.
@@ -15642,6 +15723,7 @@ UNTO thee, O God, do we give thanks, unto thee do we give thanks: for that thy n
 8 For in the hand of the LORD there is a cup, and the wine is red; it is full of mixture; and he poureth out of the same: but the dregs thereof, all the wicked of the earth shall wring them out, and drink them.
 9 But I will declare for ever; I will sing praises to the God of Jacob.
 10 All the horns of the wicked also will I cut off; but the horns of the righteous shall be exalted.
+PSALM 76
 To the chief Musician on Neginoth, A Psalm or Song of Asaph.
 IN Judah is God known: his name is great in Israel.
 2 In Salem also is his tabernacle, and his dwelling place in Zion.
@@ -15655,6 +15737,7 @@ IN Judah is God known: his name is great in Israel.
 10 Surely the wrath of man shall praise thee: the remainder of wrath shalt thou restrain.
 11 Vow, and pay unto the LORD your God: let all that be round about him bring presents unto him that ought to be feared.
 12 He shall cut off the spirit of princes: he is terrible to the kings of the earth.
+PSALM 77
 To the chief Musician, to Jeduthun, A Psalm of Asaph.
 I CRIED unto God with my voice, even unto God with my voice; and he gave ear unto me.
 2 In the day of my trouble I sought the Lord: my sore ran in the night, and ceased not: my soul refused to be comforted.
@@ -15676,6 +15759,7 @@ I CRIED unto God with my voice, even unto God with my voice; and he gave ear unt
 18 The voice of thy thunder was in the heaven: the lightnings lightened the world: the earth trembled and shook.
 19 Thy way is in the sea, and thy path in the great waters, and thy footsteps are not known.
 20 Thou leddest thy people like a flock by the hand of Moses and Aaron.
+PSALM 78
 Maschil of Asaph.
 GIVE ear, O my people, to my law: incline your ears to the words of my mouth.
 2 I will open my mouth in a parable: I will utter dark sayings of old:
@@ -15749,6 +15833,7 @@ GIVE ear, O my people, to my law: incline your ears to the words of my mouth.
 70 He chose David also his servant, and took him from the sheepfolds:
 71 From following the ewes great with young he brought him to feed Jacob his people, and Israel his inheritance.
 72 So he fed them according to the integrity of his heart; and guided them by the skilfulness of his hands.
+PSALM 79
 A Psalm of Asaph.
 O GOD, the heathen are come into thine inheritance; thy holy temple have they defiled; they have laid Jerusalem on heaps.
 2 The dead bodies of thy servants have they given to be meat unto the fowls of the heaven, the flesh of thy saints unto the beasts of the earth.
@@ -15763,6 +15848,7 @@ O GOD, the heathen are come into thine inheritance; thy holy temple have they de
 11 Let the sighing of the prisoner come before thee; according to the greatness of thy power preserve thou those that are appointed to die;
 12 And render unto our neighbours sevenfold into their bosom their reproach, wherewith they have reproached thee, O Lord.
 13 So we thy people and sheep of thy pasture will give thee thanks for ever: we will shew forth thy praise to all generations.
+PSALM 80
 To the chief Musician upon Shoshannim-Eduth, A Psalm of Asaph.
 GIVE ear, O Shepherd of Israel, thou that leadest Joseph like a flock; thou that dwellest between the cherubims, shine forth.
 2 Before Ephraim and Benjamin and Manasseh stir up thy strength, and come and save us.
@@ -15783,6 +15869,7 @@ GIVE ear, O Shepherd of Israel, thou that leadest Joseph like a flock; thou that
 17 Let thy hand be upon the man of thy right hand, upon the son of man whom thou madest strong for thyself.
 18 So will not we go back from thee: quicken us, and we will call upon thy name.
 19 Turn us again, O LORD God of hosts, cause thy face to shine; and we shall be saved.
+PSALM 81
 To the chief Musician upon Gittith, A Psalm of Asaph.
 SING aloud unto God our strength: make a joyful noise unto the God of Jacob.
 2 Take a psalm, and bring hither the timbrel, the pleasant harp with the psaltery.
@@ -15800,6 +15887,7 @@ SING aloud unto God our strength: make a joyful noise unto the God of Jacob.
 14 I should soon have subdued their enemies, and turned my hand against their adversaries.
 15 The haters of the LORD should have submitted themselves unto him: but their time should have endured for ever.
 16 He should have fed them also with the finest of the wheat: and with honey out of the rock should I have satisfied thee.
+PSALM 82
 A Psalm of Asaph.
 GOD standeth in the congregation of the mighty; he judgeth among the gods.
 2 How long will ye judge unjustly, and accept the persons of the wicked? Selah.
@@ -15809,6 +15897,7 @@ GOD standeth in the congregation of the mighty; he judgeth among the gods.
 6 I have said, Ye are gods; and all of you are children of the most High.
 7 But ye shall die like men, and fall like one of the princes.
 8 Arise, O God, judge the earth: for thou shalt inherit all nations.
+PSALM 83
 A Song or Psalm of Asaph.
 KEEP not thou silence, O God: hold not thy peace, and be not still, O God.
 2 For, lo, thine enemies make a tumult: and they that hate thee have lifted up the head.
@@ -15828,6 +15917,7 @@ KEEP not thou silence, O God: hold not thy peace, and be not still, O God.
 16 Fill their faces with shame; that they may seek thy name, O LORD.
 17 Let them be confounded and troubled for ever; yea, let them be put to shame, and perish:
 18 That men may know that thou, whose name alone is JEHOVAH, art the most high over all the earth.
+PSALM 84
 To the chief Musician upon Gittith, A Psalm for the sons of Korah.
 HOW amiable are thy tabernacles, O LORD of hosts!
 2 My soul longeth, yea, even fainteth for the courts of the LORD: my heart and my flesh crieth out for the living God.
@@ -15841,6 +15931,7 @@ HOW amiable are thy tabernacles, O LORD of hosts!
 10 For a day in thy courts is better than a thousand. I had rather be a doorkeeper in the house of my God, than to dwell in the tents of wickedness.
 11 For the LORD God is a sun and shield: the LORD will give grace and glory: no good thing will he withhold from them that walk uprightly.
 12 O LORD of hosts, blessed is the man that trusteth in thee.
+PSALM 85
 To the chief Musician, A Psalm for the sons of Korah.
 LORD, thou hast been favourable unto thy land: thou hast brought back the captivity of Jacob.
 2 Thou hast forgiven the iniquity of thy people, thou hast covered all their sin. Selah.
@@ -15855,6 +15946,7 @@ LORD, thou hast been favourable unto thy land: thou hast brought back the captiv
 11 Truth shall spring out of the earth; and righteousness shall look down from heaven.
 12 Yea, the LORD shall give that which is good; and our land shall yield her increase.
 13 Righteousness shall go before him; and shall set us in the way of his steps.
+PSALM 86
 A Prayer of David.
 BOW down thine ear, O LORD, hear me: for I am poor and needy.
 2 Preserve my soul; for I am holy: O thou my God, save thy servant that trusteth in thee.
@@ -15873,6 +15965,7 @@ BOW down thine ear, O LORD, hear me: for I am poor and needy.
 15 But thou, O Lord, art a God full of compassion, and gracious, longsuffering, and plenteous in mercy and truth.
 16 O turn unto me, and have mercy upon me; give thy strength unto thy servant, and save the son of thine handmaid.
 17 Shew me a token for good; that they which hate me may see it, and be ashamed: because thou, LORD, hast holpen me, and comforted me.
+PSALM 87
 A Psalm or Song for the sons of Korah.
 HIS foundation is in the holy mountains.
 2 The LORD loveth the gates of Zion more than all the dwellings of Jacob.
@@ -15881,6 +15974,7 @@ HIS foundation is in the holy mountains.
 5 And of Zion it shall be said, This and that man was born in her: and the highest himself shall establish her.
 6 The LORD shall count, when he writeth up the people, that this man was born there. Selah.
 7 As well the singers as the players on instruments shall be there: all my springs are in thee.
+PSALM 88
 A Song or Psalm for the sons of Korah, to the chief Musician upon Mahalath Leannoth, Maschil of Heman the Ezrahite.
 O LORD God of my salvation, I have cried day and night before thee:
 2 Let my prayer come before thee: incline thine ear unto my cry;
@@ -15900,6 +15994,7 @@ O LORD God of my salvation, I have cried day and night before thee:
 16 Thy fierce wrath goeth over me; thy terrors have cut me off.
 17 They came round about me daily like water; they compassed me about together.
 18 Lover and friend hast thou put far from me, and mine acquaintance into darkness.
+PSALM 89
 Maschil of Ethan the Ezrahite.
 I WILL sing of the mercies of the LORD for ever: with my mouth will I make known thy faithfulness to all generations.
 2 For I have said, Mercy shall be built up for ever: thy faithfulness shalt thou establish in the very heavens.
@@ -15953,6 +16048,7 @@ I WILL sing of the mercies of the LORD for ever: with my mouth will I make known
 50 Remember, Lord, the reproach of thy servants; how I do bear in my bosom the reproach of all the mighty people;
 51 Wherewith thine enemies have reproached, O LORD; wherewith they have reproached the footsteps of thine anointed.
 52 Blessed be the LORD for evermore. Amen, and Amen.
+PSALM 90
 A Prayer of Moses the man of God.
 LORD, thou hast been our dwelling place in all generations.
 2 Before the mountains were brought forth, or ever thou hadst formed the earth and the world, even from everlasting to everlasting, thou art God.
@@ -15971,6 +16067,8 @@ LORD, thou hast been our dwelling place in all generations.
 15 Make us glad according to the days wherein thou hast afflicted us, and the years wherein we have seen evil.
 16 Let thy work appear unto thy servants, and thy glory unto their children.
 17 And let the beauty of the LORD our God be upon us: and establish thou the work of our hands upon us; yea, the work of our hands establish thou it.
+PSALM 91
+HE that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty.
 2 I will say of the LORD, He is my refuge and my fortress: my God; in him will I trust.
 3 Surely he shall deliver thee from the snare of the fowler, and from the noisome pestilence.
 4 He shall cover thee with his feathers, and under his wings shalt thou trust: his truth shall be thy shield and buckler.
@@ -15986,6 +16084,7 @@ LORD, thou hast been our dwelling place in all generations.
 14 Because he hath set his love upon me, therefore will I deliver him: I will set him on high, because he hath known my name.
 15 He shall call upon me, and I will answer him: I will be with him in trouble; I will deliver him, and honour him.
 16 With long life will I satisfy him, and shew him my salvation.
+PSALM 92
 A Psalm or Song for the sabbath day.
 IT is a good thing to give thanks unto the LORD, and to sing praises unto thy name, O most High:
 2 To shew forth thy lovingkindness in the morning, and thy faithfulness every night,
@@ -16002,10 +16101,14 @@ IT is a good thing to give thanks unto the LORD, and to sing praises unto thy na
 13 Those that be planted in the house of the LORD shall flourish in the courts of our God.
 14 They shall still bring forth fruit in old age; they shall be fat and flourishing;
 15 To shew that the LORD is upright: he is my rock, and there is no unrighteousness in him.
+PSALM 93
+THE LORD reigneth, he is clothed with majesty; the LORD is clothed with strength, wherewith he hath girded himself: the world also is stablished, that it cannot be moved.
 2 Thy throne is established of old: thou art from everlasting.
 3 The floods have lifted up, O LORD, the floods have lifted up their voice; the floods lift up their waves.
 4 The LORD on high is mightier than the noise of many waters, yea, than the mighty waves of the sea.
 5 Thy testimonies are very sure: holiness becometh thine house, O LORD, for ever.
+PSALM 94
+O LORD God, to whom vengeance belongeth; O God, to whom vengeance belongeth, shew thyself.
 2 Lift up thyself, thou judge of the earth: render a reward to the proud.
 3 LORD, how long shall the wicked, how long shall the wicked triumph?
 4 How long shall they utter and speak hard things? and all the workers of iniquity boast themselves?
@@ -16028,6 +16131,8 @@ IT is a good thing to give thanks unto the LORD, and to sing praises unto thy na
 21 They gather themselves together against the soul of the righteous, and condemn the innocent blood.
 22 But the LORD is my defence; and my God is the rock of my refuge.
 23 And he shall bring upon them their own iniquity, and shall cut them off in their own wickedness; yea, the LORD our God shall cut them off.
+PSALM 95
+O COME, let us sing unto the LORD: let us make a joyful noise to the rock of our salvation.
 2 Let us come before his presence with thanksgiving, and make a joyful noise unto him with psalms.
 3 For the LORD is a great God, and a great King above all gods.
 4 In his hand are the deep places of the earth: the strength of the hills is his also.
@@ -16038,6 +16143,8 @@ IT is a good thing to give thanks unto the LORD, and to sing praises unto thy na
 9 When your fathers tempted me, proved me, and saw my work.
 10 Forty years long was I grieved with this generation, and said, It is a people that do err in their heart, and they have not known my ways:
 11 Unto whom I sware in my wrath that they should not enter into my rest.
+PSALM 96
+O SING unto the LORD a new song: sing unto the LORD, all the earth.
 2 Sing unto the LORD, bless his name; shew forth his salvation from day to day.
 3 Declare his glory among the heathen, his wonders among all people.
 4 For the LORD is great, and greatly to be praised: he is to be feared above all gods.
@@ -16050,6 +16157,8 @@ IT is a good thing to give thanks unto the LORD, and to sing praises unto thy na
 11 Let the heavens rejoice, and let the earth be glad; let the sea roar, and the fulness thereof.
 12 Let the field be joyful, and all that is therein: then shall all the trees of the wood rejoice
 13 Before the LORD: for he cometh, for he cometh to judge the earth: he shall judge the world with righteousness, and the people with his truth.
+PSALM 97
+THE LORD reigneth; let the earth rejoice; let the multitude of isles be glad thereof.
 2 Clouds and darkness are round about him: righteousness and judgment are the habitation of his throne.
 3 A fire goeth before him, and burneth up his enemies round about.
 4 His lightnings enlightened the world: the earth saw, and trembled.
@@ -16061,6 +16170,7 @@ IT is a good thing to give thanks unto the LORD, and to sing praises unto thy na
 10 Ye that love the LORD, hate evil: he preserveth the souls of his saints; he delivereth them out of the hand of the wicked.
 11 Light is sown for the righteous, and gladness for the upright in heart.
 12 Rejoice in the LORD, ye righteous; and give thanks at the remembrance of his holiness.
+PSALM 98
 A Psalm.
 O SING unto the LORD a new song; for he hath done marvellous things: his right hand, and his holy arm, hath gotten him the victory.
 2 The LORD hath made known his salvation: his righteousness hath he openly shewed in the sight of the heathen.
@@ -16071,6 +16181,8 @@ O SING unto the LORD a new song; for he hath done marvellous things: his right h
 7 Let the sea roar, and the fulness thereof; the world, and they that dwell therein.
 8 Let the floods clap their hands: let the hills be joyful together
 9 Before the LORD; for he cometh to judge the earth: with righteousness shall he judge the world, and the people with equity.
+PSALM 99
+THE LORD reigneth; let the people tremble: he sitteth between the cherubims; let the earth be moved.
 2 The LORD is great in Zion; and he is high above all the people.
 3 Let them praise thy great and terrible name; for it is holy.
 4 The king’s strength also loveth judgment; thou dost establish equity, thou executest judgment and righteousness in Jacob.
@@ -16079,12 +16191,14 @@ O SING unto the LORD a new song; for he hath done marvellous things: his right h
 7 He spake unto them in the cloudy pillar: they kept his testimonies, and the ordinance that he gave them.
 8 Thou answeredst them, O LORD our God: thou wast a God that forgavest them, though thou tookest vengeance of their inventions.
 9 Exalt the LORD our God, and worship at his holy hill; for the LORD our God is holy.
+PSALM 100
 A Psalm of praise.
 MAKE a joyful noise unto the LORD, all ye lands.
 2 Serve the LORD with gladness: come before his presence with singing.
 3 Know ye that the LORD he is God: it is he that hath made us, and not we ourselves; we are his people, and the sheep of his pasture.
 4 Enter into his gates with thanksgiving, and into his courts with praise: be thankful unto him, and bless his name.
 5 For the LORD is good; his mercy is everlasting; and his truth endureth to all generations.
+PSALM 101
 A Psalm of David.
 I WILL sing of mercy and judgment: unto thee, O LORD, will I sing.
 2 I will behave myself wisely in a perfect way. O when wilt thou come unto me? I will walk within my house with a perfect heart.
@@ -16094,6 +16208,7 @@ I WILL sing of mercy and judgment: unto thee, O LORD, will I sing.
 6 Mine eyes shall be upon the faithful of the land, that they may dwell with me: he that walketh in a perfect way, he shall serve me.
 7 He that worketh deceit shall not dwell within my house: he that telleth lies shall not tarry in my sight.
 8 I will early destroy all the wicked of the land; that I may cut off all wicked doers from the city of the LORD.
+PSALM 102
 A Prayer of the afflicted, when he is overwhelmed, and poureth out his complaint before the LORD.
 HEAR my prayer, O LORD, and let my cry come unto thee.
 2 Hide not thy face from me in the day when I am in trouble; incline thine ear unto me: in the day when I call answer me speedily.
@@ -16123,6 +16238,7 @@ HEAR my prayer, O LORD, and let my cry come unto thee.
 26 They shall perish, but thou shalt endure: yea, all of them shall wax old like a garment; as a vesture shalt thou change them, and they shall be changed:
 27 But thou art the same, and thy years shall have no end.
 28 The children of thy servants shall continue, and their seed shall be established before thee.
+PSALM 103
 A Psalm of David.
 BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 2 Bless the LORD, O my soul, and forget not all his benefits:
@@ -16146,6 +16262,8 @@ BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 20 Bless the LORD, ye his angels, that excel in strength, that do his commandments, hearkening unto the voice of his word.
 21 Bless ye the LORD, all ye his hosts; ye ministers of his, that do his pleasure.
 22 Bless the LORD, all his works in all places of his dominion: bless the LORD, O my soul.
+PSALM 104
+BLESS the LORD, O my soul. O LORD my God, thou art very great; thou art clothed with honour and majesty.
 2 Who coverest thyself with light as with a garment: who stretchest out the heavens like a curtain:
 3 Who layeth the beams of his chambers in the waters: who maketh the clouds his chariot: who walketh upon the wings of the wind:
 4 Who maketh his angels spirits; his ministers a flaming fire:
@@ -16180,6 +16298,8 @@ BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 33 I will sing unto the LORD as long as I live: I will sing praise to my God while I have my being.
 34 My meditation of him shall be sweet: I will be glad in the LORD.
 35 Let the sinners be consumed out of the earth, and let the wicked be no more. Bless thou the LORD, O my soul. Praise ye the LORD.
+PSALM 105
+O GIVE thanks unto the LORD; call upon his name: make known his deeds among the people.
 2 Sing unto him, sing psalms unto him: talk ye of all his wondrous works.
 3 Glory ye in his holy name: let the heart of them rejoice that seek the LORD.
 4 Seek the LORD, and his strength: seek his face evermore.
@@ -16224,6 +16344,8 @@ BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 43 And he brought forth his people with joy, and his chosen with gladness:
 44 And gave them the lands of the heathen: and they inherited the labour of the people;
 45 That they might observe his statutes, and keep his laws. Praise ye the LORD.
+PSALM 106
+PRAISE ye the LORD. O give thanks unto the LORD; for he is good: for his mercy endureth for ever.
 2 Who can utter the mighty acts of the LORD? who can shew forth all his praise?
 3 Blessed are they that keep judgment, and he that doeth righteousness at all times.
 4 Remember me, O LORD, with the favour that thou bearest unto thy people: O visit me with thy salvation;
@@ -16271,6 +16393,8 @@ BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 46 He made them also to be pitied of all those that carried them captives.
 47 Save us, O LORD our God, and gather us from among the heathen, to give thanks unto thy holy name, and to triumph in thy praise.
 48 Blessed be the LORD God of Israel from everlasting to everlasting: and let all the people say, Amen. Praise ye the LORD.
+PSALM 107
+O GIVE thanks unto the LORD, for he is good: for his mercy endureth for ever.
 2 Let the redeemed of the LORD say so, whom he hath redeemed from the hand of the enemy;
 3 And gathered them out of the lands, from the east, and from the west, from the north, and from the south.
 4 They wandered in the wilderness in a solitary way; they found no city to dwell in.
@@ -16313,6 +16437,7 @@ BLESS the LORD, O my soul: and all that is within me, bless his holy name.
 41 Yet setteth he the poor on high from affliction, and maketh him families like a flock.
 42 The righteous shall see it, and rejoice: and all iniquity shall stop her mouth.
 43 Whoso is wise, and will observe these things, even they shall understand the lovingkindness of the LORD.
+PSALM 108
 A Song or Psalm of David.
 O GOD, my heart is fixed; I will sing and give praise, even with my glory.
 2 Awake, psaltery and harp: I myself will awake early.
@@ -16327,6 +16452,7 @@ O GOD, my heart is fixed; I will sing and give praise, even with my glory.
 11 Wilt not thou, O God, who hast cast us off? and wilt not thou, O God, go forth with our hosts?
 12 Give us help from trouble: for vain is the help of man.
 13 Through God we shall do valiantly: for he it is that shall tread down our enemies.
+PSALM 109
 To the chief Musician, A Psalm of David.
 HOLD not thy peace, O God of my praise;
 2 For the mouth of the wicked and the mouth of the deceitful are opened against me: they have spoken against me with a lying tongue.
@@ -16359,6 +16485,7 @@ HOLD not thy peace, O God of my praise;
 29 Let mine adversaries be clothed with shame, and let them cover themselves with their own confusion, as with a mantle.
 30 I will greatly praise the LORD with my mouth; yea, I will praise him among the multitude.
 31 For he shall stand at the right hand of the poor, to save him from those that condemn his soul.
+PSALM 110
 A Psalm of David.
 THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemies thy footstool.
 2 The LORD shall send the rod of thy strength out of Zion: rule thou in the midst of thine enemies.
@@ -16367,6 +16494,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 5 The Lord at thy right hand shall strike through kings in the day of his wrath.
 6 He shall judge among the heathen, he shall fill the places with the dead bodies; he shall wound the heads over many countries.
 7 He shall drink of the brook in the way: therefore shall he lift up the head.
+PSALM 111
+PRAISE ye the LORD. I will praise the LORD with my whole heart, in the assembly of the upright, and in the congregation.
 2 The works of the LORD are great, sought out of all them that have pleasure therein.
 3 His work is honourable and glorious: and his righteousness endureth for ever.
 4 He hath made his wonderful works to be remembered: the LORD is gracious and full of compassion.
@@ -16376,6 +16505,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 8 They stand fast for ever and ever, and are done in truth and uprightness.
 9 He sent redemption unto his people: he hath commanded his covenant for ever: holy and reverend is his name.
 10 The fear of the LORD is the beginning of wisdom: a good understanding have all they that do his commandments: his praise endureth for ever.
+PSALM 112
+PRAISE ye the LORD. Blessed is the man that feareth the LORD, that delighteth greatly in his commandments.
 2 His seed shall be mighty upon earth: the generation of the upright shall be blessed.
 3 Wealth and riches shall be in his house: and his righteousness endureth for ever.
 4 Unto the upright there ariseth light in the darkness: he is gracious, and full of compassion, and righteous.
@@ -16385,6 +16516,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 8 His heart is established, he shall not be afraid, until he see his desire upon his enemies.
 9 He hath dispersed, he hath given to the poor; his righteousness endureth for ever; his horn shall be exalted with honour.
 10 The wicked shall see it, and be grieved; he shall gnash with his teeth, and melt away: the desire of the wicked shall perish.
+PSALM 113
+PRAISE ye the LORD. Praise, O ye servants of the LORD, praise the name of the LORD.
 2 Blessed be the name of the LORD from this time forth and for evermore.
 3 From the rising of the sun unto the going down of the same the LORD’S name is to be praised.
 4 The LORD is high above all nations, and his glory above the heavens.
@@ -16393,6 +16526,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 7 He raiseth up the poor out of the dust, and lifteth the needy out of the dunghill;
 8 That he may set him with princes, even with the princes of his people.
 9 He maketh the barren woman to keep house, and to be a joyful mother of children. Praise ye the LORD.
+PSALM 114
+WHEN Israel went out of Egypt, the house of Jacob from a people of strange language;
 2 Judah was his sanctuary, and Israel his dominion.
 3 The sea saw it, and fled: Jordan was driven back.
 4 The mountains skipped like rams, and the little hills like lambs.
@@ -16400,6 +16535,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 6 Ye mountains, that ye skipped like rams; and ye little hills, like lambs?
 7 Tremble, thou earth, at the presence of the Lord, at the presence of the God of Jacob;
 8 Which turned the rock into a standing water, the flint into a fountain of waters.
+PSALM 115
+NOT unto us, O LORD, not unto us, but unto thy name give glory, for thy mercy, and for thy truth’s sake.
 2 Wherefore should the heathen say, Where is now their God?
 3 But our God is in the heavens: he hath done whatsoever he hath pleased.
 4 Their idols are silver and gold, the work of men’s hands.
@@ -16417,6 +16554,8 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 16 The heaven, even the heavens, are the LORD’S: but the earth hath he given to the children of men.
 17 The dead praise not the LORD, neither any that go down into silence.
 18 But we will bless the LORD from this time forth and for evermore. Praise the LORD.
+PSALM 116
+I LOVE the LORD, because he hath heard my voice and my supplications.
 2 Because he hath inclined his ear unto me, therefore will I call upon him as long as I live.
 3 The sorrows of death compassed me, and the pains of hell gat hold upon me: I found trouble and sorrow.
 4 Then called I upon the name of the LORD; O LORD, I beseech thee, deliver my soul.
@@ -16435,7 +16574,11 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 17 I will offer to thee the sacrifice of thanksgiving, and will call upon the name of the LORD.
 18 I will pay my vows unto the LORD now in the presence of all his people,
 19 In the courts of the LORD’S house, in the midst of thee, O Jerusalem. Praise ye the LORD.
+PSALM 117
+O PRAISE the LORD, all ye nations: praise him, all ye people.
 2 For his merciful kindness is great toward us: and the truth of the LORD endureth for ever. Praise ye the LORD.
+PSALM 118
+O GIVE thanks unto the LORD; for he is good: because his mercy endureth for ever.
 2 Let Israel now say, that his mercy endureth for ever.
 3 Let the house of Aaron now say, that his mercy endureth for ever.
 4 Let them now that fear the LORD say, that his mercy endureth for ever.
@@ -16464,6 +16607,7 @@ THE LORD said unto my Lord, Sit thou at my right hand, until I make thine enemie
 27 God is the LORD, which hath shewed us light: bind the sacrifice with cords, even unto the horns of the altar.
 28 Thou art my God, and I will praise thee: thou art my God, I will exalt thee.
 29 O give thanks unto the LORD; for he is good: for his mercy endureth for ever.
+PSALM 119
 ALEPH.
 BLESSED are the undefiled in the way, who walk in the law of the LORD.
 2 Blessed are they that keep his testimonies, and that seek him with the whole heart.
@@ -16662,6 +16806,7 @@ TAU.
 174 I have longed for thy salvation, O LORD; and thy law is my delight.
 175 Let my soul live, and it shall praise thee; and let thy judgments help me.
 176 I have gone astray like a lost sheep; seek thy servant; for I do not forget thy commandments.
+PSALM 120
 A Song of degrees.
 IN my distress I cried unto the LORD, and he heard me.
 2 Deliver my soul, O LORD, from lying lips, and from a deceitful tongue.
@@ -16670,6 +16815,7 @@ IN my distress I cried unto the LORD, and he heard me.
 5 Woe is me, that I sojourn in Mesech, that I dwell in the tents of Kedar!
 6 My soul hath long dwelt with him that hateth peace.
 7 I am for peace: but when I speak, they are for war.
+PSALM 121
 A Song of degrees.
 I WILL lift up mine eyes unto the hills, from whence cometh my help.
 2 My help cometh from the LORD, which made heaven and earth.
@@ -16679,6 +16825,7 @@ I WILL lift up mine eyes unto the hills, from whence cometh my help.
 6 The sun shall not smite thee by day, nor the moon by night.
 7 The LORD shall preserve thee from all evil: he shall preserve thy soul.
 8 The LORD shall preserve thy going out and thy coming in from this time forth, and even for evermore.
+PSALM 122
 A Song of degrees of David.
 I WAS glad when they said unto me, Let us go into the house of the LORD.
 2 Our feet shall stand within thy gates, O Jerusalem.
@@ -16689,11 +16836,13 @@ I WAS glad when they said unto me, Let us go into the house of the LORD.
 7 Peace be within thy walls, and prosperity within thy palaces.
 8 For my brethren and companions’ sakes, I will now say, Peace be within thee.
 9 Because of the house of the LORD our God I will seek thy good.
+PSALM 123
 A Song of degrees.
 UNTO thee lift I up mine eyes, O thou that dwellest in the heavens.
 2 Behold, as the eyes of servants look unto the hand of their masters, and as the eyes of a maiden unto the hand of her mistress; so our eyes wait upon the LORD our God, until that he have mercy upon us.
 3 Have mercy upon us, O LORD, have mercy upon us: for we are exceedingly filled with contempt.
 4 Our soul is exceedingly filled with the scorning of those that are at ease, and with the contempt of the proud.
+PSALM 124
 A Song of degrees of David.
 IF it had not been the LORD who was on our side, now may Israel say;
 2 If it had not been the LORD who was on our side, when men rose up against us:
@@ -16703,12 +16852,14 @@ IF it had not been the LORD who was on our side, now may Israel say;
 6 Blessed be the LORD, who hath not given us as a prey to their teeth.
 7 Our soul is escaped as a bird out of the snare of the fowlers: the snare is broken, and we are escaped.
 8 Our help is in the name of the LORD, who made heaven and earth.
+PSALM 125
 A Song of degrees.
 THEY that trust in the LORD shall be as mount Zion, which cannot be removed, but abideth for ever.
 2 As the mountains are round about Jerusalem, so the LORD is round about his people from henceforth even for ever.
 3 For the rod of the wicked shall not rest upon the lot of the righteous; lest the righteous put forth their hands unto iniquity.
 4 Do good, O LORD, unto those that be good, and to them that are upright in their hearts.
 5 As for such as turn aside unto their crooked ways, the LORD shall lead them forth with the workers of iniquity: but peace shall be upon Israel.
+PSALM 126
 A Song of degrees.
 WHEN the LORD turned again the captivity of Zion, we were like them that dream.
 2 Then was our mouth filled with laughter, and our tongue with singing: then said they among the heathen, The LORD hath done great things for them.
@@ -16716,12 +16867,14 @@ WHEN the LORD turned again the captivity of Zion, we were like them that dream.
 4 Turn again our captivity, O LORD, as the streams in the south.
 5 They that sow in tears shall reap in joy.
 6 He that goeth forth and weepeth, bearing precious seed, shall doubtless come again with rejoicing, bringing his sheaves with him.
+PSALM 127
 A Song of degrees for Solomon.
 EXCEPT the LORD build the house, they labour in vain that build it: except the LORD keep the city, the watchman waketh but in vain.
 2 It is vain for you to rise up early, to sit up late, to eat the bread of sorrows: for so he giveth his beloved sleep.
 3 Lo, children are an heritage of the LORD: and the fruit of the womb is his reward.
 4 As arrows are in the hand of a mighty man; so are children of the youth.
 5 Happy is the man that hath his quiver full of them: they shall not be ashamed, but they shall speak with the enemies in the gate.
+PSALM 128
 A Song of degrees.
 BLESSED is every one that feareth the LORD; that walketh in his ways.
 2 For thou shalt eat the labour of thine hands: happy shalt thou be, and it shall be well with thee.
@@ -16729,6 +16882,7 @@ BLESSED is every one that feareth the LORD; that walketh in his ways.
 4 Behold, that thus shall the man be blessed that feareth the LORD.
 5 The LORD shall bless thee out of Zion: and thou shalt see the good of Jerusalem all the days of thy life.
 6 Yea, thou shalt see thy children’s children, and peace upon Israel.
+PSALM 129
 A Song of degrees.
 MANY a time have they afflicted me from my youth, may Israel now say:
 2 Many a time have they afflicted me from my youth: yet they have not prevailed against me.
@@ -16738,6 +16892,7 @@ MANY a time have they afflicted me from my youth, may Israel now say:
 6 Let them be as the grass upon the housetops, which withereth afore it groweth up:
 7 Wherewith the mower filleth not his hand; nor he that bindeth sheaves his bosom.
 8 Neither do they which go by say, The blessing of the LORD be upon you: we bless you in the name of the LORD.
+PSALM 130
 A Song of degrees.
 OUT of the depths have I cried unto thee, O LORD.
 2 Lord, hear my voice: let thine ears be attentive to the voice of my supplications.
@@ -16747,10 +16902,12 @@ OUT of the depths have I cried unto thee, O LORD.
 6 My soul waiteth for the Lord more than they that watch for the morning: I say, more than they that watch for the morning.
 7 Let Israel hope in the LORD: for with the LORD there is mercy, and with him is plenteous redemption.
 8 And he shall redeem Israel from all his iniquities.
+PSALM 131
 A Song of degrees of David.
 LORD, my heart is not haughty, nor mine eyes lofty: neither do I exercise myself in great matters, or in things too high for me.
 2 Surely I have behaved and quieted myself, as a child that is weaned of his mother: my soul is even as a weaned child.
 3 Let Israel hope in the LORD from henceforth and for ever.
+PSALM 132
 A Song of degrees.
 LORD, remember David, and all his afflictions:
 2 How he sware unto the LORD, and vowed unto the mighty God of Jacob;
@@ -16770,14 +16927,18 @@ LORD, remember David, and all his afflictions:
 16 I will also clothe her priests with salvation: and her saints shall shout aloud for joy.
 17 There will I make the horn of David to bud: I have ordained a lamp for mine anointed.
 18 His enemies will I clothe with shame: but upon himself shall his crown flourish.
+PSALM 133
 A Song of degrees of David.
 BEHOLD, how good and how pleasant it is for brethren to dwell together in unity!
 2 It is like the precious ointment upon the head, that ran down upon the beard, even Aaron’s beard: that went down to the skirts of his garments;
 3 As the dew of Hermon, and as the dew that descended upon the mountains of Zion: for there the LORD commanded the blessing, even life for evermore.
+PSALM 134
 A Song of degrees.
 BEHOLD, bless ye the LORD, all ye servants of the LORD, which by night stand in the house of the LORD.
 2 Lift up your hands in the sanctuary, and bless the LORD.
 3 The LORD that made heaven and earth bless thee out of Zion.
+PSALM 135
+PRAISE ye the LORD. Praise ye the name of the LORD; praise him, O ye servants of the LORD.
 2 Ye that stand in the house of the LORD, in the courts of the house of our God,
 3 Praise the LORD; for the LORD is good: sing praises unto his name; for it is pleasant.
 4 For the LORD hath chosen Jacob unto himself, and Israel for his peculiar treasure.
@@ -16798,6 +16959,8 @@ BEHOLD, bless ye the LORD, all ye servants of the LORD, which by night stand in 
 19 Bless the LORD, O house of Israel: bless the LORD, O house of Aaron:
 20 Bless the LORD, O house of Levi: ye that fear the LORD, bless the LORD.
 21 Blessed be the LORD out of Zion, which dwelleth at Jerusalem. Praise ye the LORD.
+PSALM 136
+O GIVE thanks unto the LORD; for he is good: for his mercy endureth for ever.
 2 O give thanks unto the God of gods: for his mercy endureth for ever.
 3 O give thanks to the Lord of lords: for his mercy endureth for ever.
 4 To him who alone doeth great wonders: for his mercy endureth for ever.
@@ -16823,6 +16986,8 @@ BEHOLD, bless ye the LORD, all ye servants of the LORD, which by night stand in 
 24 And hath redeemed us from our enemies: for his mercy endureth for ever.
 25 Who giveth food to all flesh: for his mercy endureth for ever.
 26 O give thanks unto the God of heaven: for his mercy endureth for ever.
+PSALM 137
+BY the rivers of Babylon, there we sat down, yea, we wept, when we remembered Zion.
 2 We hanged our harps upon the willows in the midst thereof.
 3 For there they that carried us away captive required of us a song; and they that wasted us required of us mirth, saying, Sing us one of the songs of Zion.
 4 How shall we sing the LORD’S song in a strange land?
@@ -16831,6 +16996,7 @@ BEHOLD, bless ye the LORD, all ye servants of the LORD, which by night stand in 
 7 Remember, O LORD, the children of Edom in the day of Jerusalem; who said, Rase it, rase it, even to the foundation thereof.
 8 O daughter of Babylon, who art to be destroyed; happy shall he be, that rewardeth thee as thou hast served us.
 9 Happy shall he be, that taketh and dasheth thy little ones against the stones.
+PSALM 138
 A Psalm of David.
 I WILL praise thee with my whole heart: before the gods will I sing praise unto thee.
 2 I will worship toward thy holy temple, and praise thy name for thy lovingkindness and for thy truth: for thou hast magnified thy word above all thy name.
@@ -16840,6 +17006,7 @@ I WILL praise thee with my whole heart: before the gods will I sing praise unto 
 6 Though the LORD be high, yet hath he respect unto the lowly: but the proud he knoweth afar off.
 7 Though I walk in the midst of trouble, thou wilt revive me: thou shalt stretch forth thine hand against the wrath of mine enemies, and thy right hand shall save me.
 8 The LORD will perfect that which concerneth me: thy mercy, O LORD, endureth for ever: forsake not the works of thine own hands.
+PSALM 139
 To the chief Musician, A Psalm of David.
 O LORD, thou hast searched me, and known me.
 2 Thou knowest my downsitting and mine uprising, thou understandest my thought afar off.
@@ -16865,6 +17032,7 @@ O LORD, thou hast searched me, and known me.
 22 I hate them with perfect hatred: I count them mine enemies.
 23 Search me, O God, and know my heart: try me, and know my thoughts:
 24 And see if there be any wicked way in me, and lead me in the way everlasting.
+PSALM 140
 To the chief Musician, A Psalm of David.
 DELIVER me, O LORD, from the evil man: preserve me from the violent man;
 2 Which imagine mischiefs in their heart; continually are they gathered together for war.
@@ -16879,6 +17047,7 @@ DELIVER me, O LORD, from the evil man: preserve me from the violent man;
 11 Let not an evil speaker be established in the earth: evil shall hunt the violent man to overthrow him.
 12 I know that the LORD will maintain the cause of the afflicted, and the right of the poor.
 13 Surely the righteous shall give thanks unto thy name: the upright shall dwell in thy presence.
+PSALM 141
 A Psalm of David.
 LORD, I cry unto thee: make haste unto me; give ear unto my voice, when I cry unto thee.
 2 Let my prayer be set forth before thee as incense; and the lifting up of my hands as the evening sacrifice.
@@ -16890,6 +17059,7 @@ LORD, I cry unto thee: make haste unto me; give ear unto my voice, when I cry un
 8 But mine eyes are unto thee, O GOD the Lord: in thee is my trust; leave not my soul destitute.
 9 Keep me from the snares which they have laid for me, and the gins of the workers of iniquity.
 10 Let the wicked fall into their own nets, whilst that I withal escape.
+PSALM 142
 Maschil of David; A Prayer when he was in the cave.
 I CRIED unto the LORD with my voice; with my voice unto the LORD did I make my supplication.
 2 I poured out my complaint before him; I shewed before him my trouble.
@@ -16898,6 +17068,7 @@ I CRIED unto the LORD with my voice; with my voice unto the LORD did I make my s
 5 I cried unto thee, O LORD: I said, Thou art my refuge and my portion in the land of the living.
 6 Attend unto my cry; for I am brought very low: deliver me from my persecutors; for they are stronger than I.
 7 Bring my soul out of prison, that I may praise thy name: the righteous shall compass me about; for thou shalt deal bountifully with me.
+PSALM 143
 A Psalm of David.
 HEAR my prayer, O LORD, give ear to my supplications: in thy faithfulness answer me, and in thy righteousness.
 2 And enter not into judgment with thy servant: for in thy sight shall no man living be justified.
@@ -16911,6 +17082,7 @@ HEAR my prayer, O LORD, give ear to my supplications: in thy faithfulness answer
 10 Teach me to do thy will; for thou art my God: thy spirit is good; lead me into the land of uprightness.
 11 Quicken me, O LORD, for thy name’s sake: for thy righteousness’ sake bring my soul out of trouble.
 12 And of thy mercy cut off mine enemies, and destroy all them that afflict my soul: for I am thy servant.
+PSALM 144
 A Psalm of David.
 BLESSED be the LORD my strength, which teacheth my hands to war, and my fingers to fight:
 2 My goodness, and my fortress; my high tower, and my deliverer; my shield, and he in whom I trust; who subdueth my people under me.
@@ -16927,6 +17099,7 @@ BLESSED be the LORD my strength, which teacheth my hands to war, and my fingers 
 13 That our garners may be full, affording all manner of store: that our sheep may bring forth thousands and ten thousands in our streets:
 14 That our oxen may be strong to labour; that there be no breaking in, nor going out; that there be no complaining in our streets.
 15 Happy is that people, that is in such a case: yea, happy is that people, whose God is the LORD.
+PSALM 145
 David’s Psalm of praise.
 I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 2 Every day will I bless thee; and I will praise thy name for ever and ever.
@@ -16949,6 +17122,8 @@ I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 19 He will fulfil the desire of them that fear him: he also will hear their cry, and will save them.
 20 The LORD preserveth all them that love him: but all the wicked will he destroy.
 21 My mouth shall speak the praise of the LORD: and let all flesh bless his holy name for ever and ever.
+PSALM 146
+PRAISE ye the LORD. Praise the LORD, O my soul.
 2 While I live will I praise the LORD: I will sing praises unto my God while I have any being.
 3 Put not your trust in princes, nor in the son of man, in whom there is no help.
 4 His breath goeth forth, he returneth to his earth; in that very day his thoughts perish.
@@ -16958,6 +17133,8 @@ I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 8 The LORD openeth the eyes of the blind: the LORD raiseth them that are bowed down: the LORD loveth the righteous:
 9 The LORD preserveth the strangers; he relieveth the fatherless and widow: but the way of the wicked he turneth upside down.
 10 The LORD shall reign for ever, even thy God, O Zion, unto all generations. Praise ye the LORD.
+PSALM 147
+PRAISE ye the LORD: for it is good to sing praises unto our God; for it is pleasant; and praise is comely.
 2 The LORD doth build up Jerusalem: he gathereth together the outcasts of Israel.
 3 He healeth the broken in heart, and bindeth up their wounds.
 4 He telleth the number of the stars; he calleth them all by their names.
@@ -16977,6 +17154,8 @@ I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 18 He sendeth out his word, and melteth them: he causeth his wind to blow, and the waters flow.
 19 He sheweth his word unto Jacob, his statutes and his judgments unto Israel.
 20 He hath not dealt so with any nation: and as for his judgments, they have not known them. Praise ye the LORD.
+PSALM 148
+PRAISE ye the LORD. Praise ye the LORD from the heavens: praise him in the heights.
 2 Praise ye him, all his angels: praise ye him, all his hosts.
 3 Praise ye him, sun and moon: praise him, all ye stars of light.
 4 Praise him, ye heavens of heavens, and ye waters that be above the heavens.
@@ -16990,6 +17169,8 @@ I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 12 Both young men, and maidens; old men, and children:
 13 Let them praise the name of the LORD: for his name alone is excellent; his glory is above the earth and heaven.
 14 He also exalteth the horn of his people, the praise of all his saints; even of the children of Israel, a people near unto him. Praise ye the LORD.
+PSALM 149
+PRAISE ye the LORD. Sing unto the LORD a new song, and his praise in the congregation of saints.
 2 Let Israel rejoice in him that made him: let the children of Zion be joyful in their King.
 3 Let them praise his name in the dance: let them sing praises unto him with the timbrel and harp.
 4 For the LORD taketh pleasure in his people: he will beautify the meek with salvation.
@@ -16998,6 +17179,8 @@ I WILL extol thee, my God, O king; and I will bless thy name for ever and ever.
 7 To execute vengeance upon the heathen, and punishments upon the people;
 8 To bind their kings with chains, and their nobles with fetters of iron;
 9 To execute upon them the judgment written: this honour have all his saints. Praise ye the LORD.
+PSALM 150
+PRAISE ye the LORD. Praise God in his sanctuary: praise him in the firmament of his power.
 2 Praise him for his mighty acts: praise him according to his excellent greatness.
 3 Praise him with the sound of the trumpet: praise him with the psaltery and harp.
 4 Praise him with the timbrel and dance: praise him with stringed instruments and organs.

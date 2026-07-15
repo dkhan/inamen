@@ -30,6 +30,7 @@ module Inamen
       processed = []
       books = []
       in_corpus = false
+      current_book = nil
       expecting_implicit_opening = false
 
       lines.each_with_index do |line, index|
@@ -41,6 +42,7 @@ module Inamen
           raise Error, "too many books (max #{MAX_BOOKS})" if books.length > MAX_BOOKS
 
           in_corpus = true
+          current_book = book
           expecting_implicit_opening = false
           processed << book
           next
@@ -48,13 +50,13 @@ module Inamen
 
         next unless in_corpus
         classification = LineClassifier.classify(stripped)
-        keep = corpus_line?(stripped, classification) ||
+        keep = corpus_line?(stripped, classification, current_book) ||
           (expecting_implicit_opening && implicit_opening_line?(stripped, classification))
         next unless keep
 
         normalized = normalize_chapter_line(stripped)
         processed << normalized
-        expecting_implicit_opening = chapter_or_superscription_line?(normalized, classification)
+        expecting_implicit_opening = chapter_or_superscription_line?(normalized, classification, current_book)
       end
 
       validate_bible_corpus!(processed, books)
@@ -92,8 +94,9 @@ module Inamen
       end
     end
 
-    def corpus_line?(stripped, classification)
+    def corpus_line?(stripped, classification, current_book)
       return true if stripped.match?(CHAPTER_LINE)
+      return true if psalm_chapter_line?(stripped, current_book)
       return true if stripped.match?(VERSE_LINE)
 
       %i[psalm_heading psalm_119_division colophon].include?(classification)
@@ -107,13 +110,23 @@ module Inamen
       stripped.match?(/\p{L}/)
     end
 
-    def chapter_or_superscription_line?(line, classification)
-      line.match?(CHAPTER_LINE) || %i[psalm_heading psalm_119_division].include?(classification)
+    def chapter_or_superscription_line?(line, classification, current_book)
+      line.match?(CHAPTER_LINE) ||
+        psalm_chapter_line?(line, current_book) ||
+        %i[psalm_heading psalm_119_division].include?(classification)
+    end
+
+    def psalm_chapter_line?(stripped, current_book)
+      current_book == "Psalms" && CountingService.psalm_chapter_line?(stripped, in_psalms: true)
+    end
+
+    def chapter_marker?(line)
+      line.match?(CHAPTER_LINE) || CountingService.psalm_chapter_line?(line, in_psalms: true)
     end
 
     def validate_bible_corpus!(lines, books)
       raise Error, "no canonical Bible books found" if books.empty?
-      raise Error, "no chapters found" unless lines.any? { |line| line.match?(CHAPTER_LINE) }
+      raise Error, "no chapters found" unless lines.any? { |line| chapter_marker?(line) }
       raise Error, "no numbered verses found" unless lines.any? { |line| line.match?(VERSE_LINE) }
 
       unknown_books = books - BibleBooks::ALL

@@ -42,6 +42,30 @@ RSpec.describe Inamen::BibleTextPreprocessor do
     end
   end
 
+  it "keeps Psalm chapter titles, superscriptions, and implicit verse openings" do
+    text = <<~TEXT
+      Psalms
+      PSALM 1
+      Blessed is the man that walketh not in the counsel of the ungodly.
+      2 But his delight is in the law of the LORD.
+
+      PSALM 2
+      A Psalm of David.
+      Why do the heathen rage?
+      2 The kings of the earth set themselves.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+
+      expect(result.books).to eq(["Psalms"])
+      expect(result.lines).to include("PSALM 1", "PSALM 2")
+      expect(result.lines).to include("A Psalm of David.")
+      expect(result.lines).to include("Blessed is the man that walketh not in the counsel of the ungodly.")
+      expect(result.lines).to include("Why do the heathen rage?")
+    end
+  end
+
   it "rejects binary files" do
     with_text_file("Genesis\x00Chapter 1") do |path|
       expect { described_class.from_file(path) }.to raise_error(described_class::Error, /binary/)
