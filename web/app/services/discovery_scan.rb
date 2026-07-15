@@ -520,6 +520,16 @@ class DiscoveryScan
     ["discovery_verses/v31", *shared_cache_components(params, edition)]
   end
 
+  def self.verses_display_cache_key_for(edition, params, offset:, limit:, partial:)
+    [
+      "discovery_verses_html/v1",
+      partial.to_s,
+      offset.to_i,
+      limit.to_i,
+      *shared_cache_components(params, edition)
+    ]
+  end
+
   def self.shared_cache_components(params, edition)
     p = params.is_a?(Params) ? params : normalize(params)
     terms_digest =

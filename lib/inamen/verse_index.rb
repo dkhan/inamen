@@ -76,7 +76,7 @@ module Inamen
       )
     end
 
-    def self.chapter_index_for(cache_key, lines:, prebuilt_path: nil)
+    def self.chapter_index_for(cache_key, lines: nil, prebuilt_path: nil)
       @edition_chapter_indices[cache_key] ||= load_or_build_chapter_index(lines, prebuilt_path)
     end
 
@@ -153,6 +153,8 @@ module Inamen
       if prebuilt_path && File.file?(prebuilt_path)
         load_chapter_index_file(prebuilt_path)
       else
+        raise ArgumentError, "lines are required to build a chapter index" unless lines
+
         build_chapter_index(lines)
       end
     end

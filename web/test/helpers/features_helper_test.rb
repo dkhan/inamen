@@ -18,20 +18,19 @@ class FeaturesHelperTest < ActionView::TestCase
     )
   end
 
-  test "MATCH for a saved feature loads only generic search criteria" do
+  test "MATCH for a saved feature loads generic search criteria and a durable feature id" do
     feature = create_saved_feature
     captured = nil
 
     DiscoverQueryStore.stub(:write, ->(_token, query) { captured = query; "tok" }) do
       path = feature_discover_path_for(feature.url_id, edition: EDITION_ID)
       assert_includes path, "dq=tok"
+      assert_includes path, "feature=#{feature.url_id}"
       assert_includes path, "auto_scan=1"
     end
 
-    # Only generic search criteria are stored — no feature identity/source.
-    assert_equal %w[mode search_selection search_phrases], captured.keys
-    refute captured.key?("from_feature")
-    refute captured.key?(:from_feature)
+    assert_equal %w[mode search_selection search_phrases from_feature], captured.keys
+    assert_equal feature.url_id, captured["from_feature"]
     assert_equal "word_count", captured["mode"]
     assert_equal({ "0" => { "phrase" => "peter" } }, captured["search_phrases"])
   end

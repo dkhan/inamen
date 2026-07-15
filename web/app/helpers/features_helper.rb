@@ -45,10 +45,11 @@ module FeaturesHelper
       store_query = {
         "mode" => saved_feature.mode,
         "search_selection" => saved_feature.search_selection,
-        "search_phrases" => saved_feature.search_phrases
+        "search_phrases" => saved_feature.search_phrases,
+        "from_feature" => saved_feature.url_id
       }
       token = DiscoverQueryStore.write(nil, store_query)
-      return discoveries_path(edition: edition, dq: token, auto_scan: "1")
+      return discoveries_path(edition: edition, dq: token, feature: saved_feature.url_id, auto_scan: "1")
     end
 
     query = FeatureDiscoverLink.query_for(feature_id, edition_id: edition)

@@ -7,7 +7,7 @@ require_relative "token_pattern"
 module Inamen
   # Enumerate verse-level search hits for discovery word-count scans.
   module VerseMatchQuery
-    DISPLAY_LIMIT = 500
+    DISPLAY_LIMIT = 100
 
     Hit = Struct.new(:book, :chapter, :verse, :bucket, :word_index, :word_count, :search_index, keyword_init: true) do
       def position_key

@@ -46,11 +46,25 @@ class EditionContext
   end
 
   def chapter_index
+    prebuilt_path = verse_index_prebuilt_path
     @chapter_index ||= Inamen::VerseIndex.chapter_index_for(
       cache_key,
-      lines: lines,
-      prebuilt_path: verse_index_prebuilt_path
+      lines: File.file?(prebuilt_path.to_s) ? nil : lines,
+      prebuilt_path: prebuilt_path
     )
+  end
+
+  def books
+    @books ||= begin
+      known = Array(edition.metadata["books"]).presence || chapter_index.keys
+      known.select { |book| chapter_index.key?(book) }
+           .sort_by { |book| Inamen::BibleBooks::ALL.index(book) || Inamen::BibleBooks::ALL.length }
+    end
+  end
+
+  def chapter_numbers(book)
+    @chapter_numbers ||= {}
+    @chapter_numbers[book.to_s] ||= chapter_index.fetch(book.to_s, {}).keys.sort
   end
 
   def verse_map

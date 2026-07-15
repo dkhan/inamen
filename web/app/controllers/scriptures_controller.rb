@@ -3,7 +3,6 @@
 class ScripturesController < ApplicationController
   include EditionSelectable
 
-  before_action :warm_edition
   before_action :assign_chapter_context, only: :chapter
   after_action :remember_chapter, only: :chapter
 
@@ -37,9 +36,11 @@ class ScripturesController < ApplicationController
     @colophon_text = @edition.chapter_colophon(book: @book, chapter: @chapter)
     @highlight_extra_bucket = highlight_extra_bucket?
     @highlight_scroll_target = highlight_scroll_target
+    @scripture_books = @edition.books
+    @scripture_chapters = @edition.chapter_numbers(@book)
 
-    @prev_chapter = Inamen::CanonNavigation.prev_chapter(@book, @chapter)
-    @next_chapter = Inamen::CanonNavigation.next_chapter(@book, @chapter)
+    @prev_chapter = previous_chapter_ref
+    @next_chapter = next_chapter_ref
     @title = "#{@book} #{@chapter}"
   end
 
@@ -48,10 +49,6 @@ class ScripturesController < ApplicationController
   end
 
   private
-
-  def warm_edition
-    @edition.warm! if @edition
-  end
 
   def assign_chapter_context
     @book = params[:book].to_s
@@ -87,5 +84,29 @@ class ScripturesController < ApplicationController
     return "v#{@highlight_verse}" if @highlight_verse.positive? && @highlight_indices.any?
 
     nil
+  end
+
+  def previous_chapter_ref
+    chapters = @edition.chapter_numbers(@book)
+    index = chapters.index(@chapter)
+    return { book: @book, chapter: chapters[index - 1] } if index&.positive?
+
+    book_index = @edition.books.index(@book)
+    return nil unless book_index&.positive?
+
+    previous_book = @edition.books[book_index - 1]
+    { book: previous_book, chapter: @edition.chapter_numbers(previous_book).last }
+  end
+
+  def next_chapter_ref
+    chapters = @edition.chapter_numbers(@book)
+    index = chapters.index(@chapter)
+    return { book: @book, chapter: chapters[index + 1] } if index && index < chapters.length - 1
+
+    book_index = @edition.books.index(@book)
+    return nil unless book_index && book_index < @edition.books.length - 1
+
+    next_book = @edition.books[book_index + 1]
+    { book: next_book, chapter: @edition.chapter_numbers(next_book).first }
   end
 end

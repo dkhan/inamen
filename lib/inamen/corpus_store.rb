@@ -145,6 +145,7 @@ module Inamen
           CREATE INDEX IF NOT EXISTS idx_tokens_norm_bucket ON tokens (token_norm, bucket);
           CREATE INDEX IF NOT EXISTS idx_tokens_testament ON tokens (testament, bucket);
           CREATE INDEX IF NOT EXISTS idx_tokens_book ON tokens (book, bucket);
+          CREATE INDEX IF NOT EXISTS idx_tokens_ref_bucket ON tokens (book, chapter, verse, bucket, word_index);
 
           CREATE TABLE IF NOT EXISTS token_counts (
             token_norm TEXT NOT NULL,

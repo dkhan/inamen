@@ -20,16 +20,18 @@ class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
       WordRow.new(pattern: "Amen", case_sensitive: true, count: 77, spellings: {}, exclude: false, overlap: false)
     ]
     run_counts_validate = nil
-    enqueue_validate = nil
+    run_verses_validate = nil
     cached = false
 
     DiscoverQueryStore.stub(:fetch, query) do
       DiscoverQueryStore.stub(:write, token) do
         DiscoveryScan.stub(:valid_search_terms?, ->(*) { raise "auto-scan should not validate saved feature criteria" }) do
           DiscoveryScan.stub(:counts_cached?, ->(*) { cached }) do
-            DiscoveryScan.stub(:run_counts, ->(*, **kwargs) { run_counts_validate = kwargs[:validate]; cached = true; rows }) do
-              DiscoveryScan.stub(:enqueue_verses!, ->(*, **kwargs) { enqueue_validate = kwargs[:validate]; nil }) do
-                get discoveries_path(edition: "kjv_normalized", dq: token, auto_scan: "1")
+            DiscoveryScan.stub(:verses_cached?, ->(*) { false }) do
+              DiscoveryScan.stub(:run_counts, ->(*, **kwargs) { run_counts_validate = kwargs[:validate]; cached = true; rows }) do
+                DiscoveryScan.stub(:run_verses, ->(*, **kwargs) { run_verses_validate = kwargs[:validate]; nil }) do
+                  get discoveries_path(edition: "kjv_normalized", dq: token, auto_scan: "1")
+                end
               end
             end
           end
@@ -42,6 +44,36 @@ class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "search_phrases[1][phrase]", "Amen"
     assert_select "input[name=?][checked]", "search_phrases[1][case_sensitive]"
     assert_equal false, run_counts_validate
-    assert_equal false, enqueue_validate
+    assert_equal false, run_verses_validate
+  end
+
+  test "scan reuses cached counts without validating phrases again" do
+    query = {
+      "mode" => "word_count",
+      "search_selection" => { "submitted" => "1", "all_books" => "1" },
+      "search_phrases" => {
+        "0" => { "phrase" => "beginning" }
+      }
+    }
+    token = "dq-token"
+    ran_verses = false
+
+    DiscoverQueryStore.stub(:fetch, query) do
+      DiscoverQueryStore.stub(:write, token) do
+        DiscoveryScan.stub(:valid_search_terms?, ->(*) { raise "cached scan should not validate" }) do
+          DiscoveryScan.stub(:counts_cached?, true) do
+            DiscoveryScan.stub(:run_verses, ->(*) { ran_verses = true; nil }) do
+              post scan_discoveries_path(edition: "kjv_normalized", dq: token)
+            end
+          end
+        end
+      end
+    end
+
+    assert_response :redirect
+    assert_includes response.location, "/discover"
+    assert_includes response.location, "edition=kjv_normalized"
+    assert_includes response.location, "query_terms=beginning"
+    assert_equal true, ran_verses
   end
 end

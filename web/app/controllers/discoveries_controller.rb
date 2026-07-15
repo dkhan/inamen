@@ -18,12 +18,6 @@ class DiscoveriesController < ApplicationController
       @file_stats = DiscoveryScan.read_cached(@edition, @scan_params)
     else
       @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
-      if @scan_params.mode == "word_count"
-        @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
-        if @verse_result
-          DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: @rows)
-        end
-      end
     end
   end
 
@@ -39,24 +33,27 @@ class DiscoveriesController < ApplicationController
       return
     end
 
+    if @edition.corpus_ready? && !DiscoveryScan.verses_cached?(@edition, @scan_params)
+      DiscoveryScan.run_verses(@edition, @scan_params, force: false, validate: false)
+    end
+
     if DiscoveryScan.verses_cached?(@edition, @scan_params)
-      rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
-      @verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
       offset = [params[:offset].to_i, 0].max
       limit = Inamen::VerseMatchQuery::DISPLAY_LIMIT
-      DiscoveryScan.prepare_verses_for_display!(@edition, @verse_result, rows: rows, offset: offset, limit: limit)
       if params[:offset].present?
-        render partial: "verse_result_rows",
-               locals: {
-                 edition: @edition,
-                 verse_result: @verse_result,
-                 offset: offset,
-                 limit: limit
-               },
-               layout: false
+        render_cached_verses_partial(
+          partial: "verse_result_rows",
+          cache_partial: :rows,
+          offset: offset,
+          limit: limit
+        )
       else
-        render partial: "verse_results", locals: { edition: @edition, verse_result: @verse_result },
-               layout: false
+        render_cached_verses_partial(
+          partial: "verse_results",
+          cache_partial: :full,
+          offset: 0,
+          limit: limit
+        )
       end
       return
     end
@@ -87,13 +84,13 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if scan_params.mode == "word_count" && !DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
+    if params[:refresh] != "1" && DiscoveryScan.counts_cached?(edition, scan_params)
+      run_or_enqueue_verses!(edition, scan_params, validate: false)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
 
-    if params[:refresh] != "1" && DiscoveryScan.counts_cached?(edition, scan_params)
-      run_or_enqueue_verses!(edition, scan_params)
+    if scan_params.mode == "word_count" && !DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -158,10 +155,11 @@ class DiscoveriesController < ApplicationController
   def maybe_run_feature_auto_scan!
     return unless params[:auto_scan] == "1"
     return unless @scan_params.mode == "word_count"
-    return if DiscoveryScan.counts_cached?(@edition, @scan_params)
     return unless @edition.corpus_ready?
 
-    DiscoveryScan.run_counts(@edition, @scan_params, force: false, validate: false)
+    unless DiscoveryScan.counts_cached?(@edition, @scan_params)
+      DiscoveryScan.run_counts(@edition, @scan_params, force: false, validate: false)
+    end
     run_or_enqueue_verses!(@edition, @scan_params, validate: false)
   end
 
@@ -194,7 +192,7 @@ class DiscoveriesController < ApplicationController
   end
 
   def scan_param_hash
-    stored = stored_discover_query
+    stored = stored_discover_query || feature_discover_query
     hash = {
       mode: params[:mode],
       divisible_by: params[:divisible_by],
@@ -270,7 +268,39 @@ class DiscoveriesController < ApplicationController
   end
 
   def run_or_enqueue_verses!(edition, scan_params, force: false, validate: true)
-    DiscoveryScan.enqueue_verses!(edition, scan_params, force: force, validate: validate)
+    if edition.corpus_ready?
+      DiscoveryScan.run_verses(edition, scan_params, force: force, validate: validate)
+    else
+      DiscoveryScan.enqueue_verses!(edition, scan_params, force: force, validate: validate)
+    end
+  end
+
+  def render_cached_verses_partial(partial:, cache_partial:, offset:, limit:)
+    cache_key = DiscoveryScan.verses_display_cache_key_for(
+      @edition,
+      @scan_params,
+      offset: offset,
+      limit: limit,
+      partial: cache_partial
+    )
+
+    html = Rails.cache.fetch(cache_key, expires_in: 7.days) do
+      rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
+      verse_result = DiscoveryScan.read_verses_cached(@edition, @scan_params)
+      DiscoveryScan.prepare_verses_for_display!(@edition, verse_result, rows: rows, offset: offset, limit: limit)
+      render_to_string(
+        partial: partial,
+        locals: {
+          edition: @edition,
+          verse_result: verse_result,
+          offset: offset,
+          limit: limit
+        },
+        layout: false
+      )
+    end
+
+    render html: html.html_safe, layout: false
   end
 
   def invalid_word_count_phrases?
@@ -287,6 +317,25 @@ class DiscoveriesController < ApplicationController
   def discover_search_phrases_hash(raw_phrases = nil)
     raw = search_phrases_param_hash(raw_phrases) if raw_phrases.present?
     raw = stored_discover_query&.dig("search_phrases") if raw.blank?
+    raw = feature_discover_query&.dig("search_phrases") if raw.blank?
     raw || {}
+  end
+
+  def feature_discover_query
+    return @feature_discover_query if defined?(@feature_discover_query)
+
+    feature_id = params[:feature].presence || stored_discover_query&.dig("from_feature").presence
+    @feature_discover_query =
+      if SavedFeature.url_id?(feature_id)
+        feature = SavedFeature.find_by_url_id!(feature_id)
+        {
+          "mode" => feature.mode,
+          "search_selection" => feature.search_selection,
+          "search_phrases" => feature.search_phrases,
+          "from_feature" => feature.url_id
+        }
+      end
+  rescue ActiveRecord::RecordNotFound
+    @feature_discover_query = nil
   end
 end

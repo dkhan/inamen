@@ -42,4 +42,5 @@
 
   document.addEventListener("DOMContentLoaded", init);
   document.addEventListener("turbo:load", init);
+  window.addEventListener("pageshow", init);
 })();

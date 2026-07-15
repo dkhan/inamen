@@ -31,7 +31,6 @@
   // verses have loaded. Text inputs use readOnly (still submitted); other
   // controls are disabled.
   function setBusy(discoveryForm, busy) {
-    if (isBusy(discoveryForm) === busy) return;
     if (busy) {
       discoveryForm.dataset.scanBusy = "true";
     } else {
@@ -269,6 +268,20 @@
     initAutoScan(discoveryForm);
   }
 
+  function restoreAfterHistoryNavigation() {
+    const discoveryForm = form();
+    if (!discoveryForm) return;
+
+    cancelScheduledScan();
+    delete discoveryForm.dataset.scanPending;
+
+    if (discoveryForm.dataset.resultsReady === "true") {
+      markScanned(discoveryForm);
+    }
+
+    refreshBusyFromPage(discoveryForm);
+  }
+
   function initAutoScan(discoveryForm) {
     if (discoveryForm.dataset.autoScan !== "true") return;
     if (discoveryForm.dataset.resultsReady === "true") return;
@@ -291,4 +304,5 @@
 
   document.addEventListener("DOMContentLoaded", init);
   document.addEventListener("turbo:load", init);
+  window.addEventListener("pageshow", restoreAfterHistoryNavigation);
 })();

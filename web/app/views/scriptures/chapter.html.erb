@@ -1,6 +1,29 @@
 <% content_for :title, "#{@title} — Scripture — Inamen" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "scripture_navigation", defer: true %>
+<% end %>
 
 <section class="panel scripture-panel">
+  <div class="scripture-picker">
+    <label>
+      Book
+      <%= select_tag :scripture_book,
+          options_for_select(@scripture_books, @book),
+          id: "scripture-book-select",
+          data: {
+            chapters: @scripture_books.to_h { |book| [book, @edition.chapter_numbers(book)] }.to_json,
+            path_template: scripture_chapter_path(book: "__BOOK__", chapter: "__CHAPTER__", edition: @edition.edition_id)
+          } %>
+    </label>
+
+    <label>
+      Chapter
+      <%= select_tag :scripture_chapter,
+          options_for_select(@scripture_chapters, @chapter),
+          id: "scripture-chapter-select" %>
+    </label>
+  </div>
+
   <nav class="scripture-chapter-nav" aria-label="Chapter navigation">
   <% if @prev_chapter %>
     <%= link_to "← Prev", scripture_chapter_link(@prev_chapter, edition_id: @edition.edition_id), class: "scripture-nav-button" %>
