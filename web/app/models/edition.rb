@@ -27,10 +27,14 @@ class Edition < ApplicationRecord
   end
 
   def lines
-    File.readlines(corpus_text_path, chomp: true)
+    @lines ||= if metadata.to_h["processed_path"].present?
+      File.readlines(corpus_text_path, chomp: true)
+    else
+      Inamen::BibleTextPreprocessor.from_file(source_path).lines
+    end
   end
 
   def source_lines
-    File.readlines(source_path, chomp: true)
+    @source_lines ||= File.readlines(source_path, chomp: true)
   end
 end

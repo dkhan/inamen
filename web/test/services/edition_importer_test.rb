@@ -26,6 +26,8 @@ class EditionImporterTest < ActiveSupport::TestCase
     assert_predicate result.edition, :persisted?
     assert_equal "sample_import", result.edition.short_name
     assert_equal %w[Genesis Tobit], result.edition.metadata["books"]
+    assert_nil result.edition.metadata["processed_path"]
+    assert_equal File.expand_path(file.path), result.edition.source_path
     assert File.file?(result.paths.fetch(:corpus))
     assert File.file?(result.paths.fetch(:word_stream))
   ensure

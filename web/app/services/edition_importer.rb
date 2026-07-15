@@ -1,13 +1,8 @@
 # frozen_string_literal: true
 
 require "digest"
-require "fileutils"
 
 class EditionImporter
-  IMPORT_ROOT = Rails.root.join("..", "data", "imported_editions").expand_path
-  ORIGINAL_ROOT = IMPORT_ROOT.join("originals")
-  PROCESSED_ROOT = IMPORT_ROOT.join("processed")
-
   Result = Struct.new(:edition, :paths, keyword_init: true)
 
   def self.import!(file:, type:, name: nil, force: true)
@@ -15,7 +10,7 @@ class EditionImporter
   end
 
   def initialize(file:, type:, name:, force:)
-    @file = Pathname(file)
+    @file = Pathname(file).expand_path
     @type = type.to_s
     @name = name.to_s.strip.presence
     @force = force
@@ -26,28 +21,22 @@ class EditionImporter
 
     result = Inamen::BibleTextPreprocessor.from_file(@file)
     short_name = unique_short_name
-    original_dest = original_text_path(short_name)
-    processed_dest = processed_text_path(short_name)
-
-    FileUtils.mkdir_p(ORIGINAL_ROOT)
-    FileUtils.mkdir_p(PROCESSED_ROOT)
-    FileUtils.cp(@file, original_dest)
-    File.write(processed_dest, result.lines.join("\n") + "\n", mode: "w:UTF-8")
 
     edition = Edition.find_or_initialize_by(short_name: short_name)
+    remove_previous_generated_text_copies!(edition) if edition.persisted?
     edition.assign_attributes(
       name: @name || display_name_from_filename,
       corpus_type: @type,
-      source_path: original_dest.to_s,
+      source_path: @file.to_s,
       source_filename: @file.basename.to_s,
-      source_checksum: Digest::SHA256.file(original_dest).hexdigest,
-      byte_size: original_dest.size,
+      source_checksum: Digest::SHA256.file(@file).hexdigest,
+      byte_size: @file.size,
       imported_at: Time.current,
-      metadata: { books: result.books, processed_path: processed_dest.to_s }
+      metadata: { books: result.books }
     )
     edition.save!
 
-    paths = build_artifacts!(edition)
+    paths = build_artifacts!(edition, lines: result.lines)
     Result.new(edition: edition, paths: paths)
   rescue Inamen::BibleTextPreprocessor::Error => e
     raise ArgumentError, e.message
@@ -77,20 +66,26 @@ class EditionImporter
     @file.basename(".*").to_s.tr("_-", " ").squeeze(" ").split.map(&:capitalize).join(" ")
   end
 
-  def original_text_path(short_name)
-    ORIGINAL_ROOT.join("#{short_name}.txt")
-  end
-
-  def processed_text_path(short_name)
-    PROCESSED_ROOT.join("#{short_name}.txt")
-  end
-
   def slug(value)
     value.to_s.downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_+|_+\z/, "")
   end
 
-  def build_artifacts!(edition)
-    lines = edition.lines
+  def remove_previous_generated_text_copies!(edition)
+    [edition.source_path, edition.metadata.to_h["processed_path"]].compact.each do |path|
+      next unless generated_text_copy?(path)
+      next if File.expand_path(path) == @file.to_s
+
+      File.delete(path) if File.file?(path)
+    end
+  end
+
+  def generated_text_copy?(path)
+    expanded = File.expand_path(path)
+    root = Rails.root.join("..", "data", "imported_editions").expand_path.to_s
+    expanded.start_with?("#{root}/")
+  end
+
+  def build_artifacts!(edition, lines:)
     corpus = Inamen::CorpusPublisher.build_prebuilt!(
       edition.edition_id,
       text_path: edition.corpus_text_path,
