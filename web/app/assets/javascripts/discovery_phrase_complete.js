@@ -269,8 +269,7 @@
     return checkbox ? checkbox.checked : false;
   }
 
-  function updateRow(row, options = {}) {
-    const userInitiated = options.userInitiated === true;
+  function updateRow(row) {
     const input = row.querySelector(".search-phrase-input");
     const preview = row.querySelector("[data-phrase-preview]");
     const suggestions = row.querySelector("[data-phrase-suggestions]");
@@ -303,7 +302,6 @@
       return;
     }
 
-    const wasCanSearch = row.dataset.canSearch === "true";
     const analysis = analyzePhrase(phrase, rowCaseSensitive(row));
     preview.innerHTML = renderPreview(analysis);
     preview.hidden = false;
@@ -322,11 +320,6 @@
           applySuggestion(input, word);
           updateRow(row);
           document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
-          if (row.dataset.canSearch === "true") {
-            document.dispatchEvent(
-              new CustomEvent("discovery:schedule-scan", { detail: { rememberFocus: true, trigger: input } })
-            );
-          }
         });
         item.appendChild(button);
         suggestions.appendChild(item);
@@ -337,12 +330,6 @@
     }
 
     document.dispatchEvent(new CustomEvent("discovery:phrase-validity-changed"));
-
-    if (userInitiated && analysis.canSearch && !wasCanSearch) {
-      document.dispatchEvent(
-        new CustomEvent("discovery:schedule-scan", { detail: { rememberFocus: true, trigger: input } })
-      );
-    }
   }
 
   function applySuggestion(input, word) {
@@ -366,7 +353,7 @@
     const input = row.querySelector(".search-phrase-input");
     if (!input) return;
 
-    input.addEventListener("input", () => updateRow(row, { userInitiated: true }));
+    input.addEventListener("input", () => updateRow(row));
     input.addEventListener("focus", () => updateRow(row));
     row.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
       checkbox.addEventListener("change", () => updateRow(row));

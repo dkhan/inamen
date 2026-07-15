@@ -245,7 +245,7 @@
     document.addEventListener("discovery:phrase-validity-changed", () => {
       const results = document.querySelector("[data-discovery-results]");
       if (!results) return;
-      results.hidden = !canScan(discoveryForm);
+      results.hidden = !canScan(discoveryForm) || shouldScan(discoveryForm);
     });
 
     document.addEventListener("discovery:schedule-scan", (event) => {
@@ -265,7 +265,6 @@
     }
 
     refreshBusyFromPage(discoveryForm);
-    initAutoScan(discoveryForm);
   }
 
   function restoreAfterHistoryNavigation() {
@@ -280,26 +279,6 @@
     }
 
     refreshBusyFromPage(discoveryForm);
-  }
-
-  function initAutoScan(discoveryForm) {
-    if (discoveryForm.dataset.autoScan !== "true") return;
-    if (discoveryForm.dataset.resultsReady === "true") return;
-
-    const tryAutoScan = () => {
-      if (!canScan(discoveryForm)) return false;
-      cancelScheduledScan();
-      scheduleScan(discoveryForm);
-      return true;
-    };
-
-    if (tryAutoScan()) return;
-
-    document.addEventListener("discovery:phrase-validity-changed", function onValidity() {
-      if (tryAutoScan()) {
-        document.removeEventListener("discovery:phrase-validity-changed", onValidity);
-      }
-    });
   }
 
   document.addEventListener("DOMContentLoaded", init);
