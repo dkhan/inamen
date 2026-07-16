@@ -8,17 +8,18 @@ require "test_helper"
 class SavedFeatureCatalogTest < ActiveSupport::TestCase
   WordRow = Struct.new(:count, :exclude, :overlap, keyword_init: true)
 
-  def edition(id)
-    double = Struct.new(:edition_id).new(id)
+  def edition(id, language: "en")
+    double = Struct.new(:edition_id, :language).new(id, language)
     def double.corpus_ready? = true
     def double.warm! = nil
     double
   end
 
-  def saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
+  def saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized", language: "en")
     SavedFeature.create!(
       name: "Peter",
       original_edition_id: original,
+      language: language,
       scope_label: "All texts",
       unit: unit,
       mode: "word_count",
@@ -131,6 +132,23 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
 
     assert_equal 2, feature.feature_editions.count
     assert_equal %w[concord kjv_normalized], feature.feature_editions.pluck(:edition_id).sort
+  end
+
+  test "rows_for_edition only includes features for the edition language" do
+    english = saved_feature(language: "en")
+    russian = saved_feature(original: "russian_synodal_77", language: "ru")
+    russian.feature_editions.create!(
+      edition_id: "russian_synodal_77",
+      actual: 158,
+      status: FeatureEdition::STATUS_MATCH,
+      processing_state: :verified,
+      verified_at: Time.current
+    )
+
+    rows = SavedFeatureCatalog.rows_for_edition(edition("russian_synodal_77", language: "ru"))
+
+    assert_equal [russian.url_id], rows.map(&:id)
+    assert_nil english.feature_editions.find_by(edition_id: "russian_synodal_77")
   end
 
   test "verification never changes the feature's expected value or original edition" do

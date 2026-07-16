@@ -12,7 +12,7 @@ module Inamen
     CHAPTER_LINE = /\A(?:chapter\s+)?\d+\z/i
     VERSE_LINE = /\A\d+\s+\S/
 
-    Result = Struct.new(:lines, :books, keyword_init: true)
+    Result = Struct.new(:lines, :books, :language, :canon, keyword_init: true)
 
     class Error < StandardError; end
 
@@ -27,6 +27,8 @@ module Inamen
     def process
       validate_file!
       lines = decoded_lines
+      return process_russian_synodal(lines) if russian_synodal?(lines)
+
       processed = []
       books = []
       in_corpus = false
@@ -60,10 +62,93 @@ module Inamen
       end
 
       validate_bible_corpus!(processed, books)
-      Result.new(lines: processed, books: books)
+      Result.new(lines: processed, books: books, language: "en", canon: "generic")
     end
 
     private
+
+    RUSSIAN_BOOK_TITLES = {
+      "Бытие" => "Genesis",
+      "Исход" => "Exodus",
+      "Левит" => "Leviticus",
+      "Числа" => "Numbers",
+      "Второзаконие" => "Deuteronomy",
+      "Книга Иисуса Навина" => "Joshua",
+      "Книга Судей израилевых" => "Judges",
+      "Книга Руфи" => "Ruth",
+      "Первая книга Царств" => "1 Samuel",
+      "Вторая книга Царств" => "2 Samuel",
+      "Третья книга Царств" => "1 Kings",
+      "Четвертая книга Царств" => "2 Kings",
+      "Первая книга Паралипоменон" => "1 Chronicles",
+      "Вторая книга Паралипоменон" => "2 Chronicles",
+      "Первая книга Ездры" => "Ezra",
+      "Книга Неемии" => "Nehemiah",
+      "Вторая книга Ездры" => "1 Esdras",
+      "Книга Товита" => "Tobit",
+      "Книга Иудифи" => "Judith",
+      "Книга Есфири" => "Esther",
+      "Книга Иова" => "Job",
+      "Псалтирь" => "Psalms",
+      "Притчи Соломона" => "Proverbs",
+      "Книга Екклезиаста" => "Ecclesiastes",
+      "Песнь песней Соломона" => "Song of Solomon",
+      "Книга Премудрости Соломона" => "Wisdom of Solomon",
+      "Книга Премудрости Иисуса, сына Сирахова" => "Sirach",
+      "Книга пророка Исаии" => "Isaiah",
+      "Книга пророка Иеремии" => "Jeremiah",
+      "Плач Иеремии" => "Lamentations",
+      "Послание Иеремии" => "Letter of Jeremiah",
+      "Книга пророка Варуха" => "Baruch",
+      "Книга пророка Иезекииля" => "Ezekiel",
+      "Книга пророка Даниила" => "Daniel",
+      "Книга пророка Осии" => "Hosea",
+      "Книга пророка Иоиля" => "Joel",
+      "Книга пророка Амоса" => "Amos",
+      "Книга пророка Авдия" => "Obadiah",
+      "Книга пророка Ионы" => "Jonah",
+      "Книга пророка Михея" => "Micah",
+      "Книга пророка Наума" => "Nahum",
+      "Книга пророка Аввакума" => "Habakkuk",
+      "Книга пророка Софонии" => "Zephaniah",
+      "Книга пророка Аггея" => "Haggai",
+      "Книга пророка Захарии" => "Zechariah",
+      "Книга пророка Малахии" => "Malachi",
+      "Первая книга Маккавейская" => "1 Maccabees",
+      "Вторая книга Маккавейская" => "2 Maccabees",
+      "Третья книга Маккавейская" => "3 Maccabees",
+      "Третья книга Ездры" => "2 Esdras",
+      "От Матфея святое благовествование" => "Matthew",
+      "От Марка святое благовествование" => "Mark",
+      "От Луки святое благовествование" => "Luke",
+      "От Иоанна святое благовествование" => "John",
+      "Деяния святых апостолов" => "Acts",
+      "Соборное послание святого апостола Иакова" => "James",
+      "Первое соборное послание святого апостола Петра" => "1 Peter",
+      "Второе соборное послание святого апостола Петра" => "2 Peter",
+      "Первое соборное послание святого апостола Иоанна" => "1 John",
+      "Второе соборное послание святого апостола Иоанна" => "2 John",
+      "Третье соборное послание святого апостола Иоанна" => "3 John",
+      "Соборное послание святого апостола Иуды" => "Jude",
+      "Послание к Римлянам святого апостола Павла" => "Romans",
+      "Первое послание к Коринфянам святого апостола Павла" => "1 Corinthians",
+      "Второе послание к Коринфянам святого апостола Павла" => "2 Corinthians",
+      "Послание к Галатам святого апостола Павла" => "Galatians",
+      "Послание к Ефесянам святого апостола Павла" => "Ephesians",
+      "Послание к Филиппийцам святого апостола Павла" => "Philippians",
+      "Послание к Колоссянам святого апостола Павла" => "Colossians",
+      "Первое послание к Фессалоникийцам (Солунянам) святого апостола Павла" => "1 Thessalonians",
+      "Второе послание к Фессалоникийцам (Солунянам) святого апостола Павла" => "2 Thessalonians",
+      "Первое послание к Тимофею святого апостола Павла" => "1 Timothy",
+      "Второе послание к Тимофею святого апостола Павла" => "2 Timothy",
+      "Послание к Титу святого апостола Павла" => "Titus",
+      "Послание к Филимону святого апостола Павла" => "Philemon",
+      "Послание к Евреям святого апостола Павла" => "Hebrews",
+      "Откровение святого Иоанна Богослова" => "Revelation"
+    }.freeze
+
+    RUSSIAN_VERSE_LINE = /\A(\d+)\s+(.+)\z/m
+    INTERNAL_SPECIAL_PREFIX = LineClassifier::IMPORTED_SPECIAL_PREFIX
 
     def validate_file!
       raise Error, "file does not exist: #{@path}" unless @path.file?
@@ -80,6 +165,118 @@ module Inamen
 
     def decoded_lines
       @text.lines(chomp: true)
+    end
+
+    def russian_synodal?(lines)
+      lines.first(100).any? { |line| normalize_russian_title(line) == "Бытие" }
+    end
+
+    def process_russian_synodal(lines)
+      processed = []
+      books = []
+      current_book = nil
+      current_verse = nil
+      special_section = false
+      skip_until = -1
+
+      flush_verse = lambda do
+        next unless current_verse
+
+        processed << current_verse
+        current_verse = nil
+      end
+
+      lines.each_with_index do |line, index|
+        next if index <= skip_until
+
+        stripped = KjvLine.strip(line)
+        next if stripped.empty?
+
+        if (match = russian_book_at(lines, index))
+          flush_verse.call
+          book, consumed = match
+          books << book unless books.include?(book)
+          raise Error, "too many books (max #{MAX_BOOKS})" if books.length > MAX_BOOKS
+
+          processed << book
+          current_book = book
+          special_section = false
+          skip_until = index + consumed - 1
+          next
+        end
+
+        next unless current_book
+
+        if russian_special_heading?(stripped)
+          flush_verse.call
+          special_section = true
+          processed << special_line(stripped)
+          next
+        end
+
+        if stripped.match?(CHAPTER_LINE)
+          flush_verse.call
+          special_section = false
+          processed << (current_book == "Psalms" ? "PSALM #{stripped}" : "CHAPTER #{stripped}")
+          next
+        end
+
+        if special_section
+          flush_verse.call
+          processed << special_line(stripped)
+          next
+        end
+
+        if (m = stripped.match(RUSSIAN_VERSE_LINE))
+          flush_verse.call
+          current_verse = "#{m[1]} #{m[2]}"
+        elsif current_verse
+          current_verse << " #{stripped}"
+        end
+      end
+
+      flush_verse.call
+      validate_bible_corpus!(processed, books)
+      Result.new(lines: processed, books: books, language: "ru", canon: "russian_synodal_77")
+    end
+
+    def russian_book_at(lines, index)
+      current = normalize_russian_title(lines[index])
+      if (book = RUSSIAN_BOOK_TITLES[current])
+        return [book, 1]
+      end
+
+      following = next_non_empty_line(lines, index + 1)
+      return nil unless following
+
+      combined = normalize_russian_title("#{current} #{following.first}")
+      book = RUSSIAN_BOOK_TITLES[combined]
+      [book, following.last - index + 1] if book
+    end
+
+    def next_non_empty_line(lines, start_index)
+      (start_index...lines.length).each do |idx|
+        stripped = KjvLine.strip(lines[idx])
+        return [stripped, idx] unless stripped.empty?
+      end
+      nil
+    end
+
+    def normalize_russian_title(text)
+      text.to_s
+          .unicode_normalize(:nfkc)
+          .strip
+          .delete_suffix("*")
+          .strip
+          .squeeze(" ")
+    end
+
+    def russian_special_heading?(stripped)
+      stripped == "Предисловие" || stripped.start_with?("[МОЛИТВА МАНАССИИ")
+    end
+
+    def special_line(stripped)
+      "#{INTERNAL_SPECIAL_PREFIX}#{stripped}"
     end
 
     def book_at(lines, index, stripped)

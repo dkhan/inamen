@@ -224,6 +224,19 @@ module DiscoveriesHelper
     end
   end
 
+  def discovery_word_match_summary(rows, scan_params, summary: nil)
+    scope_label = format_discovery_scope_label(summary&.scope_label || scan_params.search_selection.label)
+    occurrences = summary&.occurrences || discovery_word_count_total(rows)
+
+    text = "Found #{number_with_delimiter(occurrences)} word match(es)"
+    if summary
+      text += " in #{number_with_delimiter(summary.verses)} Verse(s) in " \
+              "#{number_with_delimiter(summary.chapters)} Chapter(s) in " \
+              "#{number_with_delimiter(summary.books)} Book(s)"
+    end
+    "#{text} within #{scope_label}"
+  end
+
   def discovery_verse_match_summary(summary)
     scope_label = format_discovery_scope_label(summary.scope_label)
     "Found #{number_with_delimiter(summary.occurrences)} Occurrence(s) in " \

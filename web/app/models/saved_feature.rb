@@ -13,6 +13,11 @@ class SavedFeature < ApplicationRecord
   WORD_COUNT_UNITS = [UNIT_OCCURRENCES, UNIT_VERSES].freeze
   FILE_STATS_UNITS = [UNIT_TOKENS, UNIT_CHARACTERS].freeze
   UNITS = (WORD_COUNT_UNITS + FILE_STATS_UNITS).freeze
+  DEFAULT_LANGUAGE = "en"
+  LANGUAGE_LABELS = {
+    "en" => "English",
+    "ru" => "Russian"
+  }.freeze
 
   # What kind of corpus a feature is meant to be verified against.
   FEATURE_TYPES = { bible: "bible", general_text: "general_text", both: "both" }.freeze
@@ -28,6 +33,7 @@ class SavedFeature < ApplicationRecord
 
   validates :name, presence: true
   validates :original_edition_id, presence: true
+  validates :language, presence: true
   validates :feature_type, presence: true
   validates :scope_label, presence: true
   validates :unit, presence: true, inclusion: { in: UNITS }
@@ -37,6 +43,7 @@ class SavedFeature < ApplicationRecord
   validates :search_phrases, presence: true, unless: :file_stats?
 
   before_validation :ensure_search_selection
+  before_validation :ensure_language
 
   def url_id
     "#{URL_PREFIX}#{id}"
@@ -62,6 +69,14 @@ class SavedFeature < ApplicationRecord
     description.presence || DEFAULT_DESCRIPTION
   end
 
+  def display_scope_label
+    return scope_label if file_stats?
+
+    self.class.scope_label_for(search_selection).presence || scope_label
+  rescue ArgumentError, TypeError
+    scope_label
+  end
+
   def self.url_id?(value)
     value.to_s.start_with?(URL_PREFIX)
   end
@@ -70,6 +85,10 @@ class SavedFeature < ApplicationRecord
     raise ActiveRecord::RecordNotFound unless url_id?(value)
 
     find(value.to_s.delete_prefix(URL_PREFIX))
+  end
+
+  def self.for_language(language)
+    where(language: language.presence || DEFAULT_LANGUAGE)
   end
 
   def to_scan_params
@@ -119,5 +138,9 @@ class SavedFeature < ApplicationRecord
     return if search_selection.is_a?(Hash) && search_selection.present?
 
     self.search_selection = Inamen::SearchSelection.default.to_query_hash
+  end
+
+  def ensure_language
+    self.language = DEFAULT_LANGUAGE if language.blank?
   end
 end

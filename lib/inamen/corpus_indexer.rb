@@ -47,7 +47,8 @@ module Inamen
           emit_line_tokens(block, book, chapter, 0, s, CorpusStore::BUCKET_PSALM_HEADING, testament,
                            event.lineno)
         elsif colophon_event?(event)
-          emit_line_tokens(block, book, chapter, 0, s, CorpusStore::BUCKET_COLOPHON, testament, event.lineno)
+          emit_line_tokens(block, book, chapter, 0, special_text(s), CorpusStore::BUCKET_COLOPHON, testament,
+                           event.lineno)
         end
 
         next unless d[:verse_text_words].to_i.positive?
@@ -74,6 +75,11 @@ module Inamen
       classification == :colophon
     end
     private_class_method :colophon_event?
+
+    def self.special_text(text)
+      text.to_s.delete_prefix(LineClassifier::IMPORTED_SPECIAL_PREFIX)
+    end
+    private_class_method :special_text
 
     def self.emit_line_tokens(block, book, chapter, verse, text, bucket, testament, lineno)
       emit_text_tokens(block, book, chapter, verse, text, bucket, testament, lineno)

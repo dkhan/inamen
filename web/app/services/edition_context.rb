@@ -33,6 +33,10 @@ class EditionContext
     File.basename(path)
   end
 
+  def language
+    edition.language
+  end
+
   def lines
     @lines ||= edition.lines
   end
@@ -56,9 +60,12 @@ class EditionContext
 
   def books
     @books ||= begin
-      known = Array(edition.metadata["books"]).presence || chapter_index.keys
-      known.select { |book| chapter_index.key?(book) }
-           .sort_by { |book| Inamen::BibleBooks::ALL.index(book) || Inamen::BibleBooks::ALL.length }
+      known = Array(edition.metadata["books"]).presence
+      if known
+        known.select { |book| chapter_index.key?(book) }
+      else
+        chapter_index.keys.sort_by { |book| Inamen::BibleBooks::ALL.index(book) || Inamen::BibleBooks::ALL.length }
+      end
     end
   end
 

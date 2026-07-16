@@ -4,8 +4,6 @@
   <% if verse_result.verses.blank? %>
     <p class="hint">No verse matches.</p>
   <% else %>
-  <p class="discovery-verse-summary"><%= discovery_verse_match_summary(verse_result.summary) %></p>
-
   <ol class="discovery-verse-list">
     <%= render "verse_result_rows",
         edition: edition,

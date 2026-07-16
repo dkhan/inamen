@@ -23,6 +23,7 @@ module Inamen
       '\AIt\ was\ written\ to\ .+\bfrom\b'
     ].freeze
     COLOPHON_LINE = Regexp.new(COLOPHON_SUBPATTERNS.join("|"), Regexp::IGNORECASE | Regexp::EXTENDED)
+    IMPORTED_SPECIAL_PREFIX = "@@INAMEN_SPECIAL@@ "
 
     def self.classify(line)
       s = KjvLine.strip(line)
@@ -33,6 +34,7 @@ module Inamen
       return :psalm_119_division if PsalmHeading.stanza_label?(s)
       return :verse if s.match?(VERSE_LINE)
       return :psalm_heading if PsalmHeading.match?(s)
+      return :colophon if s.start_with?(IMPORTED_SPECIAL_PREFIX)
       return :colophon if s.match?(COLOPHON_LINE)
       return :book_title if book_title?(s)
       # Letter lines that did not match an explicit rule (e.g. unnumbered psalm openers).

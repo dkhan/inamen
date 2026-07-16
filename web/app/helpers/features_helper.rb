@@ -87,6 +87,16 @@ module FeaturesHelper
     FEATURE_TYPE_LABELS.fetch(value.to_s, value.to_s.tr("_", " ").capitalize)
   end
 
+  def feature_language_options(selected = nil)
+    known = Edition.distinct.pluck(:metadata).filter_map { |metadata| metadata.to_h["language"].presence }
+    languages = (SavedFeature::LANGUAGE_LABELS.keys + known + [selected.presence]).compact.uniq
+    options_for_select(languages.map { |language| [feature_language_label(language), language] }, selected)
+  end
+
+  def feature_language_label(value)
+    SavedFeature::LANGUAGE_LABELS.fetch(value.to_s, value.to_s.upcase)
+  end
+
   def saved_feature_row?(row)
     true
   end

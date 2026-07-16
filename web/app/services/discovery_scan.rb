@@ -385,6 +385,18 @@ class DiscoveryScan
     verse_result&.summary&.verses.to_i
   end
 
+  def self.word_count_summary(edition, params, rows:, force: false, validate: false)
+    p = params.is_a?(Params) ? params : normalize(params)
+    return nil unless p.mode == "word_count"
+
+    verse_result = read_verses_cached(edition, p)
+    if verse_result.nil? && edition.corpus_ready?
+      verse_result = run_verses(edition, p, force: force, validate: validate)
+    end
+    align_verse_summary_with_counts!(verse_result, rows)
+    verse_result&.summary
+  end
+
   def self.align_verse_summary_with_counts!(verse_result, rows)
     return verse_result unless verse_result&.summary
 
@@ -517,12 +529,12 @@ class DiscoveryScan
   end
 
   def self.verses_cache_key_for(edition, params)
-    ["discovery_verses/v31", *shared_cache_components(params, edition)]
+    ["discovery_verses/v33", *shared_cache_components(params, edition)]
   end
 
   def self.verses_display_cache_key_for(edition, params, offset:, limit:, partial:)
     [
-      "discovery_verses_html/v1",
+      "discovery_verses_html/v3",
       partial.to_s,
       offset.to_i,
       limit.to_i,

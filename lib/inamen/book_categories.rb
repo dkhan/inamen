@@ -47,7 +47,49 @@ module Inamen
         categories_for(testament).find { |c| c.id == category_id.to_sym }&.books || []
       end
 
+      def label_for_books(books)
+        normalized = normalize_books(books)
+        return nil if normalized.empty?
+        return "whole Bible" if same_books?(normalized, all_books)
+        return "Old Testament" if same_books?(normalized, ot_books)
+        return "New Testament" if same_books?(normalized, nt_books)
+        return "Apocrypha" if same_books?(normalized, apocrypha_books)
+
+        exact_category = tree.flat_map(&:categories).find { |category| same_books?(normalized, category.books) }
+        return exact_category.label if exact_category
+
+        category_labels = category_labels_for_exact_cover(normalized)
+        return category_labels.join(", ") if category_labels.any?
+
+        normalized.join(", ")
+      end
+
       private
+
+      def normalize_books(books)
+        Array(books).select { |book| book_set.include?(book) }
+                    .uniq
+                    .sort_by { |book| all_books.index(book) }
+      end
+
+      def same_books?(left, right)
+        left.sort == right.sort
+      end
+
+      def category_labels_for_exact_cover(books)
+        remaining = books.dup
+        labels = []
+        tree.each do |testament|
+          testament.categories.each do |category|
+            next unless (category.books - remaining).empty?
+
+            labels << category.label
+            remaining -= category.books
+          end
+        end
+
+        remaining.empty? ? labels : []
+      end
 
       def ot_category_defs
         [

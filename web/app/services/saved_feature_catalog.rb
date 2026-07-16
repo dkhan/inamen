@@ -14,7 +14,9 @@ class SavedFeatureCatalog
 
   class << self
     def rows_for_edition(edition, force: false)
-      SavedFeature.order(:name).map { |saved_feature| row_for(saved_feature, edition, force: force) }
+      SavedFeature.for_language(edition.language).order(:name).map do |saved_feature|
+        row_for(saved_feature, edition, force: force)
+      end
     end
 
     def row_for(saved_feature, edition, force: false)
@@ -26,7 +28,7 @@ class SavedFeatureCatalog
         count: record.actual,
         expected: saved_feature.expected_count,
         unit: saved_feature.unit,
-        scope: saved_feature.scope_label,
+        scope: saved_feature.display_scope_label,
         match: record.status_match?,
         kjvcode_expected: nil,
         kjvcode_match: nil,
@@ -40,8 +42,11 @@ class SavedFeatureCatalog
     # show page to display actuals/status across all editions.
     def results_for_all_editions(saved_feature, force: false)
       EditionContext.all_ids.map do |edition_id|
-        verified_edition(saved_feature, EditionContext.new(edition_id), force: force)
-      end
+        edition = EditionContext.new(edition_id)
+        next unless saved_feature.language == edition.language
+
+        verified_edition(saved_feature, edition, force: force)
+      end.compact
     end
 
     # Returns the persisted FeatureEdition for (feature, edition), reusing a cached

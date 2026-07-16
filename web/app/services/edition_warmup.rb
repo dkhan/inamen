@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 
-# Loads prebuilt verse and word-stream indexes for every edition at boot so
-# Discover scans and Scripture links never pay a full-text parse or SQL verse scan.
+# Ensures prebuilt artifacts exist for imported editions. Callers can choose
+# whether to also load indexes into process memory.
 class EditionWarmup
   class << self
-    def warm_all!(build_if_missing: !Rails.env.production?)
+    def warm_all!(build_if_missing: !Rails.env.production?, load_indexes: true)
       EditionContext.all_ids.each do |edition_id|
-        warm_edition!(edition_id, build_if_missing: build_if_missing)
+        warm_edition!(edition_id, build_if_missing: build_if_missing, load_indexes: load_indexes)
       end
     end
 
-    def warm_edition!(edition_id, build_if_missing: !Rails.env.production?)
+    def warm_edition!(edition_id, build_if_missing: !Rails.env.production?, load_indexes: true)
       edition = EditionContext.new(edition_id)
       ensure_corpus!(edition, build_if_missing: build_if_missing)
       ensure_verse_index!(edition, build_if_missing: build_if_missing)
       ensure_word_stream!(edition, build_if_missing: build_if_missing)
       ensure_lexicon!(edition, build_if_missing: build_if_missing)
       ensure_canon_ordinals!(edition, build_if_missing: build_if_missing)
-      edition.warm!
+      edition.warm! if load_indexes
     end
 
     private

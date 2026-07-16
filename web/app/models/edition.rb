@@ -18,6 +18,10 @@ class Edition < ApplicationRecord
     short_name
   end
 
+  def language
+    metadata.to_h["language"].presence || "en"
+  end
+
   def path
     source_path
   end

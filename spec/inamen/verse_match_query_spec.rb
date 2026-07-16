@@ -26,12 +26,33 @@ RSpec.describe Inamen::VerseMatchQuery do
       expect(result.verses.map { |row| [row.book, row.chapter, row.verse] }).to include(["Matthew", 1, 1])
     end
 
-    it "lists include-term verses when exclude terms are present" do
+    it "indexes verse rows by occurrence ordinal, not verse ordinal" do
+      terms = [Inamen::TokenQuery::QueryTerm.new(pattern: "six", case_sensitive: false, exclude: false)]
+      result = described_class.scan(db, terms: terms, search_selection: selection)
+
+      expected_index = 1
+      result.verses.each do |row|
+        expect(row.first_hit_index).to eq(expected_index)
+        expected_index += row.occurrence_count
+      end
+      expect(expected_index - 1).to eq(result.summary.occurrences)
+    end
+
+    it "removes excluded occurrences from verse rows" do
       terms = Inamen::TokenQuery.parse_terms("six|exclude\nseven\n")
       result = described_class.scan(db, terms: terms, search_selection: selection)
 
       expect(result.summary.occurrences).to eq(463)
       expect(result.verses.none? { |row| row.book == "Genesis" && row.chapter == 1 && row.verse == 1 }).to be(true)
+    end
+
+    it "removes exact excluded forms from wildcard verse rows" do
+      nt = Inamen::SearchSelection.from_legacy(scope: :nt, bucket: :default)
+      terms = Inamen::TokenQuery.parse_terms("jesus*\njesus|exclude\n")
+      result = described_class.scan(db, terms: terms, search_selection: nt)
+
+      expect(result.summary.occurrences).to eq(10)
+      expect(result.verses.none? { |row| row.highlight_indices.include?(1) && row.book == "Matthew" && row.chapter == 1 }).to be(true)
     end
 
     it "counts colophon and superscription occurrences but not as verses" do

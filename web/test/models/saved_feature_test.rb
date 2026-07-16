@@ -64,4 +64,20 @@ class SavedFeatureTest < ActiveSupport::TestCase
       feature.destroy!
     end
   end
+
+  test "display_scope_label derives category labels from search selection" do
+    feature = SavedFeature.new(
+      base_attrs(
+        scope_label: "4 books",
+        search_selection: {
+          "submitted" => "1",
+          "colophons" => "0",
+          "superscriptions" => "0",
+          "books" => %w[Matthew Mark Luke John]
+        }
+      )
+    )
+
+    assert_equal "Gospels", feature.display_scope_label
+  end
 end

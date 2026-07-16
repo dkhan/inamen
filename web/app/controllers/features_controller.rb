@@ -24,6 +24,7 @@ class FeaturesController < ApplicationController
 
     @saved_feature = SavedFeature.new(
       original_edition_id: current_edition_id,
+      language: @edition.language,
       scope_label: selection.label,
       unit: SavedFeature::UNIT_OCCURRENCES,
       feature_type: SavedFeature.feature_types[:bible],
@@ -44,6 +45,9 @@ class FeaturesController < ApplicationController
   def create
     @saved_feature = SavedFeature.new(saved_feature_params)
     @saved_feature.details = SavedFeature.build_details_from_phrases(@saved_feature.search_phrases)
+    if params.dig(:saved_feature, :language).blank?
+      @saved_feature.language = language_for_edition(@saved_feature.original_edition_id)
+    end
     if @saved_feature.scope_label.blank?
       @saved_feature.scope_label = SavedFeature.scope_label_for(@saved_feature.search_selection)
     end
@@ -205,6 +209,7 @@ class FeaturesController < ApplicationController
       :name,
       :description,
       :original_edition_id,
+      :language,
       :feature_type,
       :scope_label,
       :unit,
@@ -222,7 +227,7 @@ class FeaturesController < ApplicationController
   end
 
   def saved_feature_update_params
-    params.require(:saved_feature).permit(:name, :description, :feature_type, :expected_count, :notes, :kjvcode_url)
+    params.require(:saved_feature).permit(:name, :description, :language, :feature_type, :expected_count, :notes, :kjvcode_url)
   end
 
   def load_saved_feature
@@ -246,5 +251,9 @@ class FeaturesController < ApplicationController
     JSON.parse(value)
   rescue JSON::ParserError
     {}
+  end
+
+  def language_for_edition(edition_id)
+    Edition.find_by(short_name: edition_id)&.language || SavedFeature::DEFAULT_LANGUAGE
   end
 end

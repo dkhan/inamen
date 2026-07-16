@@ -53,7 +53,7 @@ RSpec.describe Inamen::SearchSelection do
       expect(selection.colophons).to be(false)
       expect(selection.superscriptions).to be(true)
       expect(selection.books).to eq(%w[Matthew Mark])
-      expect(selection.label).to eq("superscriptions, 2 books")
+      expect(selection.label).to eq("superscriptions, Matthew, Mark")
     end
 
     it "treats compact all_books submit as default whole Bible" do

@@ -118,6 +118,7 @@
 <% if @status == :ready %>
   <section class="panel" data-discovery-results>
     <% if word_count_mode %>
+      <p class="discovery-verse-summary"><%= discovery_word_match_summary(@rows, @scan_params, summary: @word_summary) %></p>
       <table class="features-table discovery-table">
         <thead>
           <tr>

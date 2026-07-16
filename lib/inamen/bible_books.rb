@@ -18,7 +18,7 @@ module Inamen
     APOCRYPHA = [
       "Tobit", "Judith", "Wisdom of Solomon", "Sirach", "Baruch", "Letter of Jeremiah",
       "Prayer of Azariah", "Susanna", "Bel and the Dragon", "1 Maccabees", "2 Maccabees",
-      "1 Esdras", "2 Esdras", "Prayer of Manasseh", "Psalm 151"
+      "3 Maccabees", "1 Esdras", "2 Esdras", "Prayer of Manasseh", "Psalm 151"
     ].freeze
 
     ALL = (PROTESTANT + APOCRYPHA).freeze
@@ -47,8 +47,11 @@ module Inamen
       def aliases
         @aliases ||= begin
           pairs = ALL.flat_map { |book| aliases_for_book(book).map { |aliaz| [normalize_heading(aliaz), book] } }
-          pairs.concat(EXTRA_ALIASES.map { |aliaz, book| [normalize_heading(aliaz), book] })
-          pairs.to_h.freeze
+          index = pairs.to_h
+          EXTRA_ALIASES.each do |aliaz, book|
+            index[normalize_heading(aliaz)] ||= book
+          end
+          index.freeze
         end
       end
 

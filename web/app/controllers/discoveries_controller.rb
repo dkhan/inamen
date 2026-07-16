@@ -18,6 +18,7 @@ class DiscoveriesController < ApplicationController
       @file_stats = DiscoveryScan.read_cached(@edition, @scan_params)
     elsif @scan_params.mode == "word_count"
       @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
+      @word_summary = DiscoveryScan.word_count_summary(@edition, @scan_params, rows: @rows, validate: false)
     else
       @rows = DiscoveryScan.read_cached(@edition, @scan_params) || []
     end

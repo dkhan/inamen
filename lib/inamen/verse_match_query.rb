@@ -43,6 +43,7 @@ module Inamen
       def scan(db, terms:, search_selection:, word_stream: nil)
         selection = resolve_selection(search_selection)
         include_terms = Array(terms).reject(&:exclude)
+        exclude_terms = Array(terms).select(&:exclude)
 
         merged = Hash.new { |hash, key| hash[key] = [] }
         include_terms.each do |term|
@@ -55,6 +56,8 @@ module Inamen
             merged[group.verse_key].concat(group.indices)
           end
         end
+
+        apply_exclusions!(db, merged, exclude_terms, selection, word_stream: word_stream)
 
         verses = build_verse_rows(merged)
         summary = build_summary(verses, selection, occurrences: verses.sum(&:occurrence_count))
@@ -74,7 +77,7 @@ module Inamen
 
         rows.each_with_index do |row, index|
           row.html_excerpt = VerseHighlighter.render_edition_row(edition, row)
-          hit_index = offset + index + 1
+          hit_index = row.first_hit_index || offset + index + 1
           hit = Hit.new(
             book: row.book,
             chapter: row.chapter,
@@ -165,6 +168,31 @@ module Inamen
         else
           exact_verse_groups(db, term, selection)
         end
+      end
+
+      def apply_exclusions!(db, merged, exclude_terms, selection, word_stream:)
+        return merged if exclude_terms.empty? || merged.empty?
+
+        excluded = Hash.new { |hash, key| hash[key] = Set.new }
+        exclude_terms.each do |term|
+          groups = if word_stream
+            word_stream.verse_groups_for_term(term, selection: selection)
+          else
+            verse_groups_for_term(db, term, selection)
+          end
+
+          groups.each do |group|
+            excluded[group.verse_key].merge(group.indices)
+          end
+        end
+
+        excluded.each do |verse_key, indices|
+          next unless merged.key?(verse_key)
+
+          merged[verse_key] = merged[verse_key].reject { |index| indices.include?(index) }
+          merged.delete(verse_key) if merged[verse_key].empty?
+        end
+        merged
       end
 
       def exact_verse_groups(db, term, selection)
@@ -283,7 +311,11 @@ module Inamen
         end
 
         rows.sort_by! { |row| CanonIndex.sort_key(row.book, row.chapter, row.verse) + [row.bucket] }
-        rows.each_with_index { |row, index| row.first_hit_index = index + 1 }
+        occurrence_index = 1
+        rows.each do |row|
+          row.first_hit_index = occurrence_index
+          occurrence_index += row.occurrence_count
+        end
         rows
       end
 

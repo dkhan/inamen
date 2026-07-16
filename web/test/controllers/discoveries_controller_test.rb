@@ -3,7 +3,7 @@
 require "test_helper"
 
 class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
-  WordRow = Struct.new(:pattern, :case_sensitive, :count, :spellings, :exclude, :overlap, keyword_init: true)
+  WordRow = Struct.new(:pattern, :case_sensitive, :count, :spellings, :exclude, :overlap, :wildcard, keyword_init: true)
   FakeEdition = Struct.new(:edition_id, :checksum_prefix, :corpus_ready, keyword_init: true) do
     def corpus_ready?
       corpus_ready
@@ -142,5 +142,47 @@ class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "td code", "therefore"
     assert_select "td", "777"
+  end
+
+  test "word count summary includes word matches verses chapters books and categorized scope" do
+    fake = FakeEdition.new(edition_id: "test_edition", checksum_prefix: "abc123", corpus_ready: true)
+    rows = [
+      WordRow.new(pattern: "peter", case_sensitive: false, count: 153, spellings: {}, exclude: false, overlap: false)
+    ]
+    summary = Inamen::VerseMatchQuery::Summary.new(
+      occurrences: 153,
+      verses: 153,
+      chapters: 21,
+      books: 4,
+      scope_label: "Gospels"
+    )
+
+    EditionContext.stub(:all_ids, ["test_edition"]) do
+      EditionContext.stub(:default_id, "test_edition") do
+        EditionContext.stub(:new, fake) do
+          DiscoveryScan.stub(:counts_cached?, true) do
+            DiscoveryScan.stub(:read_counts_cached, rows) do
+              DiscoveryScan.stub(:word_count_summary, summary) do
+                get discoveries_path(
+                  edition: "test_edition",
+                  mode: "word_count",
+                  query_terms: "peter",
+                  search_selection: {
+                    submitted: "1",
+                    colophons: "0",
+                    superscriptions: "0",
+                    books: %w[Matthew Mark Luke John]
+                  }
+                )
+              end
+            end
+          end
+        end
+      end
+    end
+
+    assert_response :success
+    assert_select ".discovery-verse-summary",
+                  "Found 153 word match(es) in 153 Verse(s) in 21 Chapter(s) in 4 Book(s) within Gospels"
   end
 end

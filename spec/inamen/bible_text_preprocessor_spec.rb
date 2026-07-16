@@ -66,6 +66,61 @@ RSpec.describe Inamen::BibleTextPreprocessor do
     end
   end
 
+  it "normalizes Russian Synodal 77 structure with wrapped verses and special sections" do
+    text = <<~TEXT
+      БИБЛИЯ
+      ВЕТХИЙ ЗАВЕТ
+      Бытие
+      1
+      1 В начале сотворил Бог небо
+      и землю.
+      2 Земля же была безвидна.
+      Вторая книга Паралипоменон
+      36
+      23 Кто есть из вас.
+      [МОЛИТВА МАНАССИИ, ЦАРЯ ИУДЕЙСКОГО
+      Господи Вседержителю, Боже отцев наших.
+      Первая книга Ездры
+      1
+      1 В первый год Кира.
+      Книга Есфири
+      Предисловие
+      [Во второй год царствования Артаксеркса сон видел Мардохей.]
+      1
+      1 И было во дни Артаксеркса.
+      Книга Премудрости Иисуса, сына Сирахова *
+      Предисловие
+      1 Многое и великое дано нам через закон,
+      2 следовавших за ними.
+      1
+      1 Всякая премудрость - от Господа.
+      Первое послание к Фессалоникийцам (Солунянам) святого апостола
+      Павла
+      1
+      1 Павел и Силуан.
+      Третья книга Маккавейская *
+      1
+      1 Филопатор узнал.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+
+      expect(result.language).to eq("ru")
+      expect(result.canon).to eq("russian_synodal_77")
+      expect(result.books).to eq([
+        "Genesis", "2 Chronicles", "Ezra", "Esther", "Sirach", "1 Thessalonians", "3 Maccabees"
+      ])
+      expect(index.dig("Genesis", 1, 1)).to eq("В начале сотворил Бог небо и землю.")
+      expect(index.dig("Esther", 1, 1)).to eq("И было во дни Артаксеркса.")
+      expect(index.dig("Sirach", 1, 1)).to eq("Всякая премудрость - от Господа.")
+      expect(index.dig("1 Thessalonians", 1, 1)).to eq("Павел и Силуан.")
+      expect(index.dig("3 Maccabees", 1, 1)).to eq("Филопатор узнал.")
+      expect(result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX)}/).length).to eq(7)
+    end
+  end
+
   it "rejects binary files" do
     with_text_file("Genesis\x00Chapter 1") do |path|
       expect { described_class.from_file(path) }.to raise_error(described_class::Error, /binary/)

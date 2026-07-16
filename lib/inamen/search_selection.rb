@@ -200,15 +200,7 @@ module Inamen
     end
 
     def book_scope_label
-      if books.sort == BookCategories.ot_books.sort
-        "Old Testament"
-      elsif books.sort == BookCategories.nt_books.sort
-        "New Testament"
-      elsif books.length == 1
-        books.first
-      else
-        "#{books.length} books"
-      end
+      BookCategories.label_for_books(books)
     end
   end
 end

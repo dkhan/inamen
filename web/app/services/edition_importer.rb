@@ -32,7 +32,7 @@ class EditionImporter
       source_checksum: Digest::SHA256.file(@file).hexdigest,
       byte_size: @file.size,
       imported_at: Time.current,
-      metadata: { books: result.books }
+      metadata: { books: result.books, language: result.language, canon: result.canon }.compact
     )
     edition.save!
 

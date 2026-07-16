@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_16_000000) do
   create_table "editions", force: :cascade do |t|
     t.integer "byte_size", null: false
     t.string "corpus_type", default: "bible", null: false
@@ -49,6 +49,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.string "feature_type", default: "bible", null: false
     t.string "from_feature"
     t.string "kjvcode_url"
+    t.string "language", default: "en", null: false
     t.string "mode", default: "word_count", null: false
     t.string "name", null: false
     t.text "notes"
@@ -58,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_000000) do
     t.json "search_selection", default: {}, null: false
     t.string "unit", default: "occurrences", null: false
     t.datetime "updated_at", null: false
+    t.index ["language"], name: "index_saved_features_on_language"
     t.index ["name"], name: "index_saved_features_on_name"
     t.index ["original_edition_id"], name: "index_saved_features_on_original_edition_id"
   end

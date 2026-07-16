@@ -44,6 +44,12 @@
           {}, required: true, class: "form-input input-narrow" %>
     </div>
 
+    <div class="form-field">
+      <%= form.label :language, "Language", class: "form-label" %>
+      <%= form.select :language, feature_language_options(@saved_feature.language),
+          {}, required: true, class: "form-input input-narrow" %>
+    </div>
+
     <dl class="stats">
       <div>
         <dt>Expected</dt>
@@ -58,7 +64,11 @@
       </div>
       <div>
         <dt>Scope</dt>
-        <dd><%= @saved_feature.scope_label %></dd>
+        <dd><%= @saved_feature.display_scope_label %></dd>
+      </div>
+      <div>
+        <dt>Language</dt>
+        <dd><%= feature_language_label(@saved_feature.language) %></dd>
       </div>
     </dl>
 
@@ -83,6 +93,7 @@
     <section class="panel">
       <h2>Details</h2>
       <ul class="detail-list">
+        <li><code>Scope: <%= @saved_feature.display_scope_label %></code></li>
         <% @saved_feature.details.each do |line| %>
           <li><code><%= line %></code></li>
         <% end %>

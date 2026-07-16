@@ -26,10 +26,10 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
-  def feature_params(unit:, description: nil, feature_type: "bible")
+  def feature_params(unit:, description: nil, feature_type: "bible", edition_id: EDITION_ID, language: nil)
     saved_feature = {
       name: "Peter (#{unit})",
-      original_edition_id: EDITION_ID,
+      original_edition_id: edition_id,
       feature_type: feature_type,
       scope_label: "All texts",
       unit: unit,
@@ -41,8 +41,24 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
       search_phrases_json: { "0" => { "phrase" => "peter" } }.to_json
     }
     saved_feature[:description] = description if description
+    saved_feature[:language] = language if language
 
-    { edition: EDITION_ID, saved_feature: saved_feature }
+    { edition: edition_id, saved_feature: saved_feature }
+  end
+
+  def ensure_russian_edition
+    path = Rails.root.join("..", "data", "RUSSIAN_SYNODAL_77.txt").expand_path
+    path = Rails.root.join("..", "data", "KJV.txt").expand_path unless path.file?
+    edition = Edition.find_or_create_by!(short_name: "russian_synodal_77") do |edition|
+      edition.name = "Russian Synodal 77"
+      edition.corpus_type = "bible"
+      edition.source_path = path.to_s
+      edition.source_filename = path.basename.to_s
+      edition.source_checksum = Digest::SHA256.file(path).hexdigest
+      edition.byte_size = path.size
+      edition.imported_at = Time.current
+    end
+    edition.update!(metadata: edition.metadata.to_h.merge("language" => "ru"))
   end
 
   test "new offers both measures populated from the current search results" do
@@ -121,6 +137,27 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "saved_feature[description]"
   end
 
+  test "new and create mark features with the source edition language" do
+    ensure_russian_edition
+
+    DiscoverQueryStore.stub(:fetch, discover_query) do
+      DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+        DiscoveryScan.stub(:read_verses_cached, verse_result(153)) do
+          get new_feature_path(edition: "russian_synodal_77", dq: "token")
+        end
+      end
+    end
+
+    assert_response :success
+    assert_select "select[name=?] option[value=?][selected]", "saved_feature[language]", "ru"
+
+    DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+      post features_path, params: feature_params(unit: "occurrences", edition_id: "russian_synodal_77")
+    end
+
+    assert_equal "ru", SavedFeature.order(:id).last.language
+  end
+
   test "loading a saved verses feature reports the verse total from its FeatureEdition" do
     DiscoveryScan.stub(:read_verses_cached, verse_result(153)) do
       post features_path, params: feature_params(unit: "verses")
@@ -182,15 +219,50 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
                   text: /miss/i
   end
 
-  test "feature type is stored on create and editable on update" do
+  test "feature type and language are stored on create and editable on update" do
     DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
-      post features_path, params: feature_params(unit: "occurrences", feature_type: "general_text")
+      post features_path, params: feature_params(unit: "occurrences", feature_type: "general_text", language: "en")
     end
     feature = SavedFeature.order(:id).last
     assert_equal "general_text", feature.feature_type
+    assert_equal "en", feature.language
 
     patch feature_path(feature.url_id, edition: EDITION_ID),
-          params: { saved_feature: { feature_type: "both" } }
+          params: { saved_feature: { feature_type: "both", language: "ru" } }
     assert_equal "both", feature.reload.feature_type
+    assert_equal "ru", feature.language
+  end
+
+  test "feature show displays categorized scope in stats and details" do
+    feature = SavedFeature.create!(
+      name: "Gospel search",
+      original_edition_id: EDITION_ID,
+      scope_label: "4 books",
+      unit: SavedFeature::UNIT_OCCURRENCES,
+      mode: "word_count",
+      expected_count: 153,
+      search_selection: {
+        "submitted" => "1",
+        "colophons" => "0",
+        "superscriptions" => "0",
+        "books" => %w[Matthew Mark Luke John]
+      },
+      search_phrases: { "0" => { "phrase" => "peter" } },
+      details: ["peter"]
+    )
+    feature.feature_editions.create!(
+      edition_id: EDITION_ID,
+      actual: 153,
+      status: FeatureEdition::STATUS_MATCH,
+      processing_state: :verified,
+      verified_at: Time.current
+    )
+
+    get feature_path(feature.url_id, edition: EDITION_ID)
+
+    assert_response :success
+    assert_select "dt", "Scope"
+    assert_select "dd", "Gospels"
+    assert_select ".detail-list li code", "Scope: Gospels"
   end
 end

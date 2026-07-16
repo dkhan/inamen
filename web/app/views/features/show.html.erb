@@ -30,8 +30,12 @@
       <dd><%= feature_type_label(@saved_feature.feature_type) %></dd>
     </div>
     <div>
+      <dt>Language</dt>
+      <dd><%= feature_language_label(@saved_feature.language) %></dd>
+    </div>
+    <div>
       <dt>Scope</dt>
-      <dd><%= @row.scope %></dd>
+      <dd><%= @saved_feature.display_scope_label %></dd>
     </div>
     <div>
       <dt>Edition</dt>
@@ -61,10 +65,11 @@
     </section>
   <% end %>
 
-  <% if @row.details.present? %>
+  <% if @row.details.present? || !@saved_feature.file_stats? %>
     <section class="panel">
       <h2>Details</h2>
       <ul class="detail-list">
+        <li><code>Scope: <%= @saved_feature.display_scope_label %></code></li>
         <% @row.details.each do |line| %>
           <li><code><%= line %></code></li>
         <% end %>

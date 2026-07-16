@@ -4,8 +4,8 @@ require "spec_helper"
 
 RSpec.describe Inamen::BookCategories do
   it "lists Protestant canon plus Apocrypha books" do
-    expect(described_class.all_books.length).to eq(81)
-    expect(described_class.all_books).to include("Genesis", "Revelation", "Tobit")
+    expect(described_class.all_books.length).to eq(82)
+    expect(described_class.all_books).to include("Genesis", "Revelation", "Tobit", "3 Maccabees")
   end
 
   it "groups books into categories" do
@@ -35,5 +35,16 @@ RSpec.describe Inamen::BookCategories do
     pauline = described_class.books_for_category(:nt, :pauline_epistles)
     expect(pauline).to include("Hebrews")
     expect(pauline).not_to include("James")
+  end
+
+  it "labels exact category book selections" do
+    expect(described_class.label_for_books(%w[Matthew Mark Luke John])).to eq("Gospels")
+    expect(described_class.label_for_books(["Acts"])).to eq("Historical")
+    expect(described_class.label_for_books(described_class.books_for_category(:nt, :pauline_epistles)))
+      .to eq("Pauline Epistles")
+  end
+
+  it "lists selected books when they do not fit a category" do
+    expect(described_class.label_for_books(%w[Genesis Revelation])).to eq("Genesis, Revelation")
   end
 end
