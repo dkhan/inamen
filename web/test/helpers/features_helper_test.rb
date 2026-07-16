@@ -35,12 +35,23 @@ class FeaturesHelperTest < ActionView::TestCase
     assert_equal({ "0" => { "phrase" => "peter" } }, captured["search_phrases"])
   end
 
-  test "MATCH for a built-in feature opens the file-stats view without a feature identity" do
-    path = feature_discover_path_for("combined_total", edition: EDITION_ID)
+  test "MATCH for a file stats saved feature opens the file-stats view" do
+    feature = SavedFeature.create!(
+      name: "Characters",
+      original_edition_id: EDITION_ID,
+      scope_label: "whole file",
+      unit: SavedFeature::UNIT_CHARACTERS,
+      mode: "file_stats",
+      expected_count: 4_233_726,
+      search_selection: {},
+      search_phrases: {},
+      from_feature: "file_character_total"
+    )
+
+    path = feature_discover_path_for(feature.url_id, edition: EDITION_ID)
 
     assert_includes path, "mode=file_stats"
-    assert_includes path, "highlight=combined_total"
+    assert_includes path, "highlight=file_characters"
     refute_includes path, "dq="
-    refute_includes path, "from_feature"
   end
 end

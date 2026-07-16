@@ -37,34 +37,32 @@ module FeaturesHelper
   end
 
   def feature_discover_path_for(feature_id, edition:)
-    if SavedFeature.url_id?(feature_id)
-      saved_feature = SavedFeature.find_by_url_id!(feature_id)
-      # Load only the generic search criteria into Discover. The resulting scan
-      # carries no feature identity, so editing/rerunning never touches the
-      # original saved feature.
-      store_query = {
-        "mode" => saved_feature.mode,
-        "search_selection" => saved_feature.search_selection,
-        "search_phrases" => saved_feature.search_phrases,
-        "from_feature" => saved_feature.url_id
-      }
-      token = DiscoverQueryStore.write(nil, store_query)
-      return discoveries_path(edition: edition, dq: token, feature: saved_feature.url_id, auto_scan: "1")
+    return unless SavedFeature.url_id?(feature_id)
+
+    saved_feature = SavedFeature.find_by_url_id!(feature_id)
+    if saved_feature.file_stats?
+      highlight = saved_feature.characters? ? "file_characters" : "combined_total"
+      return discoveries_path(edition: edition, mode: "file_stats", highlight: highlight)
     end
 
-    query = FeatureDiscoverLink.query_for(feature_id, edition_id: edition)
-    discoveries_path(query) if query
+    # Load only the generic search criteria into Discover. The resulting scan
+    # carries no feature identity, so editing/rerunning never touches the
+    # original saved feature.
+    store_query = {
+      "mode" => saved_feature.mode,
+      "search_selection" => saved_feature.search_selection,
+      "search_phrases" => saved_feature.search_phrases,
+      "from_feature" => saved_feature.url_id
+    }
+    token = DiscoverQueryStore.write(nil, store_query)
+    discoveries_path(edition: edition, dq: token, feature: saved_feature.url_id, auto_scan: "1")
   rescue ActiveRecord::RecordNotFound
     nil
   end
 
   def feature_discover_name(feature_id)
-    if SavedFeature.url_id?(feature_id)
-      return SavedFeature.find_by_url_id!(feature_id).name
-    end
-
-    Inamen::Features.fetch(feature_id).name
-  rescue ArgumentError, ActiveRecord::RecordNotFound
+    SavedFeature.find_by_url_id!(feature_id).name
+  rescue ActiveRecord::RecordNotFound
     feature_id.to_s.tr("_", " ")
   end
 
@@ -72,8 +70,8 @@ module FeaturesHelper
     new_feature_path(edition: edition, actual_count: actual_count)
   end
 
-  def feature_measure_options(selected = nil)
-    options_for_select(SavedFeature::UNITS.map { |unit| [unit.capitalize, unit] }, selected)
+  def feature_measure_options(selected = nil, units: SavedFeature::WORD_COUNT_UNITS)
+    options_for_select(units.map { |unit| [unit.capitalize, unit] }, selected)
   end
 
   FEATURE_TYPE_LABELS = {
@@ -90,7 +88,7 @@ module FeaturesHelper
   end
 
   def saved_feature_row?(row)
-    SavedFeature.url_id?(row.id)
+    true
   end
 
   def saved_feature_actions(row, edition:)

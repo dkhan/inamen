@@ -8,7 +8,11 @@ class SavedFeature < ApplicationRecord
   # "verses" counts distinct matching verses.
   UNIT_OCCURRENCES = "occurrences"
   UNIT_VERSES = "verses"
-  UNITS = [UNIT_OCCURRENCES, UNIT_VERSES].freeze
+  UNIT_TOKENS = "tokens"
+  UNIT_CHARACTERS = "characters"
+  WORD_COUNT_UNITS = [UNIT_OCCURRENCES, UNIT_VERSES].freeze
+  FILE_STATS_UNITS = [UNIT_TOKENS, UNIT_CHARACTERS].freeze
+  UNITS = (WORD_COUNT_UNITS + FILE_STATS_UNITS).freeze
 
   # What kind of corpus a feature is meant to be verified against.
   FEATURE_TYPES = { bible: "bible", general_text: "general_text", both: "both" }.freeze
@@ -30,7 +34,7 @@ class SavedFeature < ApplicationRecord
   validates :expected_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :mode, presence: true
   validates :search_selection, presence: true
-  validates :search_phrases, presence: true
+  validates :search_phrases, presence: true, unless: :file_stats?
 
   before_validation :ensure_search_selection
 
@@ -40,6 +44,18 @@ class SavedFeature < ApplicationRecord
 
   def verses?
     unit == UNIT_VERSES
+  end
+
+  def file_stats?
+    mode == "file_stats"
+  end
+
+  def tokens?
+    unit == UNIT_TOKENS
+  end
+
+  def characters?
+    unit == UNIT_CHARACTERS
   end
 
   def display_description

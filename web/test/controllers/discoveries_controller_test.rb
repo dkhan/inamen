@@ -4,6 +4,11 @@ require "test_helper"
 
 class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
   WordRow = Struct.new(:pattern, :case_sensitive, :count, :spellings, :exclude, :overlap, keyword_init: true)
+  FakeEdition = Struct.new(:edition_id, :checksum_prefix, :corpus_ready, keyword_init: true) do
+    def corpus_ready?
+      corpus_ready
+    end
+  end
 
   test "dq auto scan loads saved search criteria and runs on first click" do
     query = {
@@ -75,5 +80,67 @@ class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.location, "edition=kjv_normalized"
     assert_includes response.location, "query_terms=beginning"
     assert_equal true, ran_verses
+  end
+
+  test "scan runs divisible searches inline when corpus is ready" do
+    fake = FakeEdition.new(edition_id: "test_edition", checksum_prefix: "abc123", corpus_ready: true)
+    ran_scan = false
+
+    EditionContext.stub(:all_ids, ["test_edition"]) do
+      EditionContext.stub(:default_id, "test_edition") do
+        EditionContext.stub(:new, fake) do
+          DiscoveryScan.stub(:cached?, false) do
+            DiscoveryScan.stub(:run, ->(*) { ran_scan = true; [] }) do
+              post scan_discoveries_path(
+                edition: "test_edition",
+                mode: "divisible",
+                divisible_by: "7",
+                min_count: "7",
+                search_selection: { submitted: "1", all_books: "1" }
+              )
+            end
+          end
+        end
+      end
+    end
+
+    assert_response :redirect
+    assert_includes response.location, "/discover"
+    refute_includes response.location, "waiting=1"
+    assert_equal true, ran_scan
+  end
+
+  test "divisible index renders rows from generic scan cache" do
+    fake = FakeEdition.new(edition_id: "test_edition", checksum_prefix: "abc123", corpus_ready: true)
+    rows = [
+      DiscoveryScan::DivisibleRow.new(
+        scope: "whole Bible",
+        token_norm: "therefore",
+        token_raw: "Therefore",
+        count: 777,
+        divisible_by: 7
+      )
+    ]
+
+    EditionContext.stub(:all_ids, ["test_edition"]) do
+      EditionContext.stub(:default_id, "test_edition") do
+        EditionContext.stub(:new, fake) do
+          DiscoveryScan.stub(:cached?, true) do
+            DiscoveryScan.stub(:read_cached, rows) do
+              get discoveries_path(
+                edition: "test_edition",
+                mode: "divisible",
+                divisible_by: "7",
+                min_count: "7"
+              )
+            end
+          end
+        end
+      end
+    end
+
+    assert_response :success
+    assert_select "td code", "therefore"
+    assert_select "td", "777"
   end
 end

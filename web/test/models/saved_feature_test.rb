@@ -16,9 +16,11 @@ class SavedFeatureTest < ActiveSupport::TestCase
     }.merge(overrides)
   end
 
-  test "accepts the occurrences and verses measures" do
+  test "accepts word-count and file-stats measures" do
     assert SavedFeature.new(base_attrs(unit: "occurrences")).valid?
     assert SavedFeature.new(base_attrs(unit: "verses")).valid?
+    assert SavedFeature.new(base_attrs(unit: "tokens", mode: "file_stats", search_phrases: {})).valid?
+    assert SavedFeature.new(base_attrs(unit: "characters", mode: "file_stats", search_phrases: {})).valid?
   end
 
   test "rejects an unknown measure" do

@@ -6,6 +6,12 @@
 # specific branches. A feature's expected value and original edition are never
 # modified here.
 class SavedFeatureCatalog
+  ResultRow = Struct.new(
+    :id, :name, :description, :count, :expected, :unit, :scope, :match,
+    :kjvcode_expected, :kjvcode_match, :kjvcode_url, :notes, :details,
+    keyword_init: true
+  )
+
   class << self
     def rows_for_edition(edition, force: false)
       SavedFeature.order(:name).map { |saved_feature| row_for(saved_feature, edition, force: force) }
@@ -13,7 +19,7 @@ class SavedFeatureCatalog
 
     def row_for(saved_feature, edition, force: false)
       record = verified_edition(saved_feature, edition, force: force)
-      FeatureCatalog::ResultRow.new(
+      ResultRow.new(
         id: saved_feature.url_id,
         name: saved_feature.name,
         description: saved_feature.display_description,
@@ -74,6 +80,13 @@ class SavedFeatureCatalog
     # edition. Reuses the same counting path as Discover — no special cases.
     def compute_actual(saved_feature, edition, force: false)
       scan_params = saved_feature.to_scan_params
+      if saved_feature.file_stats?
+        stats = DiscoveryScan.run_file_stats(edition, scan_params, force: force)
+        return stats.character_count if saved_feature.characters?
+
+        return stats.total
+      end
+
       return 0 unless DiscoveryScan.enabled_search_terms?(scan_params.query_terms)
       return 0 unless DiscoveryScan.valid_search_terms?(edition, scan_params.query_terms)
 

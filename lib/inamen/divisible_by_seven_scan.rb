@@ -12,11 +12,15 @@ module Inamen
         raise ArgumentError, "divisible_by must be positive" unless divisible_by.to_i.positive?
 
         selection = resolve_selection(search_selection, scope, bucket)
-        rows = TokenCountQuery.aggregate(db, search_selection: selection, group: :norm_raw)
+        rows =
+          if CorpusStore.token_counts_available?(db)
+            aggregate_divisible_from_counts(db, selection, divisible_by: divisible_by, min_count: min_count)
+          else
+            TokenCountQuery.aggregate(db, search_selection: selection, group: :norm_raw)
+                           .select { |row| row[:count] >= min_count && (row[:count] % divisible_by).zero? }
+          end
         rows.filter_map do |row|
           count = row[:count]
-          next if count < min_count
-          next unless (count % divisible_by).zero?
 
           ScopeRow.new(
             scope: TokenCountQuery.selection_label(selection),
@@ -72,7 +76,23 @@ module Inamen
 
         SearchSelection.from_legacy(scope: scope, bucket: bucket)
       end
+
+      def aggregate_divisible_from_counts(db, selection, divisible_by:, min_count:)
+        where_sql, where_params = selection.where_clause
+        sql = <<~SQL
+          SELECT token_norm, token_raw, SUM(count) AS total_count
+          FROM token_counts
+          WHERE 1=1 #{where_sql}
+          GROUP BY token_norm, token_raw
+          HAVING total_count >= ? AND (total_count % ?) = 0
+        SQL
+
+        db.execute(sql, where_params + [min_count, divisible_by]).map do |token_norm, token_raw, count|
+          { token_norm: token_norm, token_raw: token_raw, count: count.to_i }
+        end
+      end
       private :resolve_selection
+      private :aggregate_divisible_from_counts
     end
   end
 end

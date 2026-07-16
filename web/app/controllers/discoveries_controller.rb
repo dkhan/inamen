@@ -16,8 +16,10 @@ class DiscoveriesController < ApplicationController
 
     if @scan_params.mode == "file_stats"
       @file_stats = DiscoveryScan.read_cached(@edition, @scan_params)
-    else
+    elsif @scan_params.mode == "word_count"
       @rows = DiscoveryScan.read_counts_cached(@edition, @scan_params) || []
+    else
+      @rows = DiscoveryScan.read_cached(@edition, @scan_params) || []
     end
   end
 
@@ -84,8 +86,15 @@ class DiscoveriesController < ApplicationController
       return
     end
 
-    if params[:refresh] != "1" && DiscoveryScan.counts_cached?(edition, scan_params)
-      run_or_enqueue_verses!(edition, scan_params, validate: false)
+    cached =
+      if scan_params.mode == "word_count"
+        DiscoveryScan.counts_cached?(edition, scan_params)
+      else
+        DiscoveryScan.cached?(edition, scan_params)
+      end
+
+    if params[:refresh] != "1" && cached
+      run_or_enqueue_verses!(edition, scan_params, validate: false) if scan_params.mode == "word_count"
       redirect_to discoveries_path(scan_query(edition_id, scan_params))
       return
     end
@@ -107,6 +116,12 @@ class DiscoveriesController < ApplicationController
       return
     end
 
+    if scan_params.mode != "word_count" && edition.corpus_ready?
+      DiscoveryScan.run(edition, scan_params, force: params[:refresh] == "1")
+      redirect_to discoveries_path(scan_query(edition_id, scan_params))
+      return
+    end
+
     unless DiscoveryScan.running?(edition, scan_params)
       DiscoveryScanJob.perform_later(edition_id, DiscoveryScan.job_payload(scan_params), force: false)
     end
@@ -123,7 +138,8 @@ class DiscoveriesController < ApplicationController
   def page_status
     return :ready if @scan_params.mode == "file_stats"
 
-    return :ready if DiscoveryScan.counts_cached?(@edition, @scan_params)
+    return :ready if @scan_params.mode == "word_count" && DiscoveryScan.counts_cached?(@edition, @scan_params)
+    return :ready if @scan_params.mode != "word_count" && DiscoveryScan.cached?(@edition, @scan_params)
 
     if @scan_params.mode == "word_count" && invalid_word_count_phrases?
       return :pending

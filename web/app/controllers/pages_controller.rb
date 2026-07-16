@@ -3,7 +3,7 @@
 class PagesController < ApplicationController
   def home
     @engine_version = Inamen::VERSION
-    @feature_count = Inamen::Features.catalog.size
+    @feature_count = SavedFeature.count
     @editions = Edition.ordered.map do |edition|
       {
         id: edition.short_name,

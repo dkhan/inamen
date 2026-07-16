@@ -152,10 +152,6 @@ class EditionContext
     Pathname(Inamen::CanonOrdinalsPublisher.prebuilt_path(edition_id, text_path: corpus_text_path))
   end
 
-  def expected_count(feature_id)
-    Inamen::Features.fetch(feature_id).expected_count
-  end
-
   def db
     @db ||= begin
       ensure_corpus_file!

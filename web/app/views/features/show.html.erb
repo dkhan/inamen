@@ -1,97 +1,46 @@
-<% content_for :title, "#{(@row || @entry || @saved_feature).name} — Inamen" %>
-<% if @status == :computing %>
-  <% content_for :head do %>
-    <meta http-equiv="refresh" content="3">
-  <% end %>
-<% end %>
+<% content_for :title, "#{@saved_feature.name} — Inamen" %>
 
 <div class="page-header">
-  <% unless @saved_feature %>
-    <p class="breadcrumb">
-      <%= link_to "Features", features_path(edition: @edition.edition_id) %>
-      / <code><%= @row&.id || @entry&.id %></code>
-    </p>
+  <h1><%= @saved_feature.name %></h1>
+  <p class="lead"><%= @row.description %></p>
+  <% if @row.kjvcode_url.present? %>
+    <p class="lead-meta"><%= feature_kjvcode_link(@row.kjvcode_url) %></p>
   <% end %>
-  <h1><%= @saved_feature&.name || @row&.name || @entry&.name %></h1>
-  <% if @saved_feature %>
-    <p class="lead"><%= @row.description %></p>
-    <% if @row.kjvcode_url.present? %>
-      <p class="lead-meta"><%= feature_kjvcode_link(@row.kjvcode_url) %></p>
-    <% end %>
-    <div class="feature-show-actions">
-      <%= saved_feature_actions(@row, edition: @edition.edition_id) %>
-    </div>
-  <% else %>
-    <p class="lead"><%= (@row || @entry).description %></p>
-    <% kjvcode_url = (@row&.kjvcode_url || @entry.kjvcode_url) %>
-    <% if kjvcode_url.present? %>
-      <p class="lead-meta"><%= feature_kjvcode_link(kjvcode_url) %></p>
-    <% end %>
-  <% end %>
+  <div class="feature-show-actions">
+    <%= saved_feature_actions(@row, edition: @edition.edition_id) %>
+  </div>
 </div>
 
-<% if @status == :computing %>
-  <section class="panel notice">
-    <p><strong>Verifying…</strong> Results for this edition are still being computed. This page will refresh automatically.</p>
-  </section>
-<% elsif @status == :pending %>
-  <section class="panel notice">
-    <p>
-      <strong>No results yet.</strong>
-      <%= link_to "Run verification", features_path(edition: @edition.edition_id) %>
-      on the catalog page to compute counts for this edition.
-    </p>
-  </section>
-<% end %>
+<section class="panel">
+  <dl class="stats">
+    <div>
+      <dt>Actual</dt>
+      <dd><%= format_feature_count(@row.count) %> <%= @row.unit %></dd>
+    </div>
+    <div>
+      <dt>Expected</dt>
+      <dd><%= format_feature_count(@row.expected) %> <%= @row.unit %></dd>
+    </div>
+    <div>
+      <dt>Status</dt>
+      <dd><%= feature_discover_status_link(@row.id, match: @row.match, edition: @edition.edition_id) %></dd>
+    </div>
+    <div>
+      <dt>Feature type</dt>
+      <dd><%= feature_type_label(@saved_feature.feature_type) %></dd>
+    </div>
+    <div>
+      <dt>Scope</dt>
+      <dd><%= @row.scope %></dd>
+    </div>
+    <div>
+      <dt>Edition</dt>
+      <dd><code><%= @edition.edition_id %></code></dd>
+    </div>
+  </dl>
+</section>
 
-<% if @row %>
-  <section class="panel">
-    <% if @saved_feature %>
-      <dl class="stats">
-        <div>
-          <dt>Expected</dt>
-          <dd><%= format_feature_count(@row.expected) %> <%= @row.unit %></dd>
-        </div>
-        <div>
-          <dt>Unit</dt>
-          <dd><%= @row.unit %></dd>
-        </div>
-        <div>
-          <dt>Feature type</dt>
-          <dd><%= feature_type_label(@saved_feature.feature_type) %></dd>
-        </div>
-        <div>
-          <dt>Scope</dt>
-          <dd><%= @row.scope %></dd>
-        </div>
-      </dl>
-    <% else %>
-      <dl class="stats">
-        <div>
-          <dt>Actual</dt>
-          <dd><%= format_feature_count(@row.count) %> <%= @row.unit %></dd>
-        </div>
-        <div>
-          <dt>Expected</dt>
-          <dd><%= format_feature_count(@row.expected) %></dd>
-        </div>
-        <div>
-          <dt>Status</dt>
-          <dd><%= feature_discover_status_link(@row.id, match: @row.match, edition: @edition.edition_id) %></dd>
-        </div>
-        <div>
-          <dt>Scope</dt>
-          <dd><%= @row.scope.tr("_", " ") %></dd>
-        </div>
-        <div>
-          <dt>Edition</dt>
-          <dd><code><%= @edition.edition_id %></code></dd>
-        </div>
-      </dl>
-    <% end %>
-  </section>
-
-  <% if @saved_feature && @edition_results.present? %>
+  <% if @edition_results.present? %>
     <%= render "edition_results", results: @edition_results, saved_feature: @saved_feature %>
   <% end %>
 
@@ -122,25 +71,6 @@
       </ul>
     </section>
   <% end %>
-<% elsif @entry %>
-  <section class="panel">
-    <dl class="stats">
-      <div>
-        <dt>Expected</dt>
-        <dd><%= format_feature_count(@edition.expected_count(@entry.id)) %> <%= @entry.unit %></dd>
-      </div>
-      <div>
-        <dt>Scope</dt>
-        <dd><%= @entry.scope.tr("_", " ") %></dd>
-      </div>
-      <div>
-        <dt>Edition</dt>
-        <dd><code><%= @edition.edition_id %></code></dd>
-      </div>
-    </dl>
-  </section>
-<% end %>
-
 <p class="back-link">
   <%= link_to "← All features", features_path(edition: @edition.edition_id) %>
 </p>

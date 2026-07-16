@@ -7,15 +7,9 @@ class FeaturesController < ApplicationController
   before_action :ensure_saved_feature!, only: %i[edit update destroy]
 
   def index
-    @catalog = Inamen::Features.catalog
-    @status = page_status
     # All saved features, verified against the currently selected edition.
     @saved_rows = SavedFeatureCatalog.rows_for_edition(@edition)
-
-    return unless @status == :ready
-
-    @rows = FeatureCatalog.read_cached(@edition)
-    @match_count = @rows.count(&:match)
+    @match_count = @saved_rows.count(&:match)
   end
 
   def new
@@ -98,61 +92,20 @@ class FeaturesController < ApplicationController
     force = params[:refresh] == "1"
     edition = @edition
 
-    if !force && FeatureCatalog.cached?(edition)
-      redirect_to features_path(edition: edition_id)
-      return
-    end
-
-    FeatureCatalog.clear_cache!(edition) if force
-
-    if edition.corpus_ready?
-      FeatureCatalog.run_all(edition, force: force)
-      # Verify saved features against this edition too (generic, per-edition).
-      SavedFeatureCatalog.rows_for_edition(edition, force: force)
-      redirect_to features_path(edition: edition_id)
-      return
-    end
-
-    unless FeatureCatalog.verification_running?(edition)
-      FeatureVerificationJob.perform_later(edition_id, force: false)
-    end
-
-    redirect_to features_path(edition: edition_id, waiting: 1)
+    SavedFeatureCatalog.rows_for_edition(edition, force: force)
+    redirect_to features_path(edition: edition_id)
   end
 
   def show
-    if SavedFeature.url_id?(params[:id])
-      @saved_feature = SavedFeature.find_by_url_id!(params[:id])
-      @row = SavedFeatureCatalog.row_for(@saved_feature, @edition)
-      @edition_results = SavedFeatureCatalog.results_for_all_editions(@saved_feature)
-      return
-    end
-
-    @entry = Inamen::Features.fetch(params[:id])
-    @row = FeatureCatalog.find_row(@edition, params[:id])
-
-    return if @row
-
-    @status = if FeatureCatalog.verification_running?(@edition)
-                :computing
-              else
-                :pending
-              end
-  rescue ArgumentError
-    raise ActiveRecord::RecordNotFound
+    @saved_feature = SavedFeature.find_by_url_id!(params[:id])
+    @row = SavedFeatureCatalog.row_for(@saved_feature, @edition)
+    @edition_results = SavedFeatureCatalog.results_for_all_editions(@saved_feature)
   end
 
   private
 
   def edition_selection_redirect_path
     features_path
-  end
-
-  def page_status
-    return :ready if FeatureCatalog.cached?(@edition)
-    return :computing if FeatureCatalog.verification_running?(@edition) || params[:waiting].present?
-
-    :pending
   end
 
   def savable_discover_query?(query)
@@ -164,6 +117,14 @@ class FeaturesController < ApplicationController
   # Both measurable totals for the current scan, keyed by unit,
   # e.g. { "occurrences" => 158, "verses" => 153 }.
   def measure_counts(scan_params)
+    if scan_params.mode == "file_stats"
+      stats = DiscoveryScan.run_file_stats(@edition, scan_params)
+      return {
+        SavedFeature::UNIT_TOKENS => stats.total,
+        SavedFeature::UNIT_CHARACTERS => stats.character_count
+      }
+    end
+
     occurrences = measure_count(scan_params, SavedFeature::UNIT_OCCURRENCES).to_i
     if occurrences.zero? && params[:actual_count].to_i.positive?
       occurrences = params[:actual_count].to_i
@@ -178,7 +139,12 @@ class FeaturesController < ApplicationController
   # Total for a single measure from the existing search results, or nil when the
   # results are unavailable. Reuses DiscoveryScan's counting; never recounts here.
   def measure_count(scan_params, unit)
-    if unit == SavedFeature::UNIT_VERSES
+    if scan_params.mode == "file_stats"
+      stats = DiscoveryScan.run_file_stats(@edition, scan_params)
+      return stats.character_count if unit == SavedFeature::UNIT_CHARACTERS
+
+      return stats.total if unit == SavedFeature::UNIT_TOKENS
+    elsif unit == SavedFeature::UNIT_VERSES
       verse_result = read_or_run_verses(scan_params)
       verse_result && DiscoveryScan.verse_count_total(verse_result)
     else

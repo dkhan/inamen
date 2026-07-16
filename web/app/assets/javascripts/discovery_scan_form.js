@@ -165,8 +165,23 @@
     return parts.join("\n");
   }
 
+  function filterFingerprint(discoveryForm) {
+    const fieldValue = (name) => {
+      const field = discoveryForm.querySelector(`[name="${name}"]`);
+      return field ? field.value : "";
+    };
+
+    return JSON.stringify({
+      mode: fieldValue("mode"),
+      divisibleBy: fieldValue("divisible_by"),
+      minCount: fieldValue("min_count"),
+      minGroupSize: fieldValue("min_group_size"),
+      matchBy: fieldValue("match_by")
+    });
+  }
+
   function scanFingerprint(discoveryForm) {
-    return `${phraseFingerprint(discoveryForm)}\n${scopeFingerprint(discoveryForm)}`;
+    return `${filterFingerprint(discoveryForm)}\n${phraseFingerprint(discoveryForm)}\n${scopeFingerprint(discoveryForm)}`;
   }
 
   function markScanned(discoveryForm) {

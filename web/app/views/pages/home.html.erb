@@ -15,7 +15,7 @@
       <dd><code><%= @engine_version %></code></dd>
     </div>
     <div>
-      <dt>Catalog features</dt>
+      <dt>Saved features</dt>
       <dd><%= @feature_count %></dd>
     </div>
     <div>
@@ -54,8 +54,8 @@
 <section class="panel">
   <h2>Explore</h2>
   <p>
-    Browse the <%= link_to "feature catalog", features_path, class: "inline-link" %>
-    — <%= @feature_count %> verified patterns with definitions and live counts.
+    Browse <%= link_to "saved features", features_path, class: "inline-link" %>
+    — <%= @feature_count %> reusable patterns with definitions and live counts.
     Or <%= link_to "run a discovery scan", discoveries_path, class: "inline-link" %>
     to find tokens with counts divisible by any integer.
   </p>
