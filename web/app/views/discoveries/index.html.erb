@@ -136,7 +136,7 @@
                 <% if row.exclude %> <span class="badge badge-muted">exclude</span><% end %>
               </td>
               <td><%= row.case_sensitive ? "sensitive" : "insensitive" %></td>
-              <td class="num"><%= row.exclude ? "−" : "" %><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= row.exclude ? "−" : "" %><%= number_research_link(row.count) %></td>
               <td class="word-group"><%= discovery_word_count_spellings_label(row.spellings) %></td>
             </tr>
           <% end %>
@@ -145,7 +145,7 @@
           <tfoot>
             <tr class="row-total">
               <td colspan="2"><strong>Total</strong></td>
-              <td class="num"><strong><%= format_feature_count(discovery_word_count_total(@rows)) %></strong></td>
+              <td class="num"><strong><%= number_research_link(discovery_word_count_total(@rows)) %></strong></td>
               <td></td>
             </tr>
           </tfoot>
@@ -164,8 +164,8 @@
     <% elsif file_stats_mode && @file_stats %>
       <p class="hint">
         Whole-file counts for <strong>7<sup>7</sup></strong>
-        (<%= number_with_delimiter(@file_stats.seven_power) %>).
-        The entire Bible = <%= format_feature_count(@file_stats.total) %> words.
+        (<%= number_research_link(@file_stats.seven_power) %>).
+        The entire Bible = <%= number_research_link(@file_stats.total) %> words.
       </p>
       <table class="features-table discovery-table discovery-file-stats">
         <thead>
@@ -178,18 +178,18 @@
           <% @file_stats.rows.each do |row| %>
             <tr>
               <td><%= row.label %></td>
-              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= number_research_link(row.count) %></td>
             </tr>
           <% end %>
         </tbody>
         <tfoot>
           <tr class="row-total <%= discovery_file_stats_row_class("combined_total") %>">
             <td><strong>Total words (7<sup>7</sup>)</strong></td>
-            <td class="num"><strong><%= format_feature_count(@file_stats.total) %></strong></td>
+            <td class="num"><strong><%= number_research_link(@file_stats.total) %></strong></td>
           </tr>
           <tr class="<%= discovery_file_stats_row_class("file_characters") %>">
             <td>Total file characters</td>
-            <td class="num"><%= format_feature_count(@file_stats.character_count) %></td>
+            <td class="num"><%= number_research_link(@file_stats.character_count) %></td>
           </tr>
         </tfoot>
       </table>
@@ -205,7 +205,7 @@
         <tbody>
           <% @rows.each do |row| %>
             <tr>
-              <td class="num"><%= format_feature_count(row.count) %></td>
+              <td class="num"><%= number_research_link(row.count) %></td>
               <td class="num"><%= row.words.size %></td>
               <td class="word-group"><%= discovery_equal_count_words_label(row.words, match_by: row.match_by) %></td>
             </tr>
@@ -227,8 +227,8 @@
             <tr>
               <td><code><%= row.token_norm %></code></td>
               <td><code><%= row.token_raw %></code></td>
-              <td class="num"><%= format_feature_count(row.count) %></td>
-              <td class="num"><%= row.count / @scan_params.divisible_by %></td>
+              <td class="num"><%= number_research_link(row.count) %></td>
+              <td class="num"><%= number_research_link(row.count / @scan_params.divisible_by) %></td>
             </tr>
           <% end %>
         </tbody>

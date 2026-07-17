@@ -15,11 +15,11 @@
   <dl class="stats">
     <div>
       <dt>Actual</dt>
-      <dd><%= format_feature_count(@row.count) %> <%= @row.unit %></dd>
+      <dd><%= number_research_link(@row.count) %> <%= @row.unit %></dd>
     </div>
     <div>
       <dt>Expected</dt>
-      <dd><%= format_feature_count(@row.expected) %> <%= @row.unit %></dd>
+      <dd><%= number_research_link(@row.expected) %> <%= @row.unit %></dd>
     </div>
     <div>
       <dt>Status</dt>
@@ -52,7 +52,7 @@
     <section class="panel">
       <h2>KJV Code alignment</h2>
       <p>
-        Target: <strong><%= format_feature_count(@row.kjvcode_expected) %></strong>
+        Target: <strong><%= number_research_link(@row.kjvcode_expected) %></strong>
         — <%= feature_match_badge(@row.kjvcode_match) %>
       </p>
     </section>

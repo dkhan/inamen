@@ -94,6 +94,11 @@ RSpec.describe Inamen::BibleTextPreprocessor do
       2 следовавших за ними.
       1
       1 Всякая премудрость - от Господа.
+      50
+      31 а если будет исполнять, то все возможет; ибо свет Господень - путь его. Молитва Иисуса,
+      сына Сирахова
+      51
+      1 Прославлю Тебя, Господи Царю.
       Первое послание к Фессалоникийцам (Солунянам) святого апостола
       Павла
       1
@@ -115,9 +120,48 @@ RSpec.describe Inamen::BibleTextPreprocessor do
       expect(index.dig("Genesis", 1, 1)).to eq("В начале сотворил Бог небо и землю.")
       expect(index.dig("Esther", 1, 1)).to eq("И было во дни Артаксеркса.")
       expect(index.dig("Sirach", 1, 1)).to eq("Всякая премудрость - от Господа.")
+      expect(index.dig("Sirach", 50, 31)).to eq("а если будет исполнять, то все возможет; ибо свет Господень - путь его.")
+      expect(index.dig("Sirach", 51, 1)).to eq("Прославлю Тебя, Господи Царю.")
       expect(index.dig("1 Thessalonians", 1, 1)).to eq("Павел и Силуан.")
       expect(index.dig("3 Maccabees", 1, 1)).to eq("Филопатор узнал.")
-      expect(result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX)}/).length).to eq(7)
+      special_lines = result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX)}/)
+      expect(special_lines.length).to eq(8)
+      expect(special_lines).to include("#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Молитва Иисуса, сына Сирахова")
+    end
+  end
+
+  it "normalizes Russian Psalm superscriptions without blank-line separators" do
+    text = <<~TEXT
+      БИБЛИЯ
+      Бытие
+      1
+      1 В начале сотворил Бог небо и землю.
+      Псалтирь
+      1
+      Псалом Давида.
+      1 Блажен муж.
+      2 Но в законе Господа воля его.
+      17
+      1 Начальнику хора. Раба Господня Давида, который произнес слова песни сей к Господу,
+      когда Господь избавил его от рук всех врагов его и от руки Саула. И он сказал:
+      2 Возлюблю Тебя, Господи, крепость моя!
+      3 Господь - твердыня моя.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+
+      expect(result.books).to eq(["Genesis", "Psalms"])
+      expect(result.lines).to include("PSALM 1", "PSALM 17")
+      expect(result.lines).to include("Псалом Давида.")
+      expect(result.lines).to include(
+        "Начальнику хора. Раба Господня Давида, который произнес слова песни сей к Господу, " \
+        "когда Господь избавил его от рук всех врагов его и от руки Саула. И он сказал:"
+      )
+      expect(index.dig("Psalms", 1, 1)).to eq("Блажен муж.")
+      expect(index.dig("Psalms", 17, 1)).to be_nil
+      expect(index.dig("Psalms", 17, 2)).to eq("Возлюблю Тебя, Господи, крепость моя!")
     end
   end
 

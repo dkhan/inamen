@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
 require "tmpdir"
+require "tempfile"
+require "inamen/bible_text_preprocessor"
 require "inamen/corpus_store"
 require "inamen/divisible_by_seven_scan"
+require "inamen/verse_highlighter"
 
 RSpec.describe Inamen::CorpusStore do
   let(:full_lines) { Inamen::KjvFixture.lines }
@@ -42,6 +45,56 @@ RSpec.describe Inamen::CorpusStore do
       expect(moses).to eq(829)
       expect(described_class.token_counts_available?(db)).to be(true)
       expect(db.get_first_value("SELECT SUM(count) FROM token_counts").to_i).to eq(790_849)
+    end
+
+    it "preserves source order for multi-line imported special sections" do
+      source = <<~TEXT
+        Бытие
+        1
+        1 В начале сотворил Бог небо и землю.
+        Книга Есфири
+        Предисловие
+        [Во второй год царствования Артаксеркса сон видел Мардохей.]
+        1
+        1 И было во дни Артаксеркса.
+        Вторая книга Паралипоменон
+        36
+        23 Кто есть из вас.
+        [МОЛИТВА МАНАССИИ, ЦАРЯ ИУДЕЙСКОГО
+        Господи Вседержителю, Боже отцев наших.
+        Первая книга Ездры
+        1
+        1 В первый год Кира.
+      TEXT
+
+      Tempfile.create(["russian-special", ".txt"]) do |file|
+        file.write(source)
+        file.close
+        lines = Inamen::BibleTextPreprocessor.from_file(file.path).lines
+
+        Dir.mktmpdir do |dir|
+          path = File.join(dir, "sample.sqlite")
+          described_class.build!(lines, path: path)
+          db = described_class.open(path)
+          text = Inamen::VerseHighlighter.bucket_text(
+            db,
+            book: "2 Chronicles",
+            chapter: 36,
+            bucket: described_class::BUCKET_COLOPHON
+          )
+
+          expect(text).to start_with("МОЛИТВА МАНАССИИ ЦАРЯ ИУДЕЙСКОГО Господи Вседержителю")
+          esther_preface = Inamen::VerseHighlighter.bucket_text(
+            db,
+            book: "Esther",
+            chapter: 1,
+            bucket: described_class::BUCKET_COLOPHON
+          )
+          expect(esther_preface).to start_with("Предисловие Во второй год царствования")
+        ensure
+          db&.close
+        end
+      end
     end
   end
 

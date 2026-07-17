@@ -5,8 +5,8 @@ Rails.application.config.after_initialize do
 
   Thread.new do
     Rails.application.executor.wrap do
-      Rails.logger.info("[EditionWarmup] Ensuring prebuilt edition artifacts in background")
-      EditionWarmup.warm_all!(load_indexes: false)
+      Rails.logger.info("[EditionWarmup] Checking prebuilt edition artifacts in background")
+      EditionWarmup.warm_all!(build_if_missing: false, load_indexes: false)
       Rails.logger.info("[EditionWarmup] Ready")
     end
   rescue StandardError => e

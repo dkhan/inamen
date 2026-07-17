@@ -29,12 +29,23 @@ module Inamen
       | \ADavid(?:\u{2019}|')s\ Psalm\ of\ praise
     /ix
 
+    RUSSIAN_HEADING_START = /
+      \AПсалом\b
+      | \AНачальнику\ хора\b
+      | \AПеснь\b
+      | \AУчение\b
+      | \AСынов\ Кореевых\b
+      | \AМолитва\b
+      | \AХвалебная\ песнь\b
+    /ix
+
     def self.stanza_label?(stripped_line)
       STANZA_LABELS.include?(stripped_line.to_s.strip)
     end
 
     def self.match?(stripped_line)
-      stripped_line.to_s.strip.match?(HEADING_START)
+      line = stripped_line.to_s.strip
+      line.match?(HEADING_START) || line.match?(RUSSIAN_HEADING_START)
     end
   end
 end

@@ -128,13 +128,6 @@ module FeaturesHelper
     )
   end
 
-  def edition_options(selected_id)
-    options_for_select(
-      EditionContext.all_ids.map { |id| [id, id] },
-      selected_id
-    )
-  end
-
   def feature_kjvcode_link(url)
     return if url.blank?
 

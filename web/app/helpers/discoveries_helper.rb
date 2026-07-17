@@ -228,21 +228,25 @@ module DiscoveriesHelper
     scope_label = format_discovery_scope_label(summary&.scope_label || scan_params.search_selection.label)
     occurrences = summary&.occurrences || discovery_word_count_total(rows)
 
-    text = "Found #{number_with_delimiter(occurrences)} word match(es)"
+    parts = ["Found ", number_research_link(occurrences), " word match(es)"]
     if summary
-      text += " in #{number_with_delimiter(summary.verses)} Verse(s) in " \
-              "#{number_with_delimiter(summary.chapters)} Chapter(s) in " \
-              "#{number_with_delimiter(summary.books)} Book(s)"
+      parts.concat([
+        " in ", number_research_link(summary.verses), " Verse(s) in ",
+        number_research_link(summary.chapters), " Chapter(s) in ",
+        number_research_link(summary.books), " Book(s)"
+      ])
     end
-    "#{text} within #{scope_label}"
+    safe_join(parts.concat([" within #{scope_label}"]))
   end
 
   def discovery_verse_match_summary(summary)
     scope_label = format_discovery_scope_label(summary.scope_label)
-    "Found #{number_with_delimiter(summary.occurrences)} Occurrence(s) in " \
-      "#{number_with_delimiter(summary.verses)} Verse(s) in " \
-      "#{number_with_delimiter(summary.chapters)} Chapter(s) in " \
-      "#{number_with_delimiter(summary.books)} Book(s) within #{scope_label}"
+    safe_join([
+      "Found ", number_research_link(summary.occurrences), " Occurrence(s) in ",
+      number_research_link(summary.verses), " Verse(s) in ",
+      number_research_link(summary.chapters), " Chapter(s) in ",
+      number_research_link(summary.books), " Book(s) within #{scope_label}"
+    ])
   end
 
   def discovery_verse_reference(row)

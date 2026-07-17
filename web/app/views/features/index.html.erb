@@ -50,8 +50,8 @@
             <%= link_to row.name, feature_path(row.id, edition: @edition.edition_id), class: "feature-link" %>
             <div class="feature-id"><code><%= row.id %></code> <span class="badge badge-muted">saved</span></div>
           </td>
-          <td class="num"><%= format_feature_count(row.count) %></td>
-          <td class="num"><%= format_feature_count(row.expected) %></td>
+          <td class="num"><%= number_research_link(row.count) %></td>
+          <td class="num"><%= number_research_link(row.expected) %></td>
           <td><%= row.unit %></td>
           <td><%= row.scope %></td>
           <td class="feature-actions"><%= saved_feature_actions(row, edition: @edition.edition_id) %></td>

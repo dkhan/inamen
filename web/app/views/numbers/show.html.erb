@@ -1,0 +1,208 @@
+<% content_for :title, "#{number_with_delimiter(@facts.number)} — Numbers — Inamen" %>
+<% content_for :head do %>
+  <%= javascript_include_tag "number_lookup", defer: true %>
+<% end %>
+
+<div class="page-header">
+  <p class="breadcrumb"><%= link_to "Numbers", numbers_path %> / <%= number_research_link(@facts.number) %></p>
+  <%= form_with url: numbers_path, method: :get, local: true, class: "number-title-form" do %>
+    <%= text_field_tag :number, number_with_delimiter(@facts.number),
+        inputmode: "numeric",
+        pattern: "[0-9,]+",
+        required: true,
+        class: "number-title-input",
+        aria: { label: "Number" },
+        data: { number_lookup_input: true } %>
+  <% end %>
+  <p class="lead">Number Lab facts for counts and pattern research.</p>
+</div>
+
+<section class="panel">
+  <h2>Identity</h2>
+  <dl class="stats">
+    <div>
+      <dt>Digit sum</dt>
+      <dd><%= number_research_link(@facts.digit_sum) %></dd>
+    </div>
+    <div>
+      <dt>Digital root</dt>
+      <dd><%= number_research_link(@facts.digital_root) %></dd>
+    </div>
+    <div>
+      <dt>Parity</dt>
+      <dd><%= @facts.number.even? ? "even" : "odd" %></dd>
+    </div>
+    <div>
+      <dt>Classification</dt>
+      <dd><%= @facts.classification %></dd>
+    </div>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>Prime Structure</h2>
+  <dl class="stats">
+    <div>
+      <dt>Factorization</dt>
+      <dd><%= number_factorization(@facts) %></dd>
+    </div>
+    <div>
+      <dt>Divisors</dt>
+      <dd><%= number_research_link(@facts.divisor_count) %></dd>
+    </div>
+    <div>
+      <dt>Sum of divisors</dt>
+      <dd><%= number_research_link(@facts.divisor_sum) %></dd>
+    </div>
+    <div>
+      <dt>Proper divisor sum</dt>
+      <dd><%= number_research_link(@facts.proper_divisor_sum) %></dd>
+    </div>
+  </dl>
+  <ul class="detail-list number-detail-list">
+    <%= number_prime_index_list(@facts) %>
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>Seven Patterns</h2>
+  <dl class="stats">
+    <div>
+      <dt>Divisible by <%= number_research_link(7) %></dt>
+      <dd><%= yes_no(@facts.seven[:divisible]) %></dd>
+    </div>
+    <div>
+      <dt>Power of <%= number_research_link(7) %> factor</dt>
+      <dd>
+        <% if @facts.seven[:exponent].positive? %>
+          <%= number_research_link(7) %><sup><%= number_research_link(@facts.seven[:exponent]) %></sup> × <%= number_research_link(@facts.seven[:cofactor]) %>
+        <% else %>
+          none
+        <% end %>
+      </dd>
+    </div>
+    <div>
+      <dt>Modulo <%= number_research_link(7) %></dt>
+      <dd><%= number_research_link(7) %> × <%= number_research_link(@facts.seven[:quotient]) %> + <%= number_research_link(@facts.seven[:remainder_mod_7]) %></dd>
+    </div>
+    <div>
+      <dt>Nearest <%= number_research_link(7) %> power</dt>
+      <dd><%= number_research_link(@facts.seven[:nearest_power]) %></dd>
+    </div>
+  </dl>
+  <ul class="detail-list number-detail-list">
+    <li>
+      <%= number_expression_link(
+            number_research_link(@facts.number),
+            " = ",
+            number_research_link(49),
+            " × ",
+            number_research_link(@facts.seven[:quotient_49]),
+            " + ",
+            number_research_link(@facts.seven[:remainder_mod_49])
+          ) %>
+    </li>
+    <li>
+      <%= number_expression_link(
+            number_research_link(@facts.number),
+            " = ",
+            number_research_link(343),
+            " × ",
+            number_research_link(@facts.seven[:quotient_343]),
+            " + ",
+            number_research_link(@facts.seven[:remainder_mod_343])
+          ) %>
+    </li>
+    <% if @facts.seven[:balanced_sum].present? %>
+      <li>
+        <%= number_expression_link(
+              number_research_link(@facts.number / 2),
+              " + ",
+              number_research_link(@facts.number / 2),
+              " = ",
+              number_research_link(@facts.number / 14),
+              "x",
+              number_research_link(7),
+              " + ",
+              number_research_link(@facts.number / 14),
+              "x",
+              number_research_link(7)
+            ) %>
+      </li>
+    <% end %>
+  </ul>
+</section>
+
+<section class="panel">
+  <h2>Pi and Phi</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Sequence</th>
+        <th>First</th>
+        <th><%= number_research_link(7, label: "7th") %></th>
+        <th><%= number_research_link(77, label: "77th") %></th>
+        <th><%= number_research_link(777, label: "777th") %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @facts.sequences.each do |sequence| %>
+        <tr>
+          <td><%= sequence.name %></td>
+          <td><%= sequence_occurrence_rank_label(sequence, 1) %></td>
+          <td><%= sequence_occurrence_rank_label(sequence, 7) %></td>
+          <td><%= sequence_occurrence_rank_label(sequence, 77) %></td>
+          <td><%= sequence_occurrence_rank_label(sequence, 777) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Other Facts</h2>
+  <dl class="stats">
+    <div>
+      <dt>Square</dt>
+      <dd><%= yes_no(@facts.figurate[:square]) %></dd>
+    </div>
+    <div>
+      <dt>Cube</dt>
+      <dd><%= yes_no(@facts.figurate[:cube]) %></dd>
+    </div>
+    <div>
+      <dt>Triangular</dt>
+      <dd><%= yes_no(@facts.figurate[:triangular]) %></dd>
+    </div>
+    <div>
+      <dt>Fibonacci</dt>
+      <dd><%= yes_no(@facts.figurate[:fibonacci]) %></dd>
+    </div>
+    <div>
+      <dt>Nearest square</dt>
+      <dd><%= number_research_link(@facts.figurate[:nearest_square]) %></dd>
+    </div>
+    <div>
+      <dt>Nearest cube</dt>
+      <dd><%= number_research_link(@facts.figurate[:nearest_cube]) %></dd>
+    </div>
+  </dl>
+</section>
+
+<section class="panel">
+  <h2>Bases</h2>
+  <dl class="stats number-base-stats">
+    <div>
+      <dt>Binary</dt>
+      <dd><%= number_code_link(@facts.number, label: @facts.base_representations[:binary]) %></dd>
+    </div>
+    <div>
+      <dt>Octal</dt>
+      <dd><%= number_code_link(@facts.number, label: @facts.base_representations[:octal]) %></dd>
+    </div>
+    <div>
+      <dt>Hex</dt>
+      <dd><%= number_code_link(@facts.number, label: @facts.base_representations[:hexadecimal]) %></dd>
+    </div>
+  </dl>
+</section>

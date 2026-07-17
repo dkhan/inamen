@@ -17,27 +17,33 @@ class ScripturesController < ApplicationController
 
   def chapter
     unless Inamen::BookCategories.book_set.include?(@book)
-      redirect_to scripture_path_with_state, alert: "Unknown book: #{@book}"
+      redirect_to first_scripture_chapter_path, alert: "Unknown book: #{@book}"
       return
     end
 
     if @chapter <= 0
-      redirect_to scripture_path_with_state, alert: "Invalid chapter."
+      redirect_to first_scripture_chapter_path, alert: "Invalid chapter."
+      return
+    end
+
+    @scripture_books = @edition.books
+    unless @scripture_books.include?(@book)
+      redirect_to first_scripture_chapter_path, alert: "Book not found in #{@edition.edition_id}: #{@book}"
+      return
+    end
+
+    @scripture_chapters = @edition.chapter_numbers(@book)
+    unless @scripture_chapters.include?(@chapter)
+      redirect_to scripture_chapter_path(book: @book, chapter: @scripture_chapters.first, edition: @edition.edition_id),
+                  alert: "Chapter not found."
       return
     end
 
     @verses = @edition.chapter_verses(book: @book, chapter: @chapter)
-    if @verses.empty?
-      redirect_to scripture_path_with_state, alert: "Chapter not found."
-      return
-    end
-
     @superscription_text = @edition.chapter_superscription(book: @book, chapter: @chapter)
     @colophon_text = @edition.chapter_colophon(book: @book, chapter: @chapter)
     @highlight_extra_bucket = highlight_extra_bucket?
     @highlight_scroll_target = highlight_scroll_target
-    @scripture_books = @edition.books
-    @scripture_chapters = @edition.chapter_numbers(@book)
 
     @prev_chapter = previous_chapter_ref
     @next_chapter = next_chapter_ref
@@ -84,6 +90,12 @@ class ScripturesController < ApplicationController
     return "v#{@highlight_verse}" if @highlight_verse.positive? && @highlight_indices.any?
 
     nil
+  end
+
+  def first_scripture_chapter_path
+    book = @edition.books.first || ScriptureState::DEFAULT_BOOK
+    chapter = @edition.chapter_numbers(book).first || ScriptureState::DEFAULT_CHAPTER
+    scripture_chapter_path(book: book, chapter: chapter, edition: @edition.edition_id)
   end
 
   def previous_chapter_ref

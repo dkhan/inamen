@@ -44,9 +44,25 @@ class ScripturesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", "Genesis 1"
+    assert_select "#scripture-edition-select option[selected][value=?]", "test_edition"
     assert_select "#scripture-book-select option[selected][value=?]", "Genesis"
     assert_select "#scripture-chapter-select option[selected][value=?]", "1"
     assert_select "#scripture-book-select[data-chapters*=?]", "Genesis"
+    assert_select "#scripture-book-select[data-path-template*=?]", "__EDITION__"
     assert_select ".scripture-verse", /In the beginning/
+  end
+
+  test "chapter page redirects to first chapter when selected book is missing from edition" do
+    fake = FakeEdition.new(edition_id: "test_edition")
+
+    EditionContext.stub(:all_ids, ["test_edition"]) do
+      EditionContext.stub(:default_id, "test_edition") do
+        EditionContext.stub(:new, fake) do
+          get scripture_chapter_path(book: "Tobit", chapter: 1, edition: "test_edition")
+        end
+      end
+    end
+
+    assert_redirected_to scripture_chapter_path(book: "Genesis", chapter: 1, edition: "test_edition")
   end
 end

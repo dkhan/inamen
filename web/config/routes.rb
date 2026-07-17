@@ -15,6 +15,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :numbers, only: %i[index show], param: :id
+
   get "scripture", to: "scriptures#show", as: :scripture
   get "scripture/:book/chapters/:chapter", to: "scriptures#chapter", as: :scripture_chapter
 

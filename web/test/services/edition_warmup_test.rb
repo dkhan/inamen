@@ -35,4 +35,30 @@ class EditionWarmupTest < ActiveSupport::TestCase
 
     assert editions.values.none?(&:warmed)
   end
+
+  test "warm_all can skip missing artifact builds" do
+    edition = FakeEdition.new(edition_id: "one")
+
+    EditionContext.stub(:all_ids, ["one"]) do
+      EditionContext.stub(:new, edition) do
+        Inamen::CorpusPublisher.stub(:prebuilt_path, "missing.sqlite") do
+          Inamen::VerseIndexPublisher.stub(:prebuilt_path, "missing.marshal") do
+            Inamen::WordStreamPublisher.stub(:prebuilt_path, "missing.marshal") do
+              Inamen::LexiconPublisher.stub(:prebuilt_path, "missing.marshal") do
+                Inamen::CanonOrdinalsPublisher.stub(:prebuilt_path, "missing.marshal") do
+                  File.stub(:file?, false) do
+                    Inamen::CorpusPublisher.stub(:build_prebuilt!, ->(*) { raise "should not build corpus" }) do
+                      EditionWarmup.warm_all!(build_if_missing: false, load_indexes: false)
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    refute edition.warmed
+  end
 end

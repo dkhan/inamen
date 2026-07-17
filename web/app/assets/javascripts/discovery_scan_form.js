@@ -83,8 +83,7 @@
     return Array.from(inputs).some((input) => {
       const row = input.closest("[data-search-phrase-row]");
       if (rowDisabled(row) || rowExcluded(row)) return false;
-      if (input.value.trim() === "") return false;
-      return row.dataset.canSearch === "true";
+      return input.value.trim() !== "";
     });
   }
 

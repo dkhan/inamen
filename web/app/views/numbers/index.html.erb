@@ -1,0 +1,32 @@
+<% content_for :title, "Numbers — Inamen" %>
+
+<div class="page-header">
+  <h1>Numbers</h1>
+  <p class="lead">Research counts, factors, seven-patterns, and sequence occurrences.</p>
+</div>
+
+<% if flash[:alert].present? %>
+  <section class="panel notice">
+    <p><%= flash[:alert] %></p>
+  </section>
+<% end %>
+
+<section class="panel">
+  <%= form_with url: numbers_path, method: :get, local: true, class: "feature-save-form number-lookup-form" do %>
+    <div class="form-field">
+      <%= label_tag :number, "Number", class: "form-label" %>
+      <%= number_field_tag :number, params[:number], min: 1, required: true,
+          class: "form-input input-narrow", autofocus: true %>
+    </div>
+    <%= submit_tag "Research", class: "button button-primary" %>
+  <% end %>
+</section>
+
+<section class="panel">
+  <h2>Examples</h2>
+  <p class="number-example-list">
+    <% @examples.each do |number| %>
+      <%= number_research_link(number) %>
+    <% end %>
+  </p>
+</section>

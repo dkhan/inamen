@@ -9,6 +9,7 @@ module Inamen
       labels = BookStatsReport.book_label_at_each_index(lines)
       state = { book: nil, chapter: nil, verse: nil }
       verse_buffers = {}
+      bucket_buffers = {}
 
       KjvLineParser.each_event(lines) do |event|
         book = labels[event.lineno - 1]
@@ -39,16 +40,14 @@ module Inamen
 
         testament = CorpusStore.testament_for(book)
         chapter = state[:chapter] || 0
+        special_chapter = state[:chapter] || 1
 
         if event.kind == KjvParseEvent::KIND_PSALM_HEADING
-          emit_line_tokens(block, book, chapter, 0, s, CorpusStore::BUCKET_PSALM_HEADING, testament,
-                           event.lineno)
+          append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_PSALM_HEADING, s)
         elsif event.kind == KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING && d[:psalm_heading_words].to_i.positive?
-          emit_line_tokens(block, book, chapter, 0, s, CorpusStore::BUCKET_PSALM_HEADING, testament,
-                           event.lineno)
+          append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_PSALM_HEADING, s)
         elsif colophon_event?(event)
-          emit_line_tokens(block, book, chapter, 0, special_text(s), CorpusStore::BUCKET_COLOPHON, testament,
-                           event.lineno)
+          append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_COLOPHON, special_text(s))
         end
 
         next unless d[:verse_text_words].to_i.positive?
@@ -64,6 +63,11 @@ module Inamen
       verse_buffers.each do |(book, chapter, verse), text|
         testament = CorpusStore.testament_for(book)
         emit_text_tokens(block, book, chapter, verse, text, CorpusStore::BUCKET_VERSE_TEXT, testament, 0)
+      end
+
+      bucket_buffers.each do |(book, chapter, verse, bucket), text|
+        testament = CorpusStore.testament_for(book)
+        emit_text_tokens(block, book, chapter, verse, text, bucket, testament, 0)
       end
     end
 
@@ -81,10 +85,13 @@ module Inamen
     end
     private_class_method :special_text
 
-    def self.emit_line_tokens(block, book, chapter, verse, text, bucket, testament, lineno)
-      emit_text_tokens(block, book, chapter, verse, text, bucket, testament, lineno)
+    def self.append_buffer(buffers, book, chapter, verse, bucket, text)
+      key = [book, chapter, verse, bucket]
+      buf = (buffers[key] ||= +"")
+      buf << " " unless buf.empty?
+      buf << text.to_s
     end
-    private_class_method :emit_line_tokens
+    private_class_method :append_buffer
 
     def self.emit_text_tokens(block, book, chapter, verse, text, bucket, testament, lineno)
       Tokenizer.tokenize(text).each_with_index do |token, i|

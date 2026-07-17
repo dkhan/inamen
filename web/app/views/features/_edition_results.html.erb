@@ -16,8 +16,8 @@
       <% results.each do |record| %>
         <tr>
           <td><code><%= record.edition_id %></code></td>
-          <td class="num"><%= record.actual.nil? ? "—" : format_feature_count(record.actual) %></td>
-          <td class="num"><%= format_feature_count(saved_feature.expected_count) %></td>
+          <td class="num"><%= record.actual.nil? ? "—" : number_research_link(record.actual) %></td>
+          <td class="num"><%= number_research_link(saved_feature.expected_count) %></td>
           <td>
             <%= feature_discover_status_link(
                   saved_feature.url_id,

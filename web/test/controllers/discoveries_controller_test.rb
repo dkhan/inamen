@@ -185,4 +185,40 @@ class DiscoveriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".discovery-verse-summary",
                   "Found 153 word match(es) in 153 Verse(s) in 21 Chapter(s) in 4 Book(s) within Gospels"
   end
+
+  test "word count scan finds capitalized Cyrillic case-insensitively" do
+    path = Rails.root.join("..", "data", "RUSSIAN_SYNODAL_77.txt").expand_path
+    skip "Russian Synodal fixture missing" unless path.file?
+
+    edition = Edition.find_or_create_by!(short_name: "russian_synodal_77") do |record|
+      record.name = "Russian Synodal 77"
+      record.corpus_type = "bible"
+      record.source_path = path.to_s
+      record.source_filename = path.basename.to_s
+      record.source_checksum = Digest::SHA256.file(path).hexdigest
+      record.byte_size = path.size
+      record.imported_at = Time.current
+    end
+    edition.update!(
+      source_path: path.to_s,
+      source_filename: path.basename.to_s,
+      source_checksum: Digest::SHA256.file(path).hexdigest,
+      byte_size: path.size,
+      metadata: edition.metadata.to_h.merge("language" => "ru")
+    )
+
+    scan_payload = {
+      edition: "russian_synodal_77",
+      mode: "word_count",
+      search_selection: { submitted: "1", all_books: "1", colophons: "1", superscriptions: "1" },
+      search_phrases: { "0" => { phrase: "Святой" } }
+    }
+
+    scan_params = DiscoveryScan.normalize(scan_payload)
+    edition_context = EditionContext.new("russian_synodal_77")
+    assert DiscoveryScan.valid_search_terms?(edition_context, scan_params.query_terms)
+
+    rows = DiscoveryScan.compute_word_count_rows(edition_context, scan_params)
+    assert_equal 41, rows.find { |row| row.pattern == "Святой" }&.count
+  end
 end

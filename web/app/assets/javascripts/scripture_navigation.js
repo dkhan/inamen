@@ -1,8 +1,9 @@
 (function () {
-  function pathFor(template, book, chapter) {
+  function pathFor(template, book, chapter, edition) {
     return template
       .replace("__BOOK__", encodeURIComponent(book))
-      .replace("__CHAPTER__", encodeURIComponent(chapter));
+      .replace("__CHAPTER__", encodeURIComponent(chapter))
+      .replace("__EDITION__", encodeURIComponent(edition));
   }
 
   function replaceChapterOptions(select, chapters, selected) {
@@ -17,6 +18,7 @@
   }
 
   function init() {
+    const editionSelect = document.getElementById("scripture-edition-select");
     const bookSelect = document.getElementById("scripture-book-select");
     const chapterSelect = document.getElementById("scripture-chapter-select");
     if (!bookSelect || !chapterSelect) return;
@@ -31,15 +33,25 @@
     const template = bookSelect.dataset.pathTemplate;
     if (!template) return;
 
+    function selectedEdition() {
+      return editionSelect ? editionSelect.value : "";
+    }
+
+    if (editionSelect) {
+      editionSelect.addEventListener("change", () => {
+        window.location.assign(pathFor(template, bookSelect.value, chapterSelect.value, selectedEdition()));
+      });
+    }
+
     bookSelect.addEventListener("change", () => {
       const book = bookSelect.value;
       const chapters = chapterMap[book] || [1];
       replaceChapterOptions(chapterSelect, chapters, chapters[0]);
-      window.location.assign(pathFor(template, book, chapters[0]));
+      window.location.assign(pathFor(template, book, chapters[0], selectedEdition()));
     });
 
     chapterSelect.addEventListener("change", () => {
-      window.location.assign(pathFor(template, bookSelect.value, chapterSelect.value));
+      window.location.assign(pathFor(template, bookSelect.value, chapterSelect.value, selectedEdition()));
     });
   }
 

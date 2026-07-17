@@ -6,13 +6,20 @@
 <section class="panel scripture-panel">
   <div class="scripture-picker">
     <label>
+      Edition
+      <%= select_tag :scripture_edition,
+          edition_options(@edition.edition_id),
+          id: "scripture-edition-select" %>
+    </label>
+
+    <label>
       Book
       <%= select_tag :scripture_book,
           options_for_select(@scripture_books, @book),
           id: "scripture-book-select",
           data: {
             chapters: @scripture_books.to_h { |book| [book, @edition.chapter_numbers(book)] }.to_json,
-            path_template: scripture_chapter_path(book: "__BOOK__", chapter: "__CHAPTER__", edition: @edition.edition_id)
+            path_template: scripture_chapter_path(book: "__BOOK__", chapter: "__CHAPTER__", edition: "__EDITION__")
           } %>
     </label>
 

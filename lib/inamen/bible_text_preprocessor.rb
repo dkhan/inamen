@@ -68,82 +68,148 @@ module Inamen
     private
 
     RUSSIAN_BOOK_TITLES = {
+      "ПЕРВАЯ КНИГА МОИСЕЕВА БЫТИЕ" => "Genesis",
       "Бытие" => "Genesis",
+      "ВТОРАЯ КНИГА МОИСЕЕВА ИСХОД" => "Exodus",
       "Исход" => "Exodus",
+      "ТРЕТЬЯ КНИГА МОИСЕЕВА ЛЕВИТ" => "Leviticus",
       "Левит" => "Leviticus",
+      "ЧЕТВЕРТАЯ КНИГА МОИСЕЕВА ЧИСЛА" => "Numbers",
       "Числа" => "Numbers",
+      "ПЯТАЯ КНИГА МОИСЕЕВА ВТОРОЗАКОНИЕ" => "Deuteronomy",
       "Второзаконие" => "Deuteronomy",
+      "КНИГА ИИСУСА НАВИНА" => "Joshua",
       "Книга Иисуса Навина" => "Joshua",
+      "КНИГА СУДЕЙ ИЗРАИЛЕВЫХ" => "Judges",
       "Книга Судей израилевых" => "Judges",
+      "КНИГА РУФЬ" => "Ruth",
       "Книга Руфи" => "Ruth",
+      "ПЕРВАЯ КНИГА ЦАРСТВ" => "1 Samuel",
       "Первая книга Царств" => "1 Samuel",
+      "ВТОРАЯ КНИГА ЦАРСТВ" => "2 Samuel",
       "Вторая книга Царств" => "2 Samuel",
+      "ТРЕТЬЯ КНИГА ЦАРСТВ" => "1 Kings",
       "Третья книга Царств" => "1 Kings",
+      "ЧЕТВЕРТАЯ КНИГА ЦАРСТВ" => "2 Kings",
       "Четвертая книга Царств" => "2 Kings",
+      "ПЕРВАЯ КНИГА ПАРАЛИПОМЕНОН" => "1 Chronicles",
       "Первая книга Паралипоменон" => "1 Chronicles",
+      "ВТОРАЯ КНИГА ПАРАЛИПОМЕНОН" => "2 Chronicles",
       "Вторая книга Паралипоменон" => "2 Chronicles",
+      "ПЕРВАЯ КНИГА ЕЗДРЫ" => "Ezra",
       "Первая книга Ездры" => "Ezra",
+      "КНИГА НЕЕМИИ" => "Nehemiah",
       "Книга Неемии" => "Nehemiah",
       "Вторая книга Ездры" => "1 Esdras",
       "Книга Товита" => "Tobit",
       "Книга Иудифи" => "Judith",
+      "КНИГА ЕСФИРЬ" => "Esther",
       "Книга Есфири" => "Esther",
+      "КНИГА ИОВА" => "Job",
       "Книга Иова" => "Job",
+      "ПСАЛТИРЬ" => "Psalms",
       "Псалтирь" => "Psalms",
+      "КНИГА ПРИТЧЕЙ СОЛОМОНОВЫХ" => "Proverbs",
       "Притчи Соломона" => "Proverbs",
+      "КНИГА ЕККЛЕСИАСТА ИЛИ ПРОПОВЕДНИКА" => "Ecclesiastes",
       "Книга Екклезиаста" => "Ecclesiastes",
+      "КНИГА ПЕСНИ ПЕСНЕЙ СОЛОМОНОВЫХ" => "Song of Solomon",
       "Песнь песней Соломона" => "Song of Solomon",
       "Книга Премудрости Соломона" => "Wisdom of Solomon",
       "Книга Премудрости Иисуса, сына Сирахова" => "Sirach",
+      "КНИГА ПРОРОКА ИСАИИ" => "Isaiah",
       "Книга пророка Исаии" => "Isaiah",
+      "КНИГА ПРОРОКА ИЕРЕМИИ" => "Jeremiah",
       "Книга пророка Иеремии" => "Jeremiah",
+      "КНИГА ПЛАЧ ИЕРЕМИИ" => "Lamentations",
       "Плач Иеремии" => "Lamentations",
       "Послание Иеремии" => "Letter of Jeremiah",
       "Книга пророка Варуха" => "Baruch",
+      "КНИГА ПРОРОКА ИЕЗЕКИИЛЯ" => "Ezekiel",
       "Книга пророка Иезекииля" => "Ezekiel",
+      "КНИГА ПРОРОКА ДАНИИЛА" => "Daniel",
       "Книга пророка Даниила" => "Daniel",
+      "КНИГА ПРОРОКА ОСИИ" => "Hosea",
       "Книга пророка Осии" => "Hosea",
+      "КНИГА ПРОРОКА ИОИЛЯ" => "Joel",
       "Книга пророка Иоиля" => "Joel",
+      "КНИГА ПРОРОКА АМОСА" => "Amos",
       "Книга пророка Амоса" => "Amos",
+      "КНИГА ПРОРОКА АВДИЯ" => "Obadiah",
       "Книга пророка Авдия" => "Obadiah",
+      "КНИГА ПРОРОКА ИОНЫ" => "Jonah",
       "Книга пророка Ионы" => "Jonah",
+      "КНИГА ПРОРОКА МИХЕЯ" => "Micah",
       "Книга пророка Михея" => "Micah",
+      "КНИГА ПРОРОКА НАУМА" => "Nahum",
       "Книга пророка Наума" => "Nahum",
+      "КНИГА ПРОРОКА АВВАКУМА" => "Habakkuk",
       "Книга пророка Аввакума" => "Habakkuk",
+      "КНИГА ПРОРОКА СОФОНИИ" => "Zephaniah",
       "Книга пророка Софонии" => "Zephaniah",
+      "КНИГА ПРОРОКА АГГЕЯ" => "Haggai",
       "Книга пророка Аггея" => "Haggai",
+      "КНИГА ПРОРОКА ЗАХАРИИ" => "Zechariah",
       "Книга пророка Захарии" => "Zechariah",
+      "КНИГА ПРОРОКА МАЛАХИИ" => "Malachi",
       "Книга пророка Малахии" => "Malachi",
       "Первая книга Маккавейская" => "1 Maccabees",
       "Вторая книга Маккавейская" => "2 Maccabees",
       "Третья книга Маккавейская" => "3 Maccabees",
       "Третья книга Ездры" => "2 Esdras",
+      "ОТ МАТФЕЯ СВЯТОЕ БЛАГОВЕСТВОВАНИЕ" => "Matthew",
       "От Матфея святое благовествование" => "Matthew",
+      "ОТ МАРКА СВЯТОЕ БЛАГОВЕСТВОВАНИЕ" => "Mark",
       "От Марка святое благовествование" => "Mark",
+      "ОТ ЛУКИ СВЯТОЕ БЛАГОВЕСТВОВАНИЕ" => "Luke",
       "От Луки святое благовествование" => "Luke",
+      "ОТ ИОАННА СВЯТОЕ БЛАГОВЕСТВОВАНИЕ" => "John",
       "От Иоанна святое благовествование" => "John",
+      "ДЕЯНИЯ СВЯТЫХ АПОСТОЛОВ" => "Acts",
       "Деяния святых апостолов" => "Acts",
+      "СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ИАКОВА" => "James",
       "Соборное послание святого апостола Иакова" => "James",
+      "ПЕРВОЕ СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ПЕТРА" => "1 Peter",
       "Первое соборное послание святого апостола Петра" => "1 Peter",
+      "ВТОРОЕ СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ПЕТРА" => "2 Peter",
       "Второе соборное послание святого апостола Петра" => "2 Peter",
+      "ПЕРВОЕ СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ИОАННА" => "1 John",
       "Первое соборное послание святого апостола Иоанна" => "1 John",
+      "ВТОРОЕ СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ИОАННА" => "2 John",
       "Второе соборное послание святого апостола Иоанна" => "2 John",
+      "ТРЕТЬЕ СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ИОАННА" => "3 John",
       "Третье соборное послание святого апостола Иоанна" => "3 John",
+      "СОБОРНОЕ ПОСЛАНИЕ СВЯТОГО АПОСТОЛА ИУДЫ" => "Jude",
       "Соборное послание святого апостола Иуды" => "Jude",
+      "ПОСЛАНИЕ К РИМЛЯНАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Romans",
       "Послание к Римлянам святого апостола Павла" => "Romans",
+      "ПЕРВОЕ ПОСЛАНИЕ К КОРИНФЯНАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "1 Corinthians",
       "Первое послание к Коринфянам святого апостола Павла" => "1 Corinthians",
+      "ВТОРОЕ ПОСЛАНИЕ К КОРИНФЯНАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "2 Corinthians",
       "Второе послание к Коринфянам святого апостола Павла" => "2 Corinthians",
+      "ПОСЛАНИЕ К ГАЛАТАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Galatians",
       "Послание к Галатам святого апостола Павла" => "Galatians",
+      "ПОСЛАНИЕ К ЕФЕСЯНАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Ephesians",
       "Послание к Ефесянам святого апостола Павла" => "Ephesians",
+      "ПОСЛАНИЕ К ФИЛИППИЙЦАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Philippians",
       "Послание к Филиппийцам святого апостола Павла" => "Philippians",
+      "ПОСЛАНИЕ К КОЛОССЯНАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Colossians",
       "Послание к Колоссянам святого апостола Павла" => "Colossians",
+      "ПЕРВОЕ ПОСЛАНИЕ К ФЕССАЛОНИКИЙЦАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "1 Thessalonians",
       "Первое послание к Фессалоникийцам (Солунянам) святого апостола Павла" => "1 Thessalonians",
+      "ВТОРОЕ ПОСЛАНИЕ К ФЕССАЛОНИКИЙЦАМ СВЯТОГО АПОСТОЛА ПАВЛА" => "2 Thessalonians",
       "Второе послание к Фессалоникийцам (Солунянам) святого апостола Павла" => "2 Thessalonians",
+      "ПЕРВОЕ ПОСЛАНИЕ К ТИМОФЕЮ СВЯТОГО АПОСТОЛА ПАВЛА" => "1 Timothy",
       "Первое послание к Тимофею святого апостола Павла" => "1 Timothy",
+      "ВТОРОЕ ПОСЛАНИЕ К ТИМОФЕЮ СВЯТОГО АПОСТОЛА ПАВЛА" => "2 Timothy",
       "Второе послание к Тимофею святого апостола Павла" => "2 Timothy",
+      "ПОСЛАНИЕ К ТИТУ СВЯТОГО АПОСТОЛА ПАВЛА" => "Titus",
       "Послание к Титу святого апостола Павла" => "Titus",
+      "ПОСЛАНИЕ К ФИЛИМОНУ СВЯТОГО АПОСТОЛА ПАВЛА" => "Philemon",
       "Послание к Филимону святого апостола Павла" => "Philemon",
+      "ПОСЛАНИЕ К ЕВРЕЯМ СВЯТОГО АПОСТОЛА ПАВЛА" => "Hebrews",
       "Послание к Евреям святого апостола Павла" => "Hebrews",
+      "ОТКРОВЕНИЕ СВЯТОГО ИОАННА БОГОСЛОВА" => "Revelation",
       "Откровение святого Иоанна Богослова" => "Revelation"
     }.freeze
 
@@ -168,7 +234,7 @@ module Inamen
     end
 
     def russian_synodal?(lines)
-      lines.first(100).any? { |line| normalize_russian_title(line) == "Бытие" }
+      lines.first(500).any? { |line| RUSSIAN_BOOK_TITLES.key?(normalize_russian_title(line)) }
     end
 
     def process_russian_synodal(lines)
@@ -176,6 +242,7 @@ module Inamen
       books = []
       current_book = nil
       current_verse = nil
+      current_psalm_heading = nil
       special_section = false
       skip_until = -1
 
@@ -186,6 +253,13 @@ module Inamen
         current_verse = nil
       end
 
+      flush_psalm_heading = lambda do
+        next unless current_psalm_heading
+
+        processed << current_psalm_heading
+        current_psalm_heading = nil
+      end
+
       lines.each_with_index do |line, index|
         next if index <= skip_until
 
@@ -194,6 +268,7 @@ module Inamen
 
         if (match = russian_book_at(lines, index))
           flush_verse.call
+          flush_psalm_heading.call
           book, consumed = match
           books << book unless books.include?(book)
           raise Error, "too many books (max #{MAX_BOOKS})" if books.length > MAX_BOOKS
@@ -209,6 +284,7 @@ module Inamen
 
         if russian_special_heading?(stripped)
           flush_verse.call
+          flush_psalm_heading.call
           special_section = true
           processed << special_line(stripped)
           next
@@ -216,6 +292,7 @@ module Inamen
 
         if stripped.match?(CHAPTER_LINE)
           flush_verse.call
+          flush_psalm_heading.call
           special_section = false
           processed << (current_book == "Psalms" ? "PSALM #{stripped}" : "CHAPTER #{stripped}")
           next
@@ -223,11 +300,32 @@ module Inamen
 
         if special_section
           flush_verse.call
+          flush_psalm_heading.call
           processed << special_line(stripped)
           next
         end
 
+        if current_book == "Psalms"
+          if (heading = russian_psalm_heading_start(stripped))
+            flush_verse.call
+            current_psalm_heading = append_text(current_psalm_heading, heading)
+            next
+          elsif current_psalm_heading && !stripped.match?(RUSSIAN_VERSE_LINE)
+            current_psalm_heading = append_text(current_psalm_heading, stripped)
+            next
+          end
+        end
+
+        if current_book == "Sirach" && current_verse&.end_with?(" Молитва Иисуса,") && stripped == "сына Сирахова"
+          current_verse.delete_suffix!(" Молитва Иисуса,")
+          flush_verse.call
+          flush_psalm_heading.call
+          processed << special_line("Молитва Иисуса, сына Сирахова")
+          next
+        end
+
         if (m = stripped.match(RUSSIAN_VERSE_LINE))
+          flush_psalm_heading.call
           flush_verse.call
           current_verse = "#{m[1]} #{m[2]}"
         elsif current_verse
@@ -235,9 +333,10 @@ module Inamen
         end
       end
 
+      flush_psalm_heading.call
       flush_verse.call
       validate_bible_corpus!(processed, books)
-      Result.new(lines: processed, books: books, language: "ru", canon: "russian_synodal_77")
+      Result.new(lines: processed, books: books, language: "ru", canon: russian_synodal_canon(books))
     end
 
     def russian_book_at(lines, index)
@@ -273,6 +372,23 @@ module Inamen
 
     def russian_special_heading?(stripped)
       stripped == "Предисловие" || stripped.start_with?("[МОЛИТВА МАНАССИИ")
+    end
+
+    def russian_synodal_canon(books)
+      books.length == 66 ? "russian_synodal_66" : "russian_synodal_77"
+    end
+
+    def russian_psalm_heading_start(stripped)
+      candidate = stripped.sub(/\A1\s+/, "")
+      return candidate if PsalmHeading.match?(candidate)
+
+      nil
+    end
+
+    def append_text(base, addition)
+      return addition.to_s if base.nil? || base.empty?
+
+      "#{base} #{addition}"
     end
 
     def special_line(stripped)
