@@ -25,9 +25,11 @@ class DiscoveriesController < ApplicationController
   end
 
   def dictionary
-    @edition.word_stream_index
     expires_in 7.days, public: false
-    render json: { words: @edition.dictionary_words }
+    render json: {
+      cache_version: @edition.dictionary_cache_version,
+      words: @edition.dictionary_words
+    }
   end
 
   def verses

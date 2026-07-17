@@ -7,6 +7,7 @@
   let dictionaryPromise = null;
   let dictionaryPromiseUrl = null;
   let dictionaryLoadedUrl = null;
+  let dictionaryLoadedVersion = null;
   let normWords = null;
 
   function panel() {
@@ -16,6 +17,11 @@
   function dictionaryUrl() {
     const root = panel();
     return root ? root.dataset.dictionaryUrl : null;
+  }
+
+  function dictionaryCacheVersion() {
+    const root = panel();
+    return root ? root.dataset.dictionaryCacheVersion : null;
   }
 
   function dictionaryCacheKey(url) {
@@ -49,22 +55,29 @@
 
   function loadDictionary() {
     const url = dictionaryUrl();
+    const version = dictionaryCacheVersion();
     if (!url) return Promise.resolve([]);
 
-    if (dictionary && dictionaryLoadedUrl === url) return Promise.resolve(dictionary);
+    if (dictionary && dictionaryLoadedUrl === url && dictionaryLoadedVersion === version) return Promise.resolve(dictionary);
     if (dictionaryPromise && dictionaryPromiseUrl === url) return dictionaryPromise;
 
     dictionary = null;
     normWords = null;
     dictionaryLoadedUrl = null;
+    dictionaryLoadedVersion = null;
 
     const cacheKey = dictionaryCacheKey(url);
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
-        dictionary = JSON.parse(cached);
+        const payload = JSON.parse(cached);
+        if (!payload || payload.cache_version !== version || !Array.isArray(payload.words)) {
+          throw new Error("stale dictionary cache");
+        }
+        dictionary = payload.words;
         normWords = buildNormWords(dictionary);
         dictionaryLoadedUrl = url;
+        dictionaryLoadedVersion = version;
         return Promise.resolve(dictionary);
       } catch (_error) {
         sessionStorage.removeItem(cacheKey);
@@ -76,13 +89,15 @@
       .then((response) => response.json())
       .then((payload) => {
         const words = payload.words || [];
+        const responseVersion = payload.cache_version || null;
         if (dictionaryUrl() !== url) return words;
 
         dictionary = words;
         normWords = buildNormWords(words);
         dictionaryLoadedUrl = url;
+        dictionaryLoadedVersion = responseVersion;
         try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(words));
+          sessionStorage.setItem(cacheKey, JSON.stringify({ cache_version: responseVersion, words }));
         } catch (_error) {
           /* ignore quota errors */
         }
@@ -94,6 +109,7 @@
         dictionary = [];
         normWords = new Map();
         dictionaryLoadedUrl = url;
+        dictionaryLoadedVersion = version;
         return dictionary;
       })
       .finally(() => {

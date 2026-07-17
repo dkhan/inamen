@@ -89,6 +89,15 @@ class EditionContext
     stream.postings_raw.keys.sort
   end
 
+  def dictionary_cache_version
+    [
+      edition_id,
+      corpus_checksum_prefix,
+      Inamen::CorpusStore::INDEXER_REVISION,
+      Inamen::WordStreamIndex::FORMAT_VERSION
+    ].join(":")
+  end
+
   def phrase_completer(case_sensitive: false)
     @phrase_completers ||= {}
     key = case_sensitive ? "cs" : "ci"

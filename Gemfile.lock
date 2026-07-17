@@ -28,5 +28,8 @@ DEPENDENCIES
   rspec (~> 3.13)
   sqlite3 (~> 2.9)
 
+RUBY VERSION
+   ruby 3.4.9p0
+
 BUNDLED WITH
    2.6.5

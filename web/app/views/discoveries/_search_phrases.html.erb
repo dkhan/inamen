@@ -1,7 +1,8 @@
 <% phrases = discovery_search_phrase_rows(scan_params) %>
 
 <div class="search-phrases-field" id="search-phrases-panel"
-    data-dictionary-url="<%= dictionary_discoveries_path(edition: @edition.edition_id, v: @edition.checksum_prefix, format: :json) %>"
+    data-dictionary-url="<%= dictionary_discoveries_path(edition: @edition.edition_id, v: @edition.dictionary_cache_version, format: :json) %>"
+    data-dictionary-cache-version="<%= @edition.dictionary_cache_version %>"
     <%= "data-focus-on-load=\"true\"" if @discover_query_fresh %>>
   <span class="search-phrases-label">Search phrases</span>
   <div id="search-phrases-list" data-search-phrases-list>
