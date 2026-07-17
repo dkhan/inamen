@@ -60,6 +60,11 @@ module Inamen
       end
 
       if state.expecting_implicit_psalm_verse_1
+        if LineClassifier.classify(s) == :colophon
+          state.prev_nonempty_stripped = s
+          return colophon_line_step(lines, i, line, s)
+        end
+
         if PsalmHeading.match?(s)
           tok = Tokenizer.tokenize(s).size
           state.prev_nonempty_stripped = s
@@ -122,6 +127,11 @@ module Inamen
       end
 
       if state.expecting_implicit_verse_1_after_chapter
+        if LineClassifier.classify(s) == :colophon
+          state.prev_nonempty_stripped = s
+          return colophon_line_step(lines, i, line, s)
+        end
+
         if s.match?(VERSE_LINE)
           state.expecting_implicit_verse_1_after_chapter = false
           partial = CountingService.counts_for_line(s)
@@ -198,6 +208,27 @@ module Inamen
       end
 
       ev
+    end
+
+    def self.colophon_line_step(lines, i, line, s)
+      build_event(
+        KjvParseEvent::KIND_NUMBERED_LINE,
+        lines, i, line, s,
+        totals_delta: {
+          text_words: Tokenizer.tokenize(s).size,
+          verse_text_words: 0,
+          chapter_numbers: 0,
+          verse_numbers: 0,
+          numeric_chapter_lines: 0,
+          numbered_verse_lines: 0
+        },
+        text_words_debug: {
+          lineno: i + 1,
+          raw: line.to_s.chomp,
+          tokens: Tokenizer.tokenize(s).size,
+          classification: :colophon
+        }
+      )
     end
 
     def self.build_event(kind, lines, i, line, s, totals_delta:, book_chapters: 0, book_verses: 0,

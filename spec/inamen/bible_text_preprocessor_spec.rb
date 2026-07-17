@@ -165,6 +165,44 @@ RSpec.describe Inamen::BibleTextPreprocessor do
     end
   end
 
+  it "normalizes RBS Russian chapter markers and stores chapter summaries as colophons" do
+    text = <<~TEXT
+      Библия. Синодальный перевод
+      Ветхий Завет
+      Пятикнижие
+      Бытие
+      Глава 1
+      Сотворение неба и земли; 26  сотворение человека.
+      1 В начале сотворил Бог небо и землю.
+      2 Земля же была безвидна.
+      Глава 2
+      Бог благословляет седьмой день; 4  человек в раю Едемском.
+      1 Так совершены небо и земля и все воинство их.
+      2 И совершил Бог к седьмому дню дела Свои.
+      Откровение
+      Глава 1
+      Иоанн пишет семи церквам.
+      1 Откровение Иисуса Христа.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+      special_lines = result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX)}/)
+
+      expect(result.books).to eq(["Genesis", "Revelation"])
+      expect(result.language).to eq("ru")
+      expect(result.lines).to include("CHAPTER 1", "CHAPTER 2")
+      expect(index.dig("Genesis", 1, 1)).to eq("В начале сотворил Бог небо и землю.")
+      expect(index.dig("Genesis", 2, 1)).to eq("Так совершены небо и земля и все воинство их.")
+      expect(special_lines).to include(
+        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Сотворение неба и земли; 26  сотворение человека.",
+        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Бог благословляет седьмой день; 4  человек в раю Едемском.",
+        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Иоанн пишет семи церквам."
+      )
+    end
+  end
+
   it "rejects binary files" do
     with_text_file("Genesis\x00Chapter 1") do |path|
       expect { described_class.from_file(path) }.to raise_error(described_class::Error, /binary/)

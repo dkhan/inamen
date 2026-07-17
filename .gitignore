@@ -2,6 +2,7 @@
 .bundle/
 .vendor/
 .DS_Store
+/tmp/
 data/*.sqlite
 data/*.sqlite-*
 data/corpora/*.sqlite

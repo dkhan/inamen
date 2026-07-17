@@ -96,6 +96,37 @@ RSpec.describe Inamen::CorpusStore do
         end
       end
     end
+
+    it "indexes imported chapter summaries before verse one as colophons" do
+      source = <<~TEXT
+        Бытие
+        Глава 1
+        Сотворение неба и земли; 26  сотворение человека.
+        1 В начале сотворил Бог небо и землю.
+      TEXT
+
+      Tempfile.create(["russian-rbs-summary", ".txt"]) do |file|
+        file.write(source)
+        file.close
+        lines = Inamen::BibleTextPreprocessor.from_file(file.path).lines
+
+        Dir.mktmpdir do |dir|
+          path = File.join(dir, "sample.sqlite")
+          described_class.build!(lines, path: path)
+          db = described_class.open(path)
+          text = Inamen::VerseHighlighter.bucket_text(
+            db,
+            book: "Genesis",
+            chapter: 1,
+            bucket: described_class::BUCKET_COLOPHON
+          )
+
+          expect(text).to eq("Сотворение неба и земли 26 сотворение человека")
+        ensure
+          db&.close
+        end
+      end
+    end
   end
 
   describe ".normalize_token" do

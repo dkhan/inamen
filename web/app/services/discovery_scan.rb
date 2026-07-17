@@ -534,7 +534,7 @@ class DiscoveryScan
 
   def self.verses_display_cache_key_for(edition, params, offset:, limit:, partial:)
     [
-      "discovery_verses_html/v3",
+      "discovery_verses_html/v4",
       partial.to_s,
       offset.to_i,
       limit.to_i,

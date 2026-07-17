@@ -9,8 +9,7 @@ class PagesController < ApplicationController
         id: edition.short_name,
         name: edition.name,
         filename: edition.source_filename,
-        bytes: edition.byte_size,
-        sha256: edition.source_checksum[0, 16]
+        bytes: edition.byte_size
       }
     end
   end

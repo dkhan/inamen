@@ -83,7 +83,7 @@ class EditionContext
   end
 
   def dictionary_words
-    stream = word_stream_index
+    stream = ensure_word_stream_index
     return [] unless stream
 
     stream.postings_raw.keys.sort
@@ -92,7 +92,7 @@ class EditionContext
   def phrase_completer(case_sensitive: false)
     @phrase_completers ||= {}
     key = case_sensitive ? "cs" : "ci"
-    stream = word_stream_index
+    stream = ensure_word_stream_index
     return nil unless stream
 
     @phrase_completers[key] ||= Inamen::PhraseCompleter.from_word_stream(stream, case_sensitive: case_sensitive)
@@ -133,6 +133,11 @@ class EditionContext
 
   def word_stream_ready?
     word_stream_prebuilt_path.file?
+  end
+
+  def ensure_word_stream_index
+    ensure_word_stream_file!
+    @word_stream_index = load_word_stream_index
   end
 
   def checksum_prefix
@@ -209,6 +214,19 @@ class EditionContext
   rescue StandardError => e
     Rails.logger.warn("[EditionContext] word stream load failed for #{edition_id}: #{e.message}")
     nil
+  end
+
+  def ensure_word_stream_file!
+    path = word_stream_prebuilt_path
+    return if path.file?
+
+    prebuilt_corpus_path = Inamen::CorpusPublisher.prebuilt_path(edition_id, text_path: corpus_text_path)
+    Inamen::CorpusPublisher.build_prebuilt!(
+      edition_id,
+      text_path: corpus_text_path,
+      lines: lines
+    ) unless File.file?(prebuilt_corpus_path)
+    Inamen::WordStreamPublisher.build_prebuilt!(edition_id, text_path: corpus_text_path)
   end
 
   def ensure_corpus_file!

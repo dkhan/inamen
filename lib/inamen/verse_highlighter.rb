@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "set"
 require_relative "tokenizer"
 require_relative "verse_index"
 require_relative "corpus_store"
@@ -45,12 +46,29 @@ module Inamen
       end
 
       def highlight_text(text, highlight_indices)
-        return escape_html(text) if highlight_indices.blank?
+        source = text.to_s
+        return escape_html(source) if highlight_indices.nil? || highlight_indices.empty?
 
-        tokens = Tokenizer.tokenize(text.to_s).each_with_index.map do |raw, index|
-          { word_index: index + 1, token_raw: raw }
+        indices = highlight_indices.to_set
+        word_index = 0
+        cursor = 0
+        html = +""
+
+        source.to_enum(:scan, Tokenizer::TOKEN_PATTERN).each do
+          match = Regexp.last_match
+          raw = match[0]
+          word_index += 1
+          html << escape_html(source[cursor...match.begin(0)])
+          html << if indices.include?(word_index)
+            %(<mark class="search-hit">#{escape_html(raw)}</mark>)
+          else
+            escape_html(raw)
+          end
+          cursor = match.end(0)
         end
-        highlight_tokens(tokens, highlight_indices)
+
+        html << escape_html(source[cursor..])
+        safe_html(html)
       end
 
       def render_row(lines, db, row, edition: nil)
@@ -101,6 +119,10 @@ module Inamen
           .gsub("<", "&lt;")
           .gsub(">", "&gt;")
           .gsub('"', "&quot;")
+      end
+
+      def safe_html(text)
+        text.respond_to?(:html_safe) ? text.html_safe : text
       end
     end
   end

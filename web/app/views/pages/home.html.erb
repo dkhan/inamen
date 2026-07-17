@@ -34,7 +34,6 @@
         <th>Name</th>
         <th>File</th>
         <th>Size</th>
-        <th>SHA-256 (prefix)</th>
       </tr>
     </thead>
     <tbody>
@@ -44,7 +43,6 @@
           <td><%= edition[:name] %></td>
           <td><%= edition[:filename] %></td>
           <td><%= number_to_human_size(edition[:bytes]) %></td>
-          <td><code><%= edition[:sha256] %></code></td>
         </tr>
       <% end %>
     </tbody>
