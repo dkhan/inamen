@@ -163,9 +163,7 @@
       <% end %>
     <% elsif file_stats_mode && @file_stats %>
       <p class="hint">
-        Whole-file counts for <strong>7<sup>7</sup></strong>
-        (<%= number_research_link(@file_stats.seven_power) %>).
-        The entire Bible = <%= number_research_link(@file_stats.total) %> words.
+        Whole-file counts
       </p>
       <table class="features-table discovery-table discovery-file-stats">
         <thead>
@@ -184,7 +182,7 @@
         </tbody>
         <tfoot>
           <tr class="row-total <%= discovery_file_stats_row_class("combined_total") %>">
-            <td><strong>Total words (7<sup>7</sup>)</strong></td>
+            <td><strong>Total words and numbers</strong></td>
             <td class="num"><strong><%= number_research_link(@file_stats.total) %></strong></td>
           </tr>
           <tr class="<%= discovery_file_stats_row_class("file_characters") %>">
