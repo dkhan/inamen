@@ -378,10 +378,10 @@ module Inamen
           end
         end
 
-        if expecting_russian_chapter_comment && !stripped.match?(RUSSIAN_VERSE_LINE)
+        if expecting_russian_chapter_comment && russian_chapter_comment_line?(stripped, lines, index)
           flush_verse.call
           flush_psalm_heading.call
-          processed << special_line(stripped)
+          processed << superscription_line(stripped)
           next
         end
 
@@ -450,6 +450,16 @@ module Inamen
       stripped[RUSSIAN_CHAPTER_LINE, 1]
     end
 
+    def russian_chapter_comment_line?(stripped, lines, index)
+      match = stripped.match(RUSSIAN_VERSE_LINE)
+      return true unless match
+
+      following = next_non_empty_line(lines, index + 1)
+      return false unless following
+
+      following.first.match?(/\A#{Regexp.escape(match[1])}\s+\S/)
+    end
+
     def russian_synodal_canon(books)
       books.length == 66 ? "russian_synodal_66" : "russian_synodal_77"
     end
@@ -469,6 +479,12 @@ module Inamen
 
     def special_line(stripped)
       "#{INTERNAL_SPECIAL_PREFIX}#{stripped}"
+    end
+
+    def superscription_line(stripped)
+      return stripped if stripped.start_with?(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
+
+      "#{LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}#{stripped}"
     end
 
     def book_at(lines, index, stripped)

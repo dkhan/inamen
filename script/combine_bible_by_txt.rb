@@ -3,6 +3,7 @@
 
 require "fileutils"
 require "optparse"
+require_relative "../lib/inamen"
 require_relative "bible_by_support"
 
 begin
@@ -49,8 +50,8 @@ def verse_line?(line)
   line.match?(/\A\d+\s+\S/)
 end
 
-def colophon_safe_line(line)
-  line.sub(/\A(\d+)\s+/, "\\1. ")
+def superscription_line(line)
+  "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}#{line.sub(/\A(\d+)\s+/, "\\1. ")}"
 end
 
 def extract_chapter_lines(html, version, book, chapter)
@@ -65,7 +66,7 @@ def extract_chapter_lines(html, version, book, chapter)
 
   summaries = root.css(".top-paragraph").filter_map do |node|
     line = clean_text(node.text)
-    line.empty? ? nil : colophon_safe_line(line)
+    line.empty? ? nil : superscription_line(line)
   end
 
   verses = root.xpath("./div[@id and string(number(@id)) != 'NaN']").filter_map do |node|

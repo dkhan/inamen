@@ -165,7 +165,7 @@ RSpec.describe Inamen::BibleTextPreprocessor do
     end
   end
 
-  it "normalizes RBS Russian chapter markers and stores chapter summaries as colophons" do
+  it "normalizes RBS Russian chapter markers and stores chapter summaries as superscriptions" do
     text = <<~TEXT
       Библия. Синодальный перевод
       Ветхий Завет
@@ -183,22 +183,29 @@ RSpec.describe Inamen::BibleTextPreprocessor do
       Глава 1
       Иоанн пишет семи церквам.
       1 Откровение Иисуса Христа.
+      Матфей рассказывает об Иисусе
+      Глава 1
+      1 Родословие Иисуса; 18 Его рождение.
+      1 Родословие Иисуса Христа, Сына Давидова, Сына Авраамова.
+      2 Авраам родил Исаака.
     TEXT
 
     with_text_file(text) do |path|
       result = described_class.from_file(path)
       index = Inamen::VerseIndex.build_chapter_index(result.lines)
-      special_lines = result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX)}/)
+      superscription_lines = result.lines.grep(/\A#{Regexp.escape(Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)}/)
 
-      expect(result.books).to eq(["Genesis", "Revelation"])
+      expect(result.books).to eq(["Genesis", "Revelation", "Matthew"])
       expect(result.language).to eq("ru")
       expect(result.lines).to include("CHAPTER 1", "CHAPTER 2")
       expect(index.dig("Genesis", 1, 1)).to eq("В начале сотворил Бог небо и землю.")
       expect(index.dig("Genesis", 2, 1)).to eq("Так совершены небо и земля и все воинство их.")
-      expect(special_lines).to include(
-        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Сотворение неба и земли; 26  сотворение человека.",
-        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Бог благословляет седьмой день; 4  человек в раю Едемском.",
-        "#{Inamen::LineClassifier::IMPORTED_SPECIAL_PREFIX}Иоанн пишет семи церквам."
+      expect(index.dig("Matthew", 1, 1)).to eq("Родословие Иисуса Христа, Сына Давидова, Сына Авраамова.")
+      expect(superscription_lines).to include(
+        "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}Сотворение неба и земли; 26  сотворение человека.",
+        "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}Бог благословляет седьмой день; 4  человек в раю Едемском.",
+        "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}Иоанн пишет семи церквам.",
+        "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}1 Родословие Иисуса; 18 Его рождение."
       )
     end
   end

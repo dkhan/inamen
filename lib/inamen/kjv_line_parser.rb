@@ -60,13 +60,15 @@ module Inamen
       end
 
       if state.expecting_implicit_psalm_verse_1
-        if LineClassifier.classify(s) == :colophon
+        classification = LineClassifier.classify(s)
+        if classification == :colophon
           state.prev_nonempty_stripped = s
           return colophon_line_step(lines, i, line, s)
         end
 
-        if PsalmHeading.match?(s)
-          tok = Tokenizer.tokenize(s).size
+        if classification == :psalm_heading
+          heading_text = imported_superscription_text(s)
+          tok = Tokenizer.tokenize(heading_text).size
           state.prev_nonempty_stripped = s
           return build_event(
             KjvParseEvent::KIND_PSALM_HEADING,
@@ -127,9 +129,15 @@ module Inamen
       end
 
       if state.expecting_implicit_verse_1_after_chapter
-        if LineClassifier.classify(s) == :colophon
+        classification = LineClassifier.classify(s)
+        if classification == :colophon
           state.prev_nonempty_stripped = s
           return colophon_line_step(lines, i, line, s)
+        end
+
+        if classification == :psalm_heading
+          state.prev_nonempty_stripped = s
+          return imported_superscription_line_step(lines, i, line, s)
         end
 
         if s.match?(VERSE_LINE)
@@ -229,6 +237,21 @@ module Inamen
           classification: :colophon
         }
       )
+    end
+
+    def self.imported_superscription_line_step(lines, i, line, s)
+      text = imported_superscription_text(s)
+      tok = Tokenizer.tokenize(text).size
+      build_event(
+        KjvParseEvent::KIND_PSALM_HEADING,
+        lines, i, line, s,
+        totals_delta: { psalm_heading_words: tok },
+        psalm_heading_debug: { lineno: i + 1, raw: line.to_s.chomp, tokens: tok }
+      )
+    end
+
+    def self.imported_superscription_text(text)
+      text.to_s.delete_prefix(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
     end
 
     def self.build_event(kind, lines, i, line, s, totals_delta:, book_chapters: 0, book_verses: 0,

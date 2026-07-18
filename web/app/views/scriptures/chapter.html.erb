@@ -51,7 +51,6 @@
     <% if @superscription_text.present? %>
       <% highlight_superscription = @highlight_extra_bucket && @bucket == Inamen::CorpusStore::BUCKET_PSALM_HEADING %>
       <p id="superscription" class="scripture-extra scripture-superscription<%= " is-highlighted" if highlight_superscription %>">
-        <span class="scripture-extra-label">Sup.</span>
         <%= scripture_bucket_html(
               @edition,
               book: @book,

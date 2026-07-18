@@ -97,7 +97,7 @@ RSpec.describe Inamen::CorpusStore do
       end
     end
 
-    it "indexes imported chapter summaries before verse one as colophons" do
+    it "indexes imported chapter summaries before verse one as superscriptions" do
       source = <<~TEXT
         Бытие
         Глава 1
@@ -118,10 +118,17 @@ RSpec.describe Inamen::CorpusStore do
             db,
             book: "Genesis",
             chapter: 1,
+            bucket: described_class::BUCKET_PSALM_HEADING
+          )
+          colophon = Inamen::VerseHighlighter.bucket_text(
+            db,
+            book: "Genesis",
+            chapter: 1,
             bucket: described_class::BUCKET_COLOPHON
           )
 
           expect(text).to eq("Сотворение неба и земли 26 сотворение человека")
+          expect(colophon).to be_nil
         ensure
           db&.close
         end

@@ -43,7 +43,7 @@ module Inamen
         special_chapter = state[:chapter] || 1
 
         if event.kind == KjvParseEvent::KIND_PSALM_HEADING
-          append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_PSALM_HEADING, s)
+          append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_PSALM_HEADING, special_text(s))
         elsif event.kind == KjvParseEvent::KIND_IMPLICIT_PSALM_OPENING && d[:psalm_heading_words].to_i.positive?
           append_buffer(bucket_buffers, book, special_chapter, 0, CorpusStore::BUCKET_PSALM_HEADING, s)
         elsif colophon_event?(event)
@@ -81,7 +81,9 @@ module Inamen
     private_class_method :colophon_event?
 
     def self.special_text(text)
-      text.to_s.delete_prefix(LineClassifier::IMPORTED_SPECIAL_PREFIX)
+      text.to_s
+          .delete_prefix(LineClassifier::IMPORTED_SPECIAL_PREFIX)
+          .delete_prefix(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
     end
     private_class_method :special_text
 
