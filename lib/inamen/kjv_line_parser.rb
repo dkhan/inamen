@@ -66,7 +66,7 @@ module Inamen
           return colophon_line_step(lines, i, line, s)
         end
 
-        if classification == :psalm_heading
+        if superscription_line?(s, classification, state)
           heading_text = imported_superscription_text(s)
           tok = Tokenizer.tokenize(heading_text).size
           state.prev_nonempty_stripped = s
@@ -135,7 +135,7 @@ module Inamen
           return colophon_line_step(lines, i, line, s)
         end
 
-        if classification == :psalm_heading
+        if superscription_line?(s, classification, state)
           state.prev_nonempty_stripped = s
           return imported_superscription_line_step(lines, i, line, s)
         end
@@ -252,6 +252,12 @@ module Inamen
 
     def self.imported_superscription_text(text)
       text.to_s.delete_prefix(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
+    end
+
+    def self.superscription_line?(stripped, classification, state)
+      return false unless classification == :psalm_heading
+
+      state.in_psalms? || stripped.start_with?(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
     end
 
     def self.build_event(kind, lines, i, line, s, totals_delta:, book_chapters: 0, book_verses: 0,

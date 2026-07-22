@@ -56,7 +56,8 @@ module Inamen
 
     # Returns new book name when +lines[i]+ starts a book, else nil.
     def self.book_at(lines, i)
-      s = KjvLine.strip(lines[i])
+      raw = KjvLine.strip(lines[i])
+      s = normalize_title_punctuation(raw)
       prev = prior_stripped(lines, i)
       blob = prev_blob(lines, i)
 
@@ -141,16 +142,24 @@ module Inamen
 
         nil
       when "JOHN."
-        return "1 John" if blob.include?("FIRST EPISTLE GENERAL OF")
-        return "2 John" if blob.include?("SECOND EPISTLE OF")
         return "3 John" if blob.include?("THIRD EPISTLE OF")
+        return "2 John" if blob.include?("SECOND EPISTLE OF")
+        return "1 John" if blob.include?("FIRST EPISTLE GENERAL OF")
 
         nil
       when "JUDE." then "Jude"
       else
-        book_from_combined_title(s, blob) || BibleBooks.canonical_name(s)
+        book_from_combined_title(s, blob) || BibleBooks.canonical_name(raw)
       end
     end
+
+    def self.normalize_title_punctuation(stripped)
+      return stripped if stripped.match?(/[.,;]\z/)
+      return stripped unless stripped.match?(/\A[A-Z0-9 .,';-]+\z/)
+
+      "#{stripped}."
+    end
+    private_class_method :normalize_title_punctuation
 
     def self.book_from_kings_title_line(blob)
       return "1 Samuel" if blob.include?("FIRST BOOK OF SAMUEL")

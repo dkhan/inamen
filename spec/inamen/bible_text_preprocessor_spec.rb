@@ -66,6 +66,107 @@ RSpec.describe Inamen::BibleTextPreprocessor do
     end
   end
 
+  it "keeps Hebrew Psalm 119 stanza labels separate from implicit verse openings" do
+    text = <<~TEXT
+      Psalms
+      PSALM 119
+      א
+      BLESSED are the undefiled in the way, who walk in the law of the LORD.
+      2 Blessed are they that keep his testimonies, and that seek him with the whole heart.
+      ב
+      9 Wherewithal shall a young man cleanse his way? by taking heed thereto according to thy word.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+
+      expect(result.lines).to include("א", "ב")
+      expect(index.dig("Psalms", 119, 1)).to eq(
+        "BLESSED are the undefiled in the way, who walk in the law of the LORD."
+      )
+      expect(index.dig("Psalms", 119, 2)).to eq(
+        "Blessed are they that keep his testimonies, and that seek him with the whole heart."
+      )
+      expect(index.dig("Psalms", 119, 9)).to eq(
+        "Wherewithal shall a young man cleanse his way? by taking heed thereto according to thy word."
+      )
+    end
+  end
+
+  it "keeps non-Psalm chapter openings that look like Psalm headings as verse text" do
+    text = <<~TEXT
+      Habakkuk
+      CHAPTER 3
+      A PRAYER of Habakkuk the prophet upon Shigionoth.
+      2 O LORD, I have heard thy speech, and was afraid.
+      3 God came from Teman, and the Holy One from mount Paran. Selah.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+
+      expect(index.dig("Habakkuk", 3, 1)).to eq("A PRAYER of Habakkuk the prophet upon Shigionoth.")
+      expect(index.dig("Habakkuk", 3, 2)).to eq("O LORD, I have heard thy speech, and was afraid.")
+      expect(result.lines).not_to include(
+        "#{Inamen::LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX}A PRAYER of Habakkuk the prophet upon Shigionoth."
+      )
+    end
+  end
+
+  it "recognizes KJV-style book headings without final periods" do
+    text = <<~TEXT
+      THE THIRD BOOK OF THE KINGS
+      CHAPTER 1
+      1 Now king David was old.
+
+      THE FIRST BOOK OF THE
+      CHRONICLES
+      CHAPTER 1
+      1 Adam, Sheth, Enosh,
+
+      THE PROVERBS
+      CHAPTER 1
+      1 The proverbs of Solomon.
+
+      ACTS OF THE APOSTLES
+      CHAPTER 1
+      1 The former treatise have I made.
+
+      THE FIRST EPISTLE OF PAUL THE APOSTLE
+      TO THE
+      CORINTHIANS
+      CHAPTER 1
+      1 Paul called to be an apostle.
+
+      THE FIRST EPISTLE GENERAL OF
+      PETER
+      CHAPTER 1
+      1 Peter, an apostle of Jesus Christ.
+
+      THE SECOND EPISTLE OF
+      JOHN
+      1 The elder unto the elect lady.
+
+      OBADIAH
+      THE vision of Obadiah. Thus saith the Lord GOD concerning Edom;
+      2 Behold, I have made thee small among the heathen.
+    TEXT
+
+    with_text_file(text) do |path|
+      result = described_class.from_file(path)
+      index = Inamen::VerseIndex.build_chapter_index(result.lines)
+
+      expect(result.books).to eq([
+        "1 Kings", "1 Chronicles", "Proverbs", "Acts", "1 Corinthians", "1 Peter", "2 John", "Obadiah"
+      ])
+      expect(index.dig("Obadiah", 1, 1)).to eq(
+        "THE vision of Obadiah. Thus saith the Lord GOD concerning Edom;"
+      )
+    end
+  end
+
   it "normalizes Russian Synodal 77 structure with wrapped verses and special sections" do
     text = <<~TEXT
       БИБЛИЯ

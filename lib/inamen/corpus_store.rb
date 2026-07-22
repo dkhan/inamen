@@ -12,7 +12,7 @@ module Inamen
     DEFAULT_PATH = File.expand_path("../../data/kjv_corpus.sqlite", __dir__)
     SCHEMA_VERSION = 2
     # Bump when indexing or tokenization rules change (invalidates cached corpora).
-    INDEXER_REVISION = "11"
+    INDEXER_REVISION = "13"
 
     BUCKET_VERSE_TEXT = "verse_text"
     BUCKET_PSALM_HEADING = "psalm_heading"

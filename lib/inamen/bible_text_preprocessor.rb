@@ -45,8 +45,12 @@ module Inamen
 
           in_corpus = true
           current_book = book
-          expecting_implicit_opening = false
           processed << book
+          expecting_implicit_opening = false
+          if one_chapter_book?(book) && !next_line_chapter_marker?(lines, index)
+            processed << "CHAPTER 1"
+            expecting_implicit_opening = true
+          end
           next
         end
 
@@ -499,12 +503,24 @@ module Inamen
       end
     end
 
+    def one_chapter_book?(book)
+      BookStatsReport::EXPECTED.dig(book, :chapters) == 1
+    end
+
+    def next_line_chapter_marker?(lines, index)
+      following = next_non_empty_line(lines, index + 1)
+      return false unless following
+
+      following.first.match?(CHAPTER_LINE)
+    end
+
     def corpus_line?(stripped, classification, current_book)
       return true if stripped.match?(CHAPTER_LINE)
       return true if psalm_chapter_line?(stripped, current_book)
       return true if stripped.match?(VERSE_LINE)
+      return true if psalm_superscription_line?(stripped, classification, current_book)
 
-      %i[psalm_heading psalm_119_division colophon].include?(classification)
+      %i[psalm_119_division colophon].include?(classification)
     end
 
     def implicit_opening_line?(stripped, classification)
@@ -518,11 +534,18 @@ module Inamen
     def chapter_or_superscription_line?(line, classification, current_book)
       line.match?(CHAPTER_LINE) ||
         psalm_chapter_line?(line, current_book) ||
-        %i[psalm_heading psalm_119_division].include?(classification)
+        classification == :psalm_119_division ||
+        psalm_superscription_line?(line, classification, current_book)
     end
 
     def psalm_chapter_line?(stripped, current_book)
       current_book == "Psalms" && CountingService.psalm_chapter_line?(stripped, in_psalms: true)
+    end
+
+    def psalm_superscription_line?(stripped, classification, current_book)
+      return false unless classification == :psalm_heading
+
+      current_book == "Psalms" || stripped.start_with?(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
     end
 
     def chapter_marker?(line)

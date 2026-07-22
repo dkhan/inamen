@@ -1,9 +1,10 @@
 HOLY BIBLE
 KING JAMES VERSION
 
+
 THE FIRST BOOK OF MOSES,
 CALLED
-GENESIS.
+GENESIS
 
 CHAPTER 1
 IN the beginning God created the heaven and the earth.
@@ -1072,6 +1073,7 @@ AND Dinah the daughter of Leah, which she bare unto Jacob, went out to see the d
 17 But if ye will not hearken unto us, to be circumcised; then will we take our daughter, and we will be gone.
 18 And their words pleased Hamor, and Shechem Hamor’s son.
 19 And the young man deferred not to do the thing, because he had delight in Jacob’s daughter: and he was more honourable than all the house of his father.
+20 And Hamor and Shechem his son came unto the gate of their city, and communed with the men of their city, saying,
 21 These men are peaceable with us; therefore let them dwell in the land, and trade therein; for the land, behold, it is large enough for them; let us take their daughters to us for wives, and let us give them our daughters.
 22 Only herein will the men consent unto us for to dwell with us, to be one people, if every male among us be circumcised, as they are circumcised.
 23 Shall not their cattle and their substance and every beast of theirs be ours? only let us consent unto them, and they will dwell with us.
@@ -1639,7 +1641,7 @@ AND Joseph fell upon his father’s face, and wept upon him, and kissed him.
 
 THE SECOND BOOK OF MOSES,
 CALLED
-EXODUS.
+EXODUS
 
 CHAPTER 1
 NOW these are the names of the children of Israel, which came into Egypt; every man and his household came with Jacob.
@@ -2936,7 +2938,7 @@ AND the LORD spake unto Moses, saying,
 
 THE THIRD BOOK OF MOSES,
 CALLED
-LEVITICUS.
+LEVITICUS
 
 CHAPTER 1
 AND the LORD called unto Moses, and spake unto him out of the tabernacle of the congregation, saying,
@@ -3853,7 +3855,7 @@ AND the LORD spake unto Moses, saying,
 
 THE FOURTH BOOK OF MOSES,
 CALLED
-NUMBERS.
+NUMBERS
 
 CHAPTER 1
 AND the LORD spake unto Moses in the wilderness of Sinai, in the tabernacle of the congregation, on the first day of the second month, in the second year after they were come out of the land of Egypt, saying,
@@ -5217,7 +5219,7 @@ AND the chief fathers of the families of the children of Gilead, the son of Mach
 
 THE FIFTH BOOK OF MOSES,
 CALLED
-DEUTERONOMY.
+DEUTERONOMY
 
 CHAPTER 1
 THESE be the words which Moses spake unto all Israel on this side Jordan in the wilderness, in the plain over against the Red sea, between Paran, and Tophel, and Laban, and Hazeroth, and Dizahab.
@@ -6246,7 +6248,7 @@ AND Moses went up from the plains of Moab unto the mountain of Nebo, to the top 
 11 In all the signs and the wonders, which the LORD sent him to do in the land of Egypt to Pharaoh, and to all his servants, and to all his land,
 12 And in all that mighty hand, and in all the great terror which Moses shewed in the sight of all Israel.
 
-THE BOOK OF JOSHUA.
+THE BOOK OF JOSHUA
 
 CHAPTER 1
 NOW after the death of Moses the servant of the LORD it came to pass, that the LORD spake unto Joshua the son of Nun, Moses’ minister, saying,
@@ -6954,7 +6956,7 @@ AND Joshua gathered all the tribes of Israel to Shechem, and called for the elde
 32 And the bones of Joseph, which the children of Israel brought up out of Egypt, buried they in Shechem, in a parcel of ground which Jacob bought of the sons of Hamor the father of Shechem for an hundred pieces of silver: and it became the inheritance of the children of Joseph.
 33 And Eleazar the son of Aaron died; and they buried him in a hill that pertained to Phinehas his son, which was given him in mount Ephraim.
 
-THE BOOK OF JUDGES.
+THE BOOK OF JUDGES
 
 CHAPTER 1
 NOW after the death of Joshua it came to pass, that the children of Israel asked the LORD, saying, Who shall go up for us against the Canaanites first, to fight against them?
@@ -7616,7 +7618,7 @@ NOW the men of Israel had sworn in Mizpeh, saying, There shall not any of us giv
 24 And the children of Israel departed thence at that time, every man to his tribe and to his family, and they went out from thence every man to his inheritance.
 25 In those days there was no king in Israel: every man did that which was right in his own eyes.
 
-THE BOOK OF RUTH.
+THE BOOK OF RUTH
 
 CHAPTER 1
 NOW it came to pass in the days when the judges ruled, that there was a famine in the land. And a certain man of Beth-lehem-judah went to sojourn in the country of Moab, he, and his wife, and his two sons.
@@ -7714,7 +7716,7 @@ THEN went Boaz up to the gate, and sat him down there: and, behold, the kinsman 
 THE
 FIRST BOOK OF SAMUEL,
 OTHERWISE CALLED,
-THE FIRST BOOK OF THE KINGS.
+THE FIRST BOOK OF THE KINGS
 
 CHAPTER 1
 NOW there was a certain man of Ramathaim-zophim, of mount Ephraim, and his name was Elkanah, the son of Jeroham, the son of Elihu, the son of Tohu, the son of Zuph, an Ephrathite:
@@ -8591,7 +8593,7 @@ NOW the Philistines fought against Israel: and the men of Israel fled from befor
 THE
 SECOND BOOK OF SAMUEL,
 OTHERWISE CALLED,
-THE SECOND BOOK OF THE KINGS.
+THE SECOND BOOK OF THE KINGS
 
 CHAPTER 1
 NOW it came to pass after the death of Saul, when David was returned from the slaughter of the Amalekites, and David had abode two days in Ziklag;
@@ -9339,7 +9341,7 @@ AND again the anger of the LORD was kindled against Israel, and he moved David a
 THE FIRST
 BOOK OF THE KINGS,
 COMMONLY CALLED,
-THE THIRD BOOK OF THE KINGS.
+THE THIRD BOOK OF THE KINGS
 
 CHAPTER 1
 NOW king David was old and stricken in years; and they covered him with clothes, but he gat no heat.
@@ -10204,7 +10206,7 @@ AND they continued three years without war between Syria and Israel.
 THE SECOND
 BOOK OF THE KINGS,
 COMMONLY CALLED,
-THE FOURTH BOOK OF THE KINGS.
+THE FOURTH BOOK OF THE KINGS
 
 CHAPTER 1
 THEN Moab rebelled against Israel after the death of Ahab.
@@ -10976,7 +10978,7 @@ AND it came to pass in the ninth year of his reign, in the tenth month, in the t
 30 And his allowance was a continual allowance given him of the king, a daily rate for every day, all the days of his life.
 
 THE FIRST BOOK OF THE
-CHRONICLES.
+CHRONICLES
 
 CHAPTER 1
 ADAM, Sheth, Enosh,
@@ -11979,7 +11981,7 @@ FURTHERMORE David the king said unto all the congregation, Solomon my son, whom 
 30 With all his reign and his might, and the times that went over him, and over Israel, and over all the kingdoms of the countries.
 
 THE SECOND BOOK OF THE
-CHRONICLES.
+CHRONICLES
 
 CHAPTER 1
 AND Solomon the son of David was strengthened in his kingdom, and the LORD his God was with him, and magnified him exceedingly.
@@ -12875,7 +12877,7 @@ THEN the people of the land took Jehoahaz the son of Josiah, and made him king i
 22 Now in the first year of Cyrus king of Persia, that the word of the LORD spoken by the mouth of Jeremiah might be accomplished, the LORD stirred up the spirit of Cyrus king of Persia, that he made a proclamation throughout all his kingdom, and put it also in writing, saying,
 23 Thus saith Cyrus king of Persia, All the kingdoms of the earth hath the LORD God of heaven given me; and he hath charged me to build him an house in Jerusalem, which is in Judah. Who is there among you of all his people? The LORD his God be with him, and let him go up.
 
-EZRA.
+EZRA
 
 CHAPTER 1
 NOW in the first year of Cyrus king of Persia, that the word of the LORD by the mouth of Jeremiah might be fulfilled, the LORD stirred up the spirit of Cyrus king of Persia, that he made a proclamation throughout all his kingdom, and put it also in writing, saying,
@@ -13178,7 +13180,7 @@ NOW when Ezra had prayed, and when he had confessed, weeping and casting himself
 44 All these had taken strange wives: and some of them had wives by whom they had children.
 
 THE
-BOOK OF NEHEMIAH.
+BOOK OF NEHEMIAH
 
 CHAPTER 1
 THE words of Nehemiah the son of Hachaliah. And it came to pass in the month Chisleu, in the twentieth year, as I was in Shushan the palace,
@@ -13613,7 +13615,7 @@ ON that day they read in the book of Moses in the audience of the people; and th
 31 And for the wood offering, at times appointed, and for the firstfruits. Remember me, O my God, for good.
 
 THE
-BOOK OF ESTHER.
+BOOK OF ESTHER
 
 CHAPTER 1
 NOW it came to pass in the days of Ahasuerus, (this is Ahasuerus which reigned, from India even unto Ethiopia, over an hundred and seven and twenty provinces:)
@@ -13802,7 +13804,7 @@ AND the king Ahasuerus laid a tribute upon the land, and upon the isles of the s
 2 And all the acts of his power and of his might, and the declaration of the greatness of Mordecai, whereunto the king advanced him, are they not written in the book of the chronicles of the kings of Media and Persia?
 3 For Mordecai the Jew was next unto king Ahasuerus, and great among the Jews, and accepted of the multitude of his brethren, seeking the wealth of his people, and speaking peace to all his seed.
 
-THE BOOK OF JOB.
+THE BOOK OF JOB
 
 CHAPTER 1
 THERE was a man in the land of Uz, whose name was Job; and that man was perfect and upright, and one that feared God, and eschewed evil.
@@ -14959,7 +14961,7 @@ THEN Job answered the LORD, and said,
 17 So Job died, being old and full of days.
 
 THE
-BOOK OF PSALMS.
+BOOK OF PSALMS
 
 PSALM 1
 BLESSED is the man that walketh not in the counsel of the ungodly, nor standeth in the way of sinners, nor sitteth in the seat of the scornful.
@@ -16452,6 +16454,7 @@ O GOD, the heathen are come into thine inheritance; thy holy temple have they de
 12 And render unto our neighbours sevenfold into their bosom their reproach, wherewith they have reproached thee, O Lord.
 13 So we thy people and sheep of thy pasture will give thee thanks for ever: we will shew forth thy praise to all generations.
 
+
 PSALM 80
 To the chief Musician upon Shoshannim-Eduth, A Psalm of Asaph.
 GIVE ear, O Shepherd of Israel, thou that leadest Joseph like a flock; thou that dwellest between the cherubims, shine forth.
@@ -17861,7 +17864,7 @@ PRAISE ye the LORD. Praise God in his sanctuary: praise him in the firmament of 
 5 Praise him upon the loud cymbals: praise him upon the high sounding cymbals.
 6 Let every thing that hath breath praise the LORD. Praise ye the LORD.
 
-THE PROVERBS.
+THE PROVERBS
 
 CHAPTER 1
 THE proverbs of Solomon the son of David, king of Israel;
@@ -18840,8 +18843,8 @@ THE words of king Lemuel, the prophecy that his mother taught him.
 30 Favour is deceitful, and beauty is vain: but a woman that feareth the LORD, she shall be praised.
 31 Give her of the fruit of her hands; and let her own works praise her in the gates.
 
-ECCLESIASTES;
-OR, THE PREACHER.
+ECCLESIASTES
+OR, THE PREACHER
 
 CHAPTER 1
 THE words of the Preacher, the son of David, king in Jerusalem.
@@ -19090,7 +19093,7 @@ REMEMBER now thy Creator in the days of thy youth, while the evil days come not,
 14 For God shall bring every work into judgment, with every secret thing, whether it be good, or whether it be evil.
 
 THE
-SONG OF SOLOMON.
+SONG OF SOLOMON
 
 CHAPTER 1
 THE song of songs, which is Solomon’s.
@@ -19142,6 +19145,7 @@ BY night on my bed I sought him whom my soul loveth: I sought him, but I found h
 9 King Solomon made himself a chariot of the wood of Lebanon.
 10 He made the pillars thereof of silver, the bottom thereof of gold, the covering of it of purple, the midst thereof being paved with love, for the daughters of Jerusalem.
 11 Go forth, O ye daughters of Zion, and behold king Solomon with the crown wherewith his mother crowned him in the day of his espousals, and in the day of the gladness of his heart.
+
 
 CHAPTER 4
 BEHOLD, thou art fair, my love; behold, thou art fair; thou hast doves’ eyes within thy locks: thy hair is as a flock of goats, that appear from mount Gilead.
@@ -19226,7 +19230,7 @@ O THAT thou wert as my brother, that sucked the breasts of my mother! when I sho
 14 Make haste, my beloved, and be thou like to a roe or to a young hart upon the mountains of spices.
 
 THE BOOK OF THE PROPHET
-ISAIAH.
+ISAIAH
 
 CHAPTER 1
 THE vision of Isaiah the son of Amoz, which he saw concerning Judah and Jerusalem in the days of Uzziah, Jotham, Ahaz, and Hezekiah, kings of Judah.
@@ -20654,7 +20658,7 @@ THUS saith the LORD, The heaven is my throne, and the earth is my footstool: whe
 24 And they shall go forth, and look upon the carcases of the men that have transgressed against me: for their worm shall not die, neither shall their fire be quenched; and they shall be an abhorring unto all flesh.
 
 THE BOOK OF THE PROPHET
-JEREMIAH.
+JEREMIAH
 
 CHAPTER 1
 THE words of Jeremiah the son of Hilkiah, of the priests that were in Anathoth in the land of Benjamin:
@@ -22125,7 +22129,7 @@ ZEDEKIAH was one and twenty years old when he began to reign, and he reigned ele
 34 And for his diet, there was a continual diet given him of the king of Babylon, every day a portion until the day of his death, all the days of his life.
 
 THE LAMENTATIONS
-OF JEREMIAH.
+OF JEREMIAH
 
 CHAPTER 1
 HOW doth the city sit solitary, that was full of people! how is she become as a widow! she that was great among the nations, and princess among the provinces, how is she become tributary!
@@ -22292,7 +22296,7 @@ REMEMBER, O LORD, what is come upon us: consider, and behold our reproach.
 22 But thou hast utterly rejected us; thou art very wroth against us.
 
 THE BOOK OF THE PROPHET
-EZEKIEL.
+EZEKIEL
 
 CHAPTER 1
 NOW it came to pass in the thirtieth year, in the fourth month, in the fifth day of the month, as I was among the captives by the river of Chebar, that the heavens were opened, and I saw visions of God.
@@ -23663,7 +23667,7 @@ NOW these are the names of the tribes. From the north end to the coast of the wa
 34 At the west side four thousand and five hundred, with their three gates; one gate of Gad, one gate of Asher, one gate of Naphtali.
 35 It was round about eighteen thousand measures: and the name of the city from that day shall be, The LORD is there.
 
-THE BOOK OF DANIEL.
+THE BOOK OF DANIEL
 
 CHAPTER 1
 IN the third year of the reign of Jehoiakim king of Judah came Nebuchadnezzar king of Babylon unto Jerusalem, and besieged it.
@@ -24046,7 +24050,7 @@ AND at that time shall Michael stand up, the great prince which standeth for the
 12 Blessed is he that waiteth, and cometh to the thousand three hundred and five and thirty days.
 13 But go thou thy way till the end be: for thou shalt rest, and stand in thy lot at the end of the days.
 
-HOSEA.
+HOSEA
 
 CHAPTER 1
 THE word of the LORD that came unto Hosea, the son of Beeri, in the days of Uzziah, Jotham, Ahaz, and Hezekiah, kings of Judah, and in the days of Jeroboam the son of Joash, king of Israel.
@@ -24273,7 +24277,7 @@ O ISRAEL, return unto the LORD thy God; for thou hast fallen by thine iniquity.
 8 Ephraim shall say, What have I to do any more with idols? I have heard him, and observed him: I am like a green fir tree. From me is thy fruit found.
 9 Who is wise, and he shall understand these things? prudent, and he shall know them? for the ways of the LORD are right, and the just shall walk in them: but the transgressors shall fall therein.
 
-JOEL.
+JOEL
 
 CHAPTER 1
 THE word of the LORD that came to Joel the son of Pethuel.
@@ -24354,7 +24358,7 @@ FOR, behold, in those days, and in that time, when I shall bring again the capti
 20 But Judah shall dwell for ever, and Jerusalem from generation to generation.
 21 For I will cleanse their blood that I have not cleansed: for the LORD dwelleth in Zion.
 
-AMOS.
+AMOS
 
 CHAPTER 1
 THE words of Amos, who was among the herdmen of Tekoa, which he saw concerning Israel in the days of Uzziah king of Judah, and in the days of Jeroboam the son of Joash king of Israel, two years before the earthquake.
@@ -24520,7 +24524,7 @@ I SAW the Lord standing upon the altar: and he said, Smite the lintel of the doo
 14 And I will bring again the captivity of my people of Israel, and they shall build the waste cities, and inhabit them; and they shall plant vineyards, and drink the wine thereof; they shall also make gardens, and eat the fruit of them.
 15 And I will plant them upon their land, and they shall no more be pulled up out of their land which I have given them, saith the LORD thy God.
 
-OBADIAH.
+OBADIAH
 
 THE vision of Obadiah. Thus saith the Lord GOD concerning Edom; We have heard a rumour from the LORD, and an ambassador is sent among the heathen, Arise ye, and let us rise up against her in battle.
 2 Behold, I have made thee small among the heathen: thou art greatly despised.
@@ -24544,7 +24548,7 @@ THE vision of Obadiah. Thus saith the Lord GOD concerning Edom; We have heard a 
 20 And the captivity of this host of the children of Israel shall possess that of the Canaanites, even unto Zarephath; and the captivity of Jerusalem, which is in Sepharad, shall possess the cities of the south.
 21 And saviours shall come up on mount Zion to judge the mount of Esau; and the kingdom shall be the LORD’S.
 
-JONAH.
+JONAH
 
 CHAPTER 1
 NOW the word of the LORD came unto Jonah the son of Amittai, saying,
@@ -24602,7 +24606,7 @@ BUT it displeased Jonah exceedingly, and he was very angry.
 10 Then said the LORD, Thou hast had pity on the gourd, for the which thou hast not laboured, neither madest it grow; which came up in a night, and perished in a night:
 11 And should not I spare Nineveh, that great city, wherein are more than sixscore thousand persons that cannot discern between their right hand and their left hand; and also much cattle?
 
-MICAH.
+MICAH
 
 CHAPTER 1
 THE word of the LORD that came to Micah the Morasthite in the days of Jotham, Ahaz, and Hezekiah, kings of Judah, which he saw concerning Samaria and Jerusalem.
@@ -24723,7 +24727,7 @@ WOE is me! for I am as when they have gathered the summer fruits, as the grapegl
 19 He will turn again, he will have compassion upon us; he will subdue our iniquities; and thou wilt cast all their sins into the depths of the sea.
 20 Thou wilt perform the truth to Jacob, and the mercy to Abraham, which thou hast sworn unto our fathers from the days of old.
 
-NAHUM.
+NAHUM
 
 CHAPTER 1
 THE burden of Nineveh. The book of the vision of Nahum the Elkoshite.
@@ -24778,7 +24782,7 @@ WOE to the bloody city! it is all full of lies and robbery; the prey departeth n
 18 Thy shepherds slumber, O king of Assyria: thy nobles shall dwell in the dust: thy people is scattered upon the mountains, and no man gathereth them.
 19 There is no healing of thy bruise; thy wound is grievous: all that hear the bruit of thee shall clap the hands over thee: for upon whom hath not thy wickedness passed continually?
 
-HABAKKUK.
+HABAKKUK
 
 CHAPTER 1
 THE burden which Habakkuk the prophet did see.
@@ -24842,7 +24846,7 @@ A PRAYER of Habakkuk the prophet upon Shigionoth.
 18 Yet I will rejoice in the LORD, I will joy in the God of my salvation.
 19 The LORD God is my strength, and he will make my feet like hinds’ feet, and he will make me to walk upon mine high places. To the chief singer on my stringed instruments.
 
-ZEPHANIAH.
+ZEPHANIAH
 
 CHAPTER 1
 THE word of the LORD which came unto Zephaniah the son of Cushi, the son of Gedaliah, the son of Amariah, the son of Hizkiah, in the days of Josiah the son of Amon, king of Judah.
@@ -24903,7 +24907,7 @@ WOE to her that is filthy and polluted, to the oppressing city!
 19 Behold, at that time I will undo all that afflict thee: and I will save her that halteth, and gather her that was driven out; and I will get them praise and fame in every land where they have been put to shame.
 20 At that time will I bring you again, even in the time that I gather you: for I will make you a name and a praise among all people of the earth, when I turn back your captivity before your eyes, saith the LORD.
 
-HAGGAI.
+HAGGAI
 
 CHAPTER 1
 IN the second year of Darius the king, in the sixth month, in the first day of the month, came the word of the LORD by Haggai the prophet unto Zerubbabel the son of Shealtiel, governor of Judah, and to Joshua the son of Josedech, the high priest, saying,
@@ -24947,7 +24951,7 @@ IN the seventh month, in the one and twentieth day of the month, came the word o
 22 And I will overthrow the throne of kingdoms, and I will destroy the strength of the kingdoms of the heathen; and I will overthrow the chariots, and those that ride in them; and the horses and their riders shall come down, every one by the sword of his brother.
 23 In that day, saith the LORD of hosts, will I take thee, O Zerubbabel, my servant, the son of Shealtiel, saith the LORD, and will make thee as a signet: for I have chosen thee, saith the LORD of hosts.
 
-ZECHARIAH.
+ZECHARIAH
 
 CHAPTER 1
 IN the eighth month, in the second year of Darius, came the word of the LORD unto Zechariah, the son of Berechiah, the son of Iddo the prophet, saying,
@@ -25188,7 +25192,7 @@ BEHOLD, the day of the LORD cometh, and thy spoil shall be divided in the midst 
 20 In that day shall there be upon the bells of the horses, HOLINESS UNTO THE LORD; and the pots in the LORD’S house shall be like the bowls before the altar.
 21 Yea, every pot in Jerusalem and in Judah shall be holiness unto the LORD of hosts: and all they that sacrifice shall come and take of them, and seethe therein: and in that day there shall be no more the Canaanite in the house of the LORD of hosts.
 
-MALACHI.
+MALACHI
 
 CHAPTER 1
 THE burden of the word of the LORD to Israel by Malachi.
@@ -25253,13 +25257,14 @@ FOR, behold, the day cometh, that shall burn as an oven; and all the proud, yea,
 5 Behold, I will send you Elijah the prophet before the coming of the great and dreadful day of the LORD:
 6 And he shall turn the heart of the fathers to the children, and the heart of the children to their fathers, lest I come and smite the earth with a curse.
 
+
 THE
 NEW TESTAMENT
 OF OUR LORD AND SAVIOR
 JESUS CHRIST
 
 THE GOSPEL ACCORDING TO
-ST. MATTHEW.
+ST. MATTHEW
 
 CHAPTER 1
 THE book of the generation of Jesus Christ, the son of David, the son of Abraham.
@@ -26389,7 +26394,7 @@ IN the end of the sabbath, as it began to dawn toward the first day of the week,
 20 Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world. Amen.
 
 THE GOSPEL ACCORDING TO
-ST. MARK.
+ST. MARK
 
 CHAPTER 1
 THE beginning of the gospel of Jesus Christ, the Son of God;
@@ -27102,7 +27107,7 @@ AND when the sabbath was past, Mary Magdalene, and Mary the mother of James, and
 20 And they went forth, and preached every where, the Lord working with them, and confirming the word with signs following. Amen.
 
 THE GOSPEL ACCORDING TO
-ST. LUKE.
+ST. LUKE
 
 CHAPTER 1
 FORASMUCH as many have taken in hand to set forth in order a declaration of those things which are most surely believed among us,
@@ -28305,7 +28310,7 @@ NOW upon the first day of the week, very early in the morning, they came unto th
 53 And were continually in the temple, praising and blessing God. Amen.
 
 THE GOSPEL ACCORDING TO
-ST. JOHN.
+ST. JOHN
 
 CHAPTER 1
 IN the beginning was the Word, and the Word was with God, and the Word was God.
@@ -29229,7 +29234,7 @@ AFTER these things Jesus shewed himself again to the disciples at the sea of Tib
 25 And there are also many other things which Jesus did, the which, if they should be written every one, I suppose that even the world itself could not contain the books that should be written. Amen.
 
 THE
-ACTS OF THE APOSTLES.
+ACTS OF THE APOSTLES
 
 CHAPTER 1
 THE former treatise have I made, O Theophilus, of all that Jesus began both to do and teach,
@@ -30296,7 +30301,7 @@ AND when they were escaped, then they knew that the island was called Melita.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-ROMANS.
+ROMANS
 
 CHAPTER 1
 PAUL, a servant of Jesus Christ, called to be an apostle, separated unto the gospel of God,
@@ -30762,12 +30767,12 @@ I COMMEND unto you Phebe our sister, which is a servant of the church which is a
 25 Now to him that is of power to stablish you according to my gospel, and the preaching of Jesus Christ, according to the revelation of the mystery, which was kept secret since the world began,
 26 But now is made manifest, and by the scriptures of the prophets, according to the commandment of the everlasting God, made known to all nations for the obedience of faith:
 27 To God only wise, be glory through Jesus Christ for ever. Amen.
-Written to the Romans from Corinthus, and sent by Phebe servant of the church at Cenchrea.
+  	Written to the Romans from Corinthus, and sent by Phebe servant of the church at Cenchrea.
 
 THE
 FIRST EPISTLE OF PAUL THE APOSTLE
 TO THE
-CORINTHIANS.
+CORINTHIANS
 
 CHAPTER 1
 PAUL, called to be an apostle of Jesus Christ through the will of God, and Sosthenes our brother,
@@ -31237,12 +31242,12 @@ NOW concerning the collection for the saints, as I have given order to the churc
 22 If any man love not the Lord Jesus Christ, let him be Anathema Maran-atha.
 23 The grace of our Lord Jesus Christ be with you.
 24 My love be with you all in Christ Jesus. Amen.
-The first epistle to the Corinthians was written from Philippi by Stephanas, and Fortunatus, and Achaicus, and Timotheus.
+  	The first epistle to the Corinthians was written from Philippi by Stephanas, and Fortunatus, and Achaicus, and Timotheus.
 
 THE
 SECOND EPISTLE OF PAUL THE APOSTLE
 TO THE
-CORINTHIANS.
+CORINTHIANS
 
 CHAPTER 1
 PAUL, an apostle of Jesus Christ by the will of God, and Timothy our brother, unto the church of God which is at Corinth, with all the saints which are in all Achaia:
@@ -31526,11 +31531,11 @@ THIS is the third time I am coming to you. In the mouth of two or three witnesse
 12 Greet one another with an holy kiss.
 13 All the saints salute you.
 14 The grace of the Lord Jesus Christ, and the love of God, and the communion of the Holy Ghost, be with you all. Amen.
-The second epistle to the Corinthians was written from Philippi, a city of Macedonia, by Titus and Lucas.
+  	The second epistle to the Corinthians was written from Philippi, a city of Macedonia, by Titus and Lucas.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-GALATIANS.
+GALATIANS
 
 CHAPTER 1
 PAUL, an apostle, (not of men, neither by man, but by Jesus Christ, and God the Father, who raised him from the dead;)
@@ -31692,11 +31697,11 @@ BRETHREN, if a man be overtaken in a fault, ye which are spiritual, restore such
 16 And as many as walk according to this rule, peace be on them, and mercy, and upon the Israel of God.
 17 From henceforth let no man trouble me: for I bear in my body the marks of the Lord Jesus.
 18 Brethren, the grace of our Lord Jesus Christ be with your spirit. Amen.
-Unto the Galatians written from Rome.
+  	Unto the Galatians written from Rome.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-EPHESIANS.
+EPHESIANS
 
 CHAPTER 1
 PAUL, an apostle of Jesus Christ by the will of God, to the saints which are at Ephesus, and to the faithful in Christ Jesus:
@@ -31864,11 +31869,11 @@ CHILDREN, obey your parents in the Lord: for this is right.
 22 Whom I have sent unto you for the same purpose, that ye might know our affairs, and that he might comfort your hearts.
 23 Peace be to the brethren, and love with faith, from God the Father and the Lord Jesus Christ.
 24 Grace be with all them that love our Lord Jesus Christ in sincerity. Amen.
-Written from Rome unto the Ephesians by Tychicus.
+  	Written from Rome unto the Ephesians by Tychicus.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-PHILIPPIANS.
+PHILIPPIANS
 
 CHAPTER 1
 PAUL and Timotheus, the servants of Jesus Christ, to all the saints in Christ Jesus which are at Philippi, with the bishops and deacons:
@@ -31981,11 +31986,11 @@ THEREFORE, my brethren dearly beloved and longed for, my joy and crown, so stand
 21 Salute every saint in Christ Jesus. The brethren which are with me greet you.
 22 All the saints salute you, chiefly they that are of Cæsar’s household.
 23 The grace of our Lord Jesus Christ be with you all. Amen.
-It was written to the Philippians from Rome by Epaphroditus.
+  	It was written to the Philippians from Rome by Epaphroditus.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-COLOSSIANS.
+COLOSSIANS
 
 CHAPTER 1
 PAUL, an apostle of Jesus Christ by the will of God, and Timotheus our brother,
@@ -32089,12 +32094,12 @@ MASTERS, give unto your servants that which is just and equal; knowing that ye a
 16 And when this epistle is read among you, cause that it be read also in the church of the Laodiceans; and that ye likewise read the epistle from Laodicea.
 17 And say to Archippus, Take heed to the ministry which thou hast received in the Lord, that thou fulfil it.
 18 The salutation by the hand of me Paul. Remember my bonds. Grace be with you. Amen.
-Written from Rome to the Colossians by Tychicus and Onesimus.
+  	Written from Rome to the Colossians by Tychicus and Onesimus.
 
 THE
 FIRST EPISTLE OF PAUL THE APOSTLE
 TO THE
-THESSALONIANS.
+THESSALONIANS
 
 CHAPTER 1
 PAUL, and Silvanus, and Timotheus, unto the church of the Thessalonians which is in God the Father and in the Lord Jesus Christ: Grace be unto you, and peace, from God our Father, and the Lord Jesus Christ.
@@ -32194,12 +32199,12 @@ BUT of the times and the seasons, brethren, ye have no need that I write unto yo
 26 Greet all the brethren with an holy kiss.
 27 I charge you by the Lord that this epistle be read unto all the holy brethren.
 28 The grace of our Lord Jesus Christ be with you. Amen.
-The first epistle unto the Thessalonians was written from Athens.
+  	The first epistle unto the Thessalonians was written from Athens.
 
 THE
 SECOND EPISTLE OF PAUL THE APOSTLE
 TO THE
-THESSALONIANS.
+THESSALONIANS
 
 CHAPTER 1
 PAUL, and Silvanus, and Timotheus, unto the church of the Thessalonians in God our Father and the Lord Jesus Christ:
@@ -32253,11 +32258,11 @@ FINALLY, brethren, pray for us, that the word of the Lord may have free course, 
 16 Now the Lord of peace himself give you peace always by all means. The Lord be with you all.
 17 The salutation of Paul with mine own hand, which is the token in every epistle: so I write.
 18 The grace of our Lord Jesus Christ be with you all. Amen.
-The second epistle to the Thessalonians was written from Athens.
+  	The second epistle to the Thessalonians was written from Athens.
 
 THE FIRST
 EPISTLE OF PAUL THE APOSTLE TO
-TIMOTHY.
+TIMOTHY
 
 CHAPTER 1
 PAUL, an apostle of Jesus Christ by the commandment of God our Saviour, and Lord Jesus Christ, which is our hope;
@@ -32383,11 +32388,11 @@ LET as many servants as are under the yoke count their own masters worthy of all
 19 Laying up in store for themselves a good foundation against the time to come, that they may lay hold on eternal life.
 20 O Timothy, keep that which is committed to thy trust, avoiding profane and vain babblings, and oppositions of science falsely so called:
 21 Which some professing have erred concerning the faith. Grace be with thee. Amen.
-The first to Timothy was written from Laodicea, which is the chiefest city of Phrygia Pacatiana.
+  	The first to Timothy was written from Laodicea, which is the chiefest city of Phrygia Pacatiana.
 
 THE SECOND
 EPISTLE OF PAUL THE APOSTLE TO
-TIMOTHY.
+TIMOTHY
 
 CHAPTER 1
 PAUL, an apostle of Jesus Christ by the will of God, according to the promise of life which is in Christ Jesus,
@@ -32479,10 +32484,10 @@ I CHARGE thee therefore before God, and the Lord Jesus Christ, who shall judge t
 20 Erastus abode at Corinth: but Trophimus have I left at Miletum sick.
 21 Do thy diligence to come before winter. Eubulus greeteth thee, and Pudens, and Linus, and Claudia, and all the brethren.
 22 The Lord Jesus Christ be with thy spirit. Grace be with you. Amen.
-The second epistle unto Timotheus, ordained the first bishop of the church of the Ephesians, was written from Rome, when Paul was brought before Nero the second time.
+  	The second epistle unto Timotheus, ordained the first bishop of the church of the Ephesians, was written from Rome, when Paul was brought before Nero the second time.
 
 THE EPISTLE OF PAUL TO
-TITUS.
+TITUS
 
 CHAPTER 1
 PAUL, a servant of God, and an apostle of Jesus Christ, according to the faith of God’s elect, and the acknowledging of the truth which is after godliness;
@@ -32535,10 +32540,10 @@ PUT them in mind to be subject to principalities and powers, to obey magistrates
 13 Bring Zenas the lawyer and Apollos on their journey diligently, that nothing be wanting unto them.
 14 And let ours also learn to maintain good works for necessary uses, that they be not unfruitful.
 15 All that are with me salute thee. Greet them that love us in the faith. Grace be with you all. Amen.
-It was written to Titus, ordained the first bishop of the church of the Cretians, from Nicopolis of Macedonia.
+  	It was written to Titus, ordained the first bishop of the church of the Cretians, from Nicopolis of Macedonia.
 
 THE EPISTLE OF PAUL TO
-PHILEMON.
+PHILEMON
 
 PAUL, a prisoner of Jesus Christ, and Timothy our brother, unto Philemon our dearly beloved, and fellowlabourer,
 2 And to our beloved Apphia, and Archippus our fellowsoldier, and to the church in thy house:
@@ -32565,11 +32570,11 @@ PAUL, a prisoner of Jesus Christ, and Timothy our brother, unto Philemon our dea
 23 There salute thee Epaphras, my fellowprisoner in Christ Jesus;
 24 Marcus, Aristarchus, Demas, Lucas, my fellowlabourers.
 25 The grace of our Lord Jesus Christ be with your spirit. Amen.
-Written from Rome to Philemon, by Onesimus a servant.
+  	Written from Rome to Philemon, by Onesimus a servant.
 
 THE EPISTLE OF PAUL THE APOSTLE
 TO THE
-HEBREWS.
+HEBREWS
 
 CHAPTER 1
 GOD, who at sundry times and in divers manners spake in time past unto the fathers by the prophets,
@@ -32899,10 +32904,10 @@ LET brotherly love continue.
 23 Know ye that our brother Timothy is set at liberty; with whom, if he come shortly, I will see you.
 24 Salute all them that have the rule over you, and all the saints. They of Italy salute you.
 25 Grace be with you all. Amen.
-Written to the Hebrews from Italy by Timothy.
+  	Written to the Hebrews from Italy by Timothy.
 
 THE GENERAL EPISTLE OF
-JAMES.
+JAMES
 
 CHAPTER 1
 JAMES, a servant of God and of the Lord Jesus Christ, to the twelve tribes which are scattered abroad, greeting.
@@ -33023,7 +33028,7 @@ GO to now, ye rich men, weep and howl for your miseries that shall come upon you
 20 Let him know, that he which converteth the sinner from the error of his way shall save a soul from death, and shall hide a multitude of sins.
 
 THE FIRST EPISTLE GENERAL OF
-PETER.
+PETER
 
 CHAPTER 1
 PETER, an apostle of Jesus Christ, to the strangers scattered throughout Pontus, Galatia, Cappadocia, Asia, and Bithynia,
@@ -33141,7 +33146,7 @@ THE elders which are among you I exhort, who am also an elder, and a witness of 
 14 Greet ye one another with a kiss of charity. Peace be with you all that are in Christ Jesus. Amen.
 
 THE SECOND EPISTLE GENERAL OF
-PETER.
+PETER
 
 CHAPTER 1
 SIMON Peter, a servant and an apostle of Jesus Christ, to them that have obtained like precious faith with us through the righteousness of God and our Saviour Jesus Christ:
@@ -33211,7 +33216,7 @@ THIS second epistle, beloved, I now write unto you; in both which I stir up your
 18 But grow in grace, and in the knowledge of our Lord and Saviour Jesus Christ. To him be glory both now and for ever. Amen.
 
 THE FIRST EPISTLE GENERAL OF
-JOHN.
+JOHN
 
 CHAPTER 1
 THAT which was from the beginning, which we have heard, which we have seen with our eyes, which we have looked upon, and our hands have handled, of the Word of life;
@@ -33255,6 +33260,7 @@ MY little children, these things write I unto you, that ye sin not. And if any m
 27 But the anointing which ye have received of him abideth in you, and ye need not that any man teach you: but as the same anointing teacheth you of all things, and is truth, and is no lie, and even as it hath taught you, ye shall abide in him.
 28 And now, little children, abide in him; that, when he shall appear, we may have confidence, and not be ashamed before him at his coming.
 29 If ye know that he is righteous, ye know that every one that doeth righteousness is born of him.
+
 
 CHAPTER 3
 BEHOLD, what manner of love the Father hath bestowed upon us, that we should be called the sons of God: therefore the world knoweth us not, because it knew him not.
@@ -33329,7 +33335,7 @@ WHOSOEVER believeth that Jesus is the Christ is born of God: and every one that 
 21 Little children, keep yourselves from idols. Amen.
 
 THE SECOND EPISTLE OF
-JOHN.
+JOHN
 
 THE elder unto the elect lady and her children, whom I love in the truth; and not I only, but also all they that have known the truth;
 2 For the truth’s sake, which dwelleth in us, and shall be with us for ever.
@@ -33346,7 +33352,7 @@ THE elder unto the elect lady and her children, whom I love in the truth; and no
 13 The children of thy elect sister greet thee. Amen.
 
 THE THIRD EPISTLE OF
-JOHN.
+JOHN
 
 THE elder unto the wellbeloved Gaius, whom I love in the truth.
 2 Beloved, I wish above all things that thou mayest prosper and be in health, even as thy soul prospereth.
@@ -33364,7 +33370,7 @@ THE elder unto the wellbeloved Gaius, whom I love in the truth.
 14 But I trust I shall shortly see thee, and we shall speak face to face. Peace be to thee. Our friends salute thee. Greet the friends by name.
 
 THE GENERAL EPISTLE OF
-JUDE.
+JUDE
 
 JUDE, the servant of Jesus Christ, and brother of James, to them that are sanctified by God the Father, and preserved in Jesus Christ, and called:
 2 Mercy unto you, and peace, and love, be multiplied.
@@ -33394,7 +33400,7 @@ JUDE, the servant of Jesus Christ, and brother of James, to them that are sancti
 
 THE REVELATION
 OF
-ST. JOHN THE DIVINE.
+ST. JOHN THE DIVINE
 
 CHAPTER 1
 THE Revelation of Jesus Christ, which God gave unto him, to shew unto his servants things which must shortly come to pass; and he sent and signified it by his angel unto his servant John:
@@ -33843,4 +33849,3 @@ AND he shewed me a pure river of water of life, clear as crystal, proceeding out
 19 And if any man shall take away from the words of the book of this prophecy, God shall take away his part out of the book of life, and out of the holy city, and from the things which are written in this book.
 20 He which testifieth these things saith, Surely I come quickly. Amen. Even so, come, Lord Jesus.
 21 The grace of our Lord Jesus Christ be with you all. Amen.
-

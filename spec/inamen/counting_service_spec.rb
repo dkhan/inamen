@@ -252,6 +252,20 @@ RSpec.describe Inamen::CountingService do
       expect(c[:numbered_verse_lines]).to eq(1)
     end
 
+    it "counts Hebrew Psalm 119 stanza labels as divisions before implicit verse 1" do
+      v1 = "BLESSED are the undefiled in the way, who walk in the law of the LORD."
+      v2 = "2 Blessed are they that keep his testimonies, and that seek him with the whole heart."
+      lines = ["PSALM 119", "א", v1, v2]
+
+      c = described_class.total_for_lines(lines)
+      expect(c[:psalm_119_division_words]).to eq(1)
+      expect(c[:psalm_heading_words]).to eq(0)
+      expect(c[:implicit_psalm_verse_1]).to eq(1)
+      expect(c[:verse_text_words]).to eq(
+        Inamen::Tokenizer.tokenize(v1).size + Inamen::Tokenizer.tokenize(v2.sub(/\A[0-9]+\s+/, "")).size
+      )
+    end
+
     it "counts CHAPTER N lines with implicit verse 1 (Concord-style)" do
       v1 = "IN the beginning God created the heaven and the earth."
       v2 = "2 And the earth was without form, and void; and darkness was upon the face of the deep."
