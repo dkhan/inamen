@@ -120,7 +120,12 @@ class EditionContext
   end
 
   def file_stats
-    @file_stats ||= Inamen::FileStatsPublisher.resolve(edition_id, lines: source_lines, text_path: path)
+    @file_stats ||= Inamen::FileStatsPublisher.resolve(
+      edition_id,
+      lines: lines,
+      text_path: path,
+      source_lines: source_lines
+    )
   end
 
   def file_stats_prebuilt_path

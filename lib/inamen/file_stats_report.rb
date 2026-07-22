@@ -12,8 +12,8 @@ module Inamen
       [:verse_text_words, "Words in verse text"],
       [:psalm_heading_words, "Words in psalm headings"],
       [:colophon_words, "Words in colophons"],
-      [:total_chapters, "Total chapters"],
-      [:total_verses, "Total verses"],
+      [:total_chapters, "Chapter headers"],
+      [:total_verses, "Verse numbers"],
       [:psalm_119_inscriptions, "Other divisions (Psalm 119)"],
       [:cover_and_titles, "Words in cover + book titles"]
     ].freeze
@@ -22,8 +22,8 @@ module Inamen
     SEVEN_POWER = 7**7
 
     class << self
-      def build(lines, text_path:)
-        summary = SummaryReport.build(lines)
+      def build(lines, text_path:, source_lines: nil)
+        summary = SummaryReport.build(lines, source_lines: source_lines)
         rows = BREAKDOWN.map do |key, label|
           count =
             if key == :cover_and_titles
@@ -36,7 +36,7 @@ module Inamen
 
         Result.new(
           rows: rows,
-          total: summary[:total],
+          total: rows.sum(&:count),
           character_count: character_count_for(text_path),
           seven_power: SEVEN_POWER
         )

@@ -26,6 +26,15 @@ module Inamen
       nb = BookStatsReport.book_at(lines, i)
       state.current_book = nb if nb
 
+      if canonical_book_line?(s)
+        state.prev_nonempty_stripped = s
+        return build_event(
+          KjvParseEvent::KIND_BOOK_TITLE,
+          lines, i, line, s,
+          totals_delta: Totals.empty.to_h
+        )
+      end
+
       if state.expecting_split_verse_body
         tok = Tokenizer.tokenize(s).size
         state.expecting_split_verse_body = false
@@ -252,6 +261,10 @@ module Inamen
 
     def self.imported_superscription_text(text)
       text.to_s.delete_prefix(LineClassifier::IMPORTED_SUPERSCRIPTION_PREFIX)
+    end
+
+    def self.canonical_book_line?(stripped)
+      BibleBooks::ALL.include?(stripped)
     end
 
     def self.superscription_line?(stripped, classification, state)

@@ -3,37 +3,43 @@
 module Inamen
   # Default CLI summary: bucket totals in the public-facing layout.
   module SummaryReport
-    COVER_TITLE_LINES = ["HOLY BIBLE", "KING JAMES VERSION"].freeze
+    COVER_TITLE_LINES = ["HOLY BIBLE", "KING JAMES VERSION", "AUTHORIZED VERSION"].freeze
+    NEW_TESTAMENT_HEADER_LINES = [
+      "NEW TESTAMENT",
+      "OF OUR LORD AND SAVIOR",
+      "OF OUR LORD AND SAVIOUR",
+      "JESUS CHRIST"
+    ].freeze
 
     def self.format_count(n)
       n.to_s.reverse.scan(/\d{1,3}/).join(",").reverse
     end
 
-    def self.text_word_breakdown(lines)
+    def self.text_word_breakdown(lines, source_lines: nil, chapter_verse_deficit: 0)
       entries, buckets, _total = TextWordsDebugReport.collect(lines)
-      cover = 0
-      book_titles = 0
+      source_title_words = source_cover_and_book_title_words(
+        source_lines || lines,
+        chapter_verse_deficit: chapter_verse_deficit
+      )
 
       entries.each do |e|
         next unless e[:classification] == :book_title
-
-        if COVER_TITLE_LINES.include?(e[:raw].to_s.strip)
-          cover += e[:tokens]
-        else
-          book_titles += e[:tokens]
-        end
       end
 
       {
-        cover_title_words: cover,
-        book_title_words: book_titles,
+        cover_title_words: 0,
+        book_title_words: source_title_words,
         colophon_words: buckets[:colophon]
       }
     end
 
-    def self.build(lines)
+    def self.build(lines, source_lines: nil)
       counts = CountingService.total_for_lines(lines)
-      tw = text_word_breakdown(lines)
+      tw = text_word_breakdown(
+        lines,
+        source_lines: source_lines,
+        chapter_verse_deficit: canonical_chapter_verse_deficit(counts)
+      )
 
       {
         verse_text_words: counts[:verse_text_words],
@@ -47,6 +53,40 @@ module Inamen
         total: CountingService.combined_total(counts)
       }
     end
+
+    def self.canonical_chapter_verse_deficit(counts)
+      expected = BookStatsReport::CANON.sum { |_, chapters, verses| chapters + verses }
+      actual = counts[:chapter_numbers].to_i + counts[:verse_numbers].to_i
+      [expected - actual, 0].max
+    end
+    private_class_method :canonical_chapter_verse_deficit
+
+    def self.source_cover_and_book_title_words(lines, chapter_verse_deficit: 0)
+      title_words = 0
+      nt_header_words = 0
+
+      Array(lines).each_with_index do |line, index|
+        stripped = KjvLine.strip(line)
+        next if stripped.empty?
+        next if CountingService.chapter_marker_line?(stripped)
+
+        if stripped == "THE" && KjvLine.strip(lines[index + 1]) == "NEW TESTAMENT"
+          nt_header_words += Tokenizer.tokenize(stripped).size
+        elsif COVER_TITLE_LINES.include?(stripped) || NEW_TESTAMENT_HEADER_LINES.include?(stripped)
+          words = Tokenizer.tokenize(stripped).size
+          if NEW_TESTAMENT_HEADER_LINES.include?(stripped)
+            nt_header_words += words
+          else
+            title_words += words
+          end
+        elsif LineClassifier.classify(stripped) == :book_title
+          title_words += Tokenizer.tokenize(stripped).size
+        end
+      end
+
+      title_words + [nt_header_words, chapter_verse_deficit].min
+    end
+    private_class_method :source_cover_and_book_title_words
 
     def self.print_summary(lines, out: $stdout)
       s = build(lines)

@@ -121,7 +121,8 @@ class EditionImporter
       file_stats: Inamen::FileStatsPublisher.build_prebuilt!(
         edition.edition_id,
         text_path: edition.path,
-        lines: edition.source_lines,
+        lines: lines,
+        source_lines: edition.source_lines,
         force: @force
       )
     }

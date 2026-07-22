@@ -66,23 +66,28 @@ module Inamen
     BOOK_TITLE_LINE_RULES = [
       [/\ATHE (FIRST|SECOND|THIRD|FOURTH|FIFTH) BOOK OF MOSES,?\z/, nil],
       [/\A(FIRST|SECOND) BOOK OF [A-Z ]+,?\z/, nil],
+      [/\ABOOK OF [A-Z ]+\.?\z/, nil],
       [/\ATHE (FIRST|SECOND) BOOK OF THE\z/, nil],
-      [/\ATHE (FIRST|SECOND) BOOK OF THE [A-Z]+\.\z/, nil],
-      [/\ABOOK OF THE KINGS[,.]\z/, nil],
-      [/\ATHE (THIRD|FOURTH) BOOK OF THE KINGS\.\z/, nil],
+      [/\ATHE (FIRST|SECOND) BOOK OF THE [A-Z]+\.?\z/, nil],
+      [/\ABOOK OF THE KINGS[,.]?\z/, nil],
+      [/\ATHE (THIRD|FOURTH) BOOK OF THE KINGS\.?\z/, nil],
       [/\ATHE EPISTLE OF PAUL THE APOSTLE\z/, nil],
       [/\ATHE EPISTLE OF PAUL TO\z/, nil],
       [/\AEPISTLE OF PAUL THE APOSTLE TO\z/, nil],
       [/\ATHE (FIRST|SECOND) EPISTLE GENERAL OF\z/, nil],
       [/\ATHE SECOND EPISTLE OF\z/, nil],
-      [/\ATHE BOOK OF .+\.\z/, nil],
+      [/\ATHE BOOK OF .+\.?\z/, nil],
       [/\APSALM [0-9]+\z/, nil],
       [CHAPTER_WORD_LINE, nil],
-      [/\AST\. [A-Z.]+\z/, nil],
-      [/\AOR, .+\.\z/, nil],
+      [/\AST\. [A-Z. ]+\.?\z/, nil],
+      [/\AOR, .+\.?\z/, nil],
+      [/\AOF [A-Z ]+\.?\z/, nil],
+      [/\ASONG OF SOLOMON\.?\z/, nil],
+      [/\ATHE PROVERBS\.?\z/, nil],
+      [/\AACTS OF THE APOSTLES\.?\z/, nil],
       [/\A[A-Z][A-Z\s,'-]+\.\z/, ->(line) { !line.match?(/[a-z]/) }],
       [/\A[A-Z][A-Z\s,]+;\z/, nil],
-      [/\A[A-Z]{3,}\.\z/, ->(line) { !PsalmHeading.stanza_label?(line) }]
+      [/\A[A-Z]{3,}\.?\z/, ->(line) { !PsalmHeading.stanza_label?(line) }]
     ].freeze
 
     def self.book_title?(s)

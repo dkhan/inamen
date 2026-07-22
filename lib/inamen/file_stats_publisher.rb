@@ -6,7 +6,7 @@ require "fileutils"
 module Inamen
   # Builds and resolves precomputed whole-file stats (7^7 breakdown + character count).
   module FileStatsPublisher
-    FILE_STATS_REVISION = "1"
+    FILE_STATS_REVISION = "4"
 
     module_function
 
@@ -26,21 +26,28 @@ module Inamen
       File.file?(prebuilt_path(edition_id, text_path: text_path))
     end
 
-    def build_prebuilt!(edition_id, text_path:, lines: nil, force: false)
+    def build_prebuilt!(edition_id, text_path:, lines: nil, source_lines: nil, force: false)
       dest = prebuilt_path(edition_id, text_path: text_path)
       return dest if File.file?(dest) && !force
 
       FileUtils.mkdir_p(prebuilt_root)
-      lines ||= File.readlines(text_path, chomp: true)
-      result = FileStatsReport.build(lines, text_path: text_path)
+      source_lines ||= File.readlines(text_path, chomp: true)
+      lines ||= source_lines
+      result = FileStatsReport.build(lines, text_path: text_path, source_lines: source_lines)
       File.binwrite(dest, Marshal.dump(result))
       dest
     end
 
     def build_all_prebuilt!(editions, force: false)
       editions.map do |edition|
-        lines = edition.respond_to?(:source_lines) ? edition.source_lines : edition.lines
-        build_prebuilt!(edition.edition_id, text_path: edition.path, lines: lines, force: force)
+        lines = edition.lines
+        build_prebuilt!(
+          edition.edition_id,
+          text_path: edition.path,
+          lines: lines,
+          source_lines: edition.source_lines,
+          force: force
+        )
       end
     end
 
@@ -55,9 +62,9 @@ module Inamen
       load_prebuilt!(path)
     end
 
-    def resolve(edition_id, lines:, text_path:)
+    def resolve(edition_id, lines:, text_path:, source_lines: nil)
       load_for(edition_id, text_path: text_path) || begin
-        FileStatsReport.build(lines, text_path: text_path)
+        FileStatsReport.build(lines, text_path: text_path, source_lines: source_lines)
       end
     end
   end

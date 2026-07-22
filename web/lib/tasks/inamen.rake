@@ -52,4 +52,24 @@ namespace :editions do
     warn "Import failed: #{e.message}"
     exit 1
   end
+
+  desc "Remove an edition and generated artifacts, preserving the source file: bin/rails editions:remove EDITION=..."
+  task remove: :environment do
+    edition_id = ENV["EDITION"].presence || ENV["ID"].presence || ENV["NAME"].presence
+    result = EditionRemover.remove!(edition_id: edition_id)
+
+    puts "Removed edition #{result.edition_id}"
+    puts "Preserved source: #{result.source_path}"
+    puts "Deleted feature edition rows: #{result.deleted_feature_editions}"
+    puts "Deleted generated artifacts: #{result.deleted_artifacts.length}"
+    result.deleted_artifacts.each { |path| puts path }
+
+    if result.deleted_generated_texts.any?
+      puts "Deleted generated text copies: #{result.deleted_generated_texts.length}"
+      result.deleted_generated_texts.each { |path| puts path }
+    end
+  rescue ArgumentError => e
+    warn "Remove failed: #{e.message}"
+    exit 1
+  end
 end

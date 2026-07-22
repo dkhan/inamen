@@ -26,6 +26,7 @@ module Inamen
     KIND_IMPLICIT_CHAPTER_OPENING = :implicit_chapter_opening
     KIND_SPLIT_VERSE_NUMBER = :split_verse_number
     KIND_NUMBERED_LINE = :numbered_line
+    KIND_BOOK_TITLE = :book_title
 
     KINDS = [
       KIND_SPLIT_VERSE_BODY,
@@ -37,7 +38,8 @@ module Inamen
       KIND_CHAPTER_TITLE,
       KIND_IMPLICIT_CHAPTER_OPENING,
       KIND_SPLIT_VERSE_NUMBER,
-      KIND_NUMBERED_LINE
+      KIND_NUMBERED_LINE,
+      KIND_BOOK_TITLE
     ].freeze
 
     def self.strict_kind_validation?

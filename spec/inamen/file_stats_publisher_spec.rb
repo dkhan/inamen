@@ -17,8 +17,19 @@ RSpec.describe Inamen::FileStatsPublisher do
 
   describe ".build_all_prebuilt!" do
     it "builds each supplied edition" do
-      edition = Struct.new(:edition_id, :path, :lines).new("sample", text_path, ["Genesis", "CHAPTER 1", "1 In"])
-      expect(described_class).to receive(:build_prebuilt!).with("sample", text_path: text_path, lines: edition.lines, force: false)
+      edition = Struct.new(:edition_id, :path, :lines, :source_lines).new(
+        "sample",
+        text_path,
+        ["Genesis", "CHAPTER 1", "1 In"],
+        ["raw title", "raw body"]
+      )
+      expect(described_class).to receive(:build_prebuilt!).with(
+        "sample",
+        text_path: text_path,
+        lines: edition.lines,
+        source_lines: edition.source_lines,
+        force: false
+      )
       described_class.build_all_prebuilt!([edition])
     end
   end
