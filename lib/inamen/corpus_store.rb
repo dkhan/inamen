@@ -24,7 +24,6 @@ module Inamen
     TESTAMENT_BY_BOOK = BibleBooks::ALL.to_h { |book| [book, BibleBooks.testament_for(book)] }.freeze
 
     INSERT_BATCH_SIZE = 500
-
     class << self
       def build!(lines, path: DEFAULT_PATH)
         dir = File.dirname(path)
@@ -78,6 +77,13 @@ module Inamen
 
       def normalize_apostrophes(str)
         str.to_s.tr("'", "\u{2019}")
+      end
+
+      def apostrophe_equivalent_strings(str)
+        text = str.to_s
+        variants = [normalize_apostrophes(text)]
+        variants << text.tr("\u{2019}", "'") if text.include?("\u{2019}") || text.include?("'")
+        variants.uniq
       end
 
       def testament_for(book)

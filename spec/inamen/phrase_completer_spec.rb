@@ -57,5 +57,13 @@ RSpec.describe Inamen::PhraseCompleter do
       expect(result.branches.first.preview.map(&:text)).to eq(%w[James the son of Alphaeus])
       expect(result.branches.first.preview.all?(&:valid)).to be(true)
     end
+
+    it "accepts ASCII apostrophe tokens in a case-sensitive dictionary" do
+      completer = described_class.new(words: ["God's"], case_sensitive: true)
+      result = completer.analyze("God's")
+
+      expect(result.can_search).to be(true)
+      expect(result.branches.first.preview.first.valid).to be(true)
+    end
   end
 end

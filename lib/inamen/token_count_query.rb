@@ -105,40 +105,42 @@ module Inamen
         where_sql, where_params = selection.where_clause
         if case_sensitive
           column = "token_raw"
-          value = CorpusStore.normalize_apostrophes(token.to_s)
+          values = CorpusStore.apostrophe_equivalent_strings(token)
         else
           column = "token_norm"
-          value = CorpusStore.normalize_token(token)
+          values = [CorpusStore.normalize_token(token)]
         end
 
+        placeholders = (["?"] * values.length).join(", ")
         sql = <<~SQL
           SELECT token_raw, COUNT(*) AS count
           FROM tokens
-          WHERE #{column} = ? #{where_sql}
+          WHERE #{column} IN (#{placeholders}) #{where_sql}
           GROUP BY token_raw
           ORDER BY count DESC, token_raw
         SQL
-        db.execute(sql, [value] + where_params).to_h { |raw, count| [raw, count.to_i] }
+        db.execute(sql, values + where_params).to_h { |raw, count| [raw, count.to_i] }
       end
 
       def spellings_for_token_from_counts(db, token:, selection:, case_sensitive:)
         where_sql, where_params = selection.where_clause
         if case_sensitive
           column = "token_raw"
-          value = CorpusStore.normalize_apostrophes(token.to_s)
+          values = CorpusStore.apostrophe_equivalent_strings(token)
         else
           column = "token_norm"
-          value = CorpusStore.normalize_token(token)
+          values = [CorpusStore.normalize_token(token)]
         end
 
+        placeholders = (["?"] * values.length).join(", ")
         sql = <<~SQL
           SELECT token_raw, SUM(count) AS count
           FROM token_counts
-          WHERE #{column} = ? #{where_sql}
+          WHERE #{column} IN (#{placeholders}) #{where_sql}
           GROUP BY token_raw
           ORDER BY count DESC, token_raw
         SQL
-        db.execute(sql, [value] + where_params).to_h { |raw, count| [raw, count.to_i] }
+        db.execute(sql, values + where_params).to_h { |raw, count| [raw, count.to_i] }
       end
 
       def wildcard_aggregate_from_tokens(db, pattern:, selection:, case_sensitive:)

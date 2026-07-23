@@ -135,7 +135,7 @@ module Inamen
       if TokenPattern.wildcard?(token)
         wildcard_suggestions(token).any?
       elsif @case_sensitive
-        @word_set.include?(CorpusStore.normalize_apostrophes(token))
+        CorpusStore.apostrophe_equivalent_strings(token).any? { |variant| @word_set.include?(variant) }
       else
         @norm_set.include?(CorpusStore.normalize_token(token))
       end

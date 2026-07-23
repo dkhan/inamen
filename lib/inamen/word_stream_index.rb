@@ -124,8 +124,8 @@ module Inamen
       if TokenPattern.wildcard?(pattern)
         wildcard_positions(pattern, case_sensitive: case_sensitive, selection: selection)
       elsif case_sensitive
-        raw = CorpusStore.normalize_apostrophes(pattern)
-        filter_positions(postings_raw[raw] || [], selection)
+        positions = CorpusStore.apostrophe_equivalent_strings(pattern).flat_map { |raw| postings_raw[raw] || [] }
+        filter_positions(positions.uniq, selection)
       else
         norm = CorpusStore.normalize_token(pattern)
         filter_positions(postings_norm[norm] || [], selection)
@@ -204,7 +204,11 @@ module Inamen
         elsif prefilter[:op] == :glob
           glob = prefilter[:value]
           source = case_sensitive ? postings_raw : postings_norm
-          source.keys.select { |key| File.fnmatch?(glob, key) }
+          if case_sensitive && pattern.to_s.match?(/['\u{2019}]/)
+            source.keys.select { |key| wildcard_token_match?(regex, token_row_for_raw_key(key), pattern: pattern, case_sensitive: true) }
+          else
+            source.keys.select { |key| File.fnmatch?(glob, key) }
+          end
         else
           like = prefilter[:value]
           postings_norm.keys.select { |key| like_prefilter_match?(like, key) }
@@ -239,6 +243,11 @@ module Inamen
       text = CorpusStore.normalize_apostrophes(text)
       text = text.sub(TokenPattern::TRAILING_POSSESSIVE, "") if TokenPattern.strip_trailing_possessive_for_wildcard?(pattern)
       regex.match?(text)
+    end
+
+    def token_row_for_raw_key(key)
+      position = postings_raw[key]&.first
+      token_rows[position]
     end
 
     def like_prefilter_match?(like_value, token_norm)

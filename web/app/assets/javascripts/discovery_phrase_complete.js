@@ -1,7 +1,7 @@
 (function () {
   const DICTIONARY_CACHE_KEY = "inamen:discover-dictionary";
   const MAX_SUGGESTIONS = 12;
-  const WILDCARD_FRAGMENT = "(?:[\\p{L}\\p{M}0-9\\-]*)";
+  const WILDCARD_FRAGMENT = "(?:[\\p{L}\\p{M}0-9\\-'\u2019]*)";
 
   let dictionary = null;
   let dictionaryPromise = null;
@@ -30,6 +30,15 @@
 
   function normalizeApostrophe(text) {
     return text.replace(/'/g, "\u2019");
+  }
+
+  function apostropheEquivalentStrings(text) {
+    const value = String(text || "");
+    const variants = [normalizeApostrophe(value)];
+    if (value.includes("'") || value.includes("\u2019")) {
+      variants.push(value.replace(/\u2019/g, "'"));
+    }
+    return Array.from(new Set(variants));
   }
 
   function normalizeToken(text) {
@@ -181,7 +190,7 @@
   function validCompleteToken(token, caseSensitive) {
     if (!token) return false;
     if (wildcardPattern(token)) return wildcardSuggestions(token, caseSensitive).length > 0;
-    if (caseSensitive) return dictionary.includes(normalizeApostrophe(token));
+    if (caseSensitive) return apostropheEquivalentStrings(token).some((variant) => dictionary.includes(variant));
     return normWords.has(normalizeToken(token));
   }
 

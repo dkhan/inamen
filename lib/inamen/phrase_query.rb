@@ -122,7 +122,9 @@ module Inamen
             ["t#{index}.#{column} GLOB ?", [prefilter[:value]]]
           end
         elsif case_sensitive
-          ["t#{index}.token_raw = ?", CorpusStore.normalize_apostrophes(word)]
+          values = CorpusStore.apostrophe_equivalent_strings(word)
+          placeholders = (["?"] * values.length).join(", ")
+          ["t#{index}.token_raw IN (#{placeholders})", values]
         else
           ["t#{index}.token_norm = ?", CorpusStore.normalize_token(word)]
         end

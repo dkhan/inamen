@@ -112,6 +112,51 @@ RSpec.describe Inamen::TokenQuery do
       expect(row.spellings).to eq("Jesus\u{2019}" => 10)
     end
 
+    it "finds case-sensitive ASCII apostrophe tokens through SQL and word-stream paths" do
+      db = SQLite3::Database.new(":memory:")
+      db.execute_batch(<<~SQL)
+        CREATE TABLE tokens (
+          book TEXT NOT NULL,
+          chapter INTEGER NOT NULL,
+          verse INTEGER NOT NULL,
+          word_index INTEGER NOT NULL,
+          token_raw TEXT NOT NULL,
+          token_norm TEXT NOT NULL,
+          testament TEXT NOT NULL,
+          bucket TEXT NOT NULL,
+          lineno INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE TABLE token_counts (
+          token_norm TEXT NOT NULL,
+          token_raw TEXT NOT NULL,
+          bucket TEXT NOT NULL,
+          testament TEXT NOT NULL,
+          book TEXT NOT NULL,
+          count INTEGER NOT NULL
+        );
+      SQL
+      db.execute(
+        "INSERT INTO tokens (book, chapter, verse, word_index, token_raw, token_norm, testament, bucket) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        ["Genesis", 1, 1, 1, "God's", Inamen::CorpusStore.normalize_token("God's"), "OT", Inamen::CorpusStore::BUCKET_VERSE_TEXT]
+      )
+      db.execute(
+        "INSERT INTO token_counts (token_norm, token_raw, bucket, testament, book, count) VALUES (?, ?, ?, ?, ?, ?)",
+        [Inamen::CorpusStore.normalize_token("God's"), "God's", Inamen::CorpusStore::BUCKET_VERSE_TEXT, "OT", "Genesis", 1]
+      )
+
+      term = described_class::QueryTerm.new(pattern: "God's", case_sensitive: true)
+      sql_row = described_class.scan(db, terms: [term], search_selection: Inamen::SearchSelection.default).first
+      stream = Inamen::WordStreamIndex.build_from_db(db)
+      stream_row = described_class.scan(db, terms: [term], search_selection: Inamen::SearchSelection.default, word_stream: stream).first
+
+      expect(sql_row.count).to eq(1)
+      expect(sql_row.spellings).to eq("God's" => 1)
+      expect(stream_row.count).to eq(1)
+      expect(stream_row.spellings).to eq("God's" => 1)
+    ensure
+      db&.close
+    end
+
     it "counts consecutive-word phrases" do
       rows = described_class.scan(
         db,
