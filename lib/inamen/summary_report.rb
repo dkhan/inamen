@@ -3,7 +3,13 @@
 module Inamen
   # Default CLI summary: bucket totals in the public-facing layout.
   module SummaryReport
-    COVER_TITLE_LINES = ["HOLY BIBLE", "KING JAMES VERSION", "AUTHORIZED VERSION"].freeze
+    COVER_TITLE_LINES = [
+      "HOLY BIBLE",
+      "THE HOLY BIBLE",
+      "KING JAMES VERSION",
+      "AUTHORIZED KING JAMES VERSION",
+      "AUTHORIZED VERSION"
+    ].freeze
     NEW_TESTAMENT_HEADER_LINES = [
       "NEW TESTAMENT",
       "OF OUR LORD AND SAVIOR",

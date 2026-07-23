@@ -51,6 +51,20 @@ RSpec.describe Inamen::FileStatsReport do
       expect(by_key[:verse_text_words]).to eq(789_630)
       expect(by_key[:cover_and_titles]).to eq(380)
     end
+
+    it "counts Oxford cover text toward the 7^7 total" do
+      text_path = File.expand_path("../../data/KJV_OXFORD.txt", __dir__)
+      skip "KJV Oxford sample text missing" unless File.file?(text_path)
+
+      processed = Inamen::BibleTextPreprocessor.from_file(text_path)
+      source_lines = File.readlines(text_path, chomp: true, encoding: "UTF-8")
+      result = described_class.build(processed.lines, text_path: text_path, source_lines: source_lines)
+      by_key = result.rows.to_h { |row| [row.key, row.count] }
+
+      expect(result.total).to eq(823_543)
+      expect(by_key[:verse_text_words]).to eq(789_627)
+      expect(by_key[:cover_and_titles]).to eq(383)
+    end
   end
 
   describe ".character_count_for" do
