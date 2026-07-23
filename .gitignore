@@ -9,6 +9,7 @@ data/corpora/*.sqlite
 data/corpora/*.sqlite-*
 data/verse_indices/*.marshal
 data/file_stats/*.marshal
+data/file_stats/
 data/word_streams/*.marshal
 data/lexicons/*.marshal
 data/canon_ordinals/*.marshal

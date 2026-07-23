@@ -12,6 +12,7 @@ class EditionRemoverTest < ActiveSupport::TestCase
     artifact_paths = EditionRemover::ARTIFACT_ROOTS.map do |root|
       Pathname(root).join("#{edition_id}-artifact.marshal")
     end
+    artifact_dir = Inamen::FileStatsExplorer.cache_dir(edition_id)
     unrelated_artifact_path = Pathname(EditionRemover::ARTIFACT_ROOTS.first).join("keep_me_test-artifact.marshal")
 
     FileUtils.mkdir_p(generated_text_path.dirname)
@@ -21,6 +22,8 @@ class EditionRemoverTest < ActiveSupport::TestCase
       FileUtils.mkdir_p(path.dirname)
       File.write(path, "generated")
     end
+    FileUtils.mkdir_p(artifact_dir)
+    File.write(File.join(artifact_dir, "manifest.csv"), "key,value\n")
 
     edition = Edition.create!(
       short_name: edition_id,
@@ -61,8 +64,10 @@ class EditionRemoverTest < ActiveSupport::TestCase
     assert File.file?(source_path), "source file in data should be preserved"
     assert_not File.exist?(generated_text_path), "generated text copy should be removed"
     artifact_paths.each { |path| assert_not File.exist?(path), "#{path} should be removed" }
+    assert_not File.exist?(artifact_dir), "#{artifact_dir} should be removed"
     assert File.file?(unrelated_artifact_path), "unrelated artifacts should be preserved"
     assert_equal artifact_paths.map(&:to_s).sort, result.deleted_artifacts.sort
+    assert_equal [artifact_dir], result.deleted_artifact_dirs
     assert_equal [generated_text_path.to_s], result.deleted_generated_texts
     assert_equal 1, result.deleted_feature_editions
     assert_nil FeatureEdition.find_by(edition_id: edition.short_name)
@@ -74,5 +79,6 @@ class EditionRemoverTest < ActiveSupport::TestCase
     ([source_path, generated_text_path, unrelated_artifact_path].compact + Array(artifact_paths)).each do |path|
       FileUtils.rm_f(path)
     end
+    FileUtils.rm_rf(artifact_dir) if artifact_dir
   end
 end

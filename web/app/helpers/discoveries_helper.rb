@@ -25,6 +25,39 @@ module DiscoveriesHelper
     "row-highlight" if highlight.to_s == row_key.to_s
   end
 
+  def file_stats_category_label(value)
+    {
+      "letters" => "Letters",
+      "uppercase" => "Uppercase",
+      "lowercase" => "Lowercase",
+      "small_caps" => "Small caps",
+      "vowels" => "Vowels",
+      "consonants" => "Consonants",
+      "other_letters" => "Other letters",
+      "digits" => "Digits",
+      "punctuation" => "Punctuation",
+      "whitespace" => "Whitespace",
+      "space" => "Space",
+      "newline" => "Newline",
+      "tab" => "Tab",
+      "carriage_return" => "Carriage return",
+      "other_whitespace" => "Other whitespace",
+      "other" => "Other characters",
+      "total" => "Total"
+    }.fetch(value.to_s, value.to_s.tr("_", " ").capitalize)
+  end
+
+  def file_stats_character_symbol(character)
+    char = character.char.to_s
+    case char
+    when " " then "Space"
+    when "\n" then "Newline"
+    when "\t" then "Tab"
+    when "\r" then "CR"
+    else char
+    end
+  end
+
   def discovery_match_by_options(selected)
     options_for_select(
       [

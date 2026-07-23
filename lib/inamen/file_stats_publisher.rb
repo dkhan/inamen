@@ -6,7 +6,7 @@ require "fileutils"
 module Inamen
   # Builds and resolves precomputed whole-file stats (7^7 breakdown + character count).
   module FileStatsPublisher
-    FILE_STATS_REVISION = "4"
+    FILE_STATS_REVISION = "9"
 
     module_function
 
@@ -34,6 +34,14 @@ module Inamen
       source_lines ||= File.readlines(text_path, chomp: true)
       lines ||= source_lines
       result = FileStatsReport.build(lines, text_path: text_path, source_lines: source_lines)
+      result.explorer = FileStatsExplorer.resolve(
+        edition_id,
+        checksum: CorpusPublisher.checksum_prefix(text_path),
+        chapter_index: VerseIndex.build_chapter_index(lines),
+        lines: source_lines,
+        source_text: File.read(text_path, encoding: "UTF-8"),
+        force: force
+      )
       File.binwrite(dest, Marshal.dump(result))
       dest
     end
@@ -59,12 +67,25 @@ module Inamen
       path = prebuilt_path(edition_id, text_path: text_path)
       return nil unless File.file?(path)
 
-      load_prebuilt!(path)
+      result = load_prebuilt!(path)
+      result.explorer ||= FileStatsExplorer.load_cache(edition_id) if FileStatsExplorer.cache_current?(
+        edition_id,
+        CorpusPublisher.checksum_prefix(text_path)
+      )
+      result
     end
 
     def resolve(edition_id, lines:, text_path:, source_lines: nil)
       load_for(edition_id, text_path: text_path) || begin
-        FileStatsReport.build(lines, text_path: text_path, source_lines: source_lines)
+        result = FileStatsReport.build(lines, text_path: text_path, source_lines: source_lines)
+        result.explorer = FileStatsExplorer.resolve(
+          edition_id,
+          checksum: CorpusPublisher.checksum_prefix(text_path),
+          chapter_index: VerseIndex.build_chapter_index(lines),
+          lines: source_lines || lines,
+          source_text: File.read(text_path, encoding: "UTF-8")
+        )
+        result
       end
     end
   end

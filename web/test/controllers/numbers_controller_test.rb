@@ -40,4 +40,15 @@ class NumbersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to numbers_path
   end
+
+  test "preview returns lightweight number facts" do
+    get preview_number_path(980), as: :json
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal 980, body["number"]
+    assert_equal "2^2 × 5 × 7^2", body["factorization"]
+    assert_includes body["seven_forms"], "490 + 490 = 70x7 + 70x7"
+    assert_includes body["seven_forms"], "49 × 20 + 0"
+  end
 end

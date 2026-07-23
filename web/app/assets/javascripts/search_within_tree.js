@@ -136,6 +136,8 @@
 
   function init() {
     const root = panel();
+    initGenericToggles(document);
+    initFileStatsSelection(document);
     if (!root) return;
 
     applyExpandedState(root, readExpandedState());
@@ -168,6 +170,224 @@
         compactBookFields(form, root);
       });
     }
+  }
+
+  function initGenericToggles(root) {
+    root.querySelectorAll(".search-within-branch .search-within-toggle").forEach((button) => {
+      if (button.dataset.genericToggleReady === "true") return;
+      button.dataset.genericToggleReady = "true";
+      button.addEventListener("click", () => {
+        const branch = button.closest(".search-within-branch");
+        if (!branch || branch.closest("#search-within-panel")) return;
+        const expanded = branch.getAttribute("aria-expanded") === "true";
+        setBranchExpanded(branch, !expanded);
+      });
+    });
+  }
+
+  function initFileStatsSelection(root) {
+    const summary = root.getElementById("file-stats-selected-summary");
+    if (!summary || summary.dataset.fileStatsSelectionReady === "true") return;
+
+    summary.dataset.fileStatsSelectionReady = "true";
+    const title = root.getElementById("file-stats-selected-title");
+    const characterTree = root.getElementById("file-stats-character-tree");
+    const breakdownCache = new Map();
+    const fields = {
+      letters: summary.querySelector('[data-file-stats-selected="letters"]'),
+      digits: summary.querySelector('[data-file-stats-selected="digits"]'),
+      other: summary.querySelector('[data-file-stats-selected="other"]'),
+      total: summary.querySelector('[data-file-stats-selected="total"]')
+    };
+
+    root.querySelectorAll(".file-stats-selectable").forEach((row) => {
+      row.addEventListener("click", (event) => {
+        if (event.target.closest("a, button")) return;
+        title.textContent = row.dataset.fileStatsNodeLabel || summary.dataset.defaultLabel || "Selection";
+        fields.letters.textContent = formatNumber(row.dataset.fileStatsLetters);
+        fields.digits.textContent = formatNumber(row.dataset.fileStatsDigits);
+        fields.other.textContent = formatNumber(row.dataset.fileStatsOther);
+        fields.total.textContent = formatNumber(row.dataset.fileStatsTotal);
+        updateCharacterBreakdown(summary, characterTree, row.dataset.fileStatsNodeId, breakdownCache);
+        root.querySelectorAll(".file-stats-selectable.is-selected").forEach((selected) => {
+          selected.classList.remove("is-selected");
+        });
+        row.classList.add("is-selected");
+        summary.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+  }
+
+  async function updateCharacterBreakdown(summary, tree, nodeId, cache) {
+    if (!tree || !nodeId) return;
+
+    tree.setAttribute("aria-busy", "true");
+    try {
+      const data = cache.has(nodeId) ? cache.get(nodeId) : await beginCharacterBreakdownFetch(summary, tree, nodeId);
+      if (!cache.has(nodeId)) cache.set(nodeId, data);
+      tree.innerHTML = renderCharacterTree(data);
+      initGenericToggles(tree);
+    } catch (_error) {
+      tree.innerHTML = '<li class="search-within-node"><div class="search-within-row file-stats-tree-row"><span></span><span class="file-stats-node-label">Character breakdown unavailable</span><span></span></div></li>';
+    } finally {
+      tree.removeAttribute("aria-busy");
+    }
+  }
+
+  async function beginCharacterBreakdownFetch(summary, tree, nodeId) {
+    tree.innerHTML = `
+      <li class="search-within-node">
+        <div class="search-within-row file-stats-tree-row file-stats-loading-row">
+          <span class="file-stats-spinner" aria-hidden="true"></span>
+          <span class="file-stats-node-label">Loading character counts</span>
+          <span></span>
+        </div>
+      </li>
+    `;
+    return fetchCharacterBreakdown(summary.dataset.breakdownUrl, nodeId);
+  }
+
+  async function fetchCharacterBreakdown(baseUrl, nodeId) {
+    const url = new URL(baseUrl, window.location.origin);
+    url.searchParams.set("node_id", nodeId);
+    const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("Character breakdown request failed");
+
+    return response.json();
+  }
+
+  function renderCharacterTree(data) {
+    const categories = groupBy(data.categories || [], "category");
+    const characters = groupBy(data.characters || [], "category");
+    return Object.keys(categories).sort().map((category) => {
+      const rows = categories[category];
+      const total = (rows.find((row) => row.subcategory === "total") || { count: sumCounts(rows) }).count;
+      const charRows = characters[category] || [];
+      const subtotalRows = rows
+        .filter((row) => row.subcategory && row.subcategory !== "total")
+        .sort((a, b) => subcategorySortKey(a.subcategory).localeCompare(subcategorySortKey(b.subcategory)));
+      const subtotalChildren = subtotalRows.map((row) => `
+        <li class="search-within-node" role="treeitem">
+          <div class="search-within-row file-stats-tree-row">
+            <span class="search-within-toggle" aria-hidden="true"></span>
+            <span class="file-stats-node-label">${escapeHtml(categoryLabel(row.subcategory))}</span>
+            <span class="file-stats-node-count">${numberLink(row.count)}</span>
+          </div>
+        </li>
+      `).join("");
+      const children = charRows.map((char) => `
+        <li class="search-within-node" role="treeitem">
+          <div class="search-within-row file-stats-tree-row">
+            <span class="search-within-toggle" aria-hidden="true"></span>
+            <span class="file-stats-node-label file-stats-character-label">
+              <span class="file-stats-character-symbol">${escapeHtml(characterSymbol(char.char))}</span>
+              <span>${escapeHtml(char.name)}</span>
+            </span>
+            <span class="file-stats-node-count">${numberLink(char.count)}</span>
+          </div>
+        </li>
+      `).join("");
+
+      return `
+        <li class="search-within-node search-within-branch" role="treeitem" aria-expanded="false"
+            data-branch-id="file-stats-character:${escapeHtml(category)}">
+          <div class="search-within-row file-stats-tree-row">
+            <button type="button" class="search-within-toggle" aria-label="Toggle ${escapeHtml(category)}">▸</button>
+            <span class="file-stats-node-label">${escapeHtml(categoryLabel(category))}</span>
+            <span class="file-stats-node-count">${numberLink(total)}</span>
+          </div>
+          <ul class="search-within-children" role="group">${subtotalChildren}${children}</ul>
+        </li>
+      `;
+    }).join("");
+  }
+
+  function subcategorySortKey(value) {
+    const order = {
+      uppercase: "01",
+      lowercase: "02",
+      small_caps: "03",
+      vowels: "04",
+      consonants: "05",
+      other_letters: "06",
+      space: "01",
+      newline: "02",
+      tab: "03",
+      carriage_return: "04",
+      other_whitespace: "05"
+    };
+    return `${order[value] || "99"}:${value}`;
+  }
+
+  function groupBy(rows, key) {
+    return rows.reduce((groups, row) => {
+      const value = row[key];
+      groups[value] ||= [];
+      groups[value].push(row);
+      return groups;
+    }, {});
+  }
+
+  function sumCounts(rows) {
+    return rows.reduce((sum, row) => sum + Number.parseInt(row.count || "0", 10), 0);
+  }
+
+  function categoryLabel(value) {
+    return {
+      letters: "Letters",
+      digits: "Digits",
+      punctuation: "Punctuation",
+      whitespace: "Whitespace",
+      other: "Other characters",
+      uppercase: "Uppercase",
+      lowercase: "Lowercase",
+      small_caps: "Small caps",
+      vowels: "Vowels",
+      consonants: "Consonants",
+      other_letters: "Other letters",
+      space: "Space",
+      newline: "Newline",
+      tab: "Tab",
+      carriage_return: "Carriage return",
+      other_whitespace: "Other whitespace"
+    }[value] || String(value).replaceAll("_", " ");
+  }
+
+  function numberLink(value) {
+    const number = Number.parseInt(value || "0", 10);
+    const formatted = formatNumber(value);
+    if (Number.isNaN(number)) return formatted;
+
+    return `<a href="/numbers/${number}">${formatted}</a>`;
+  }
+
+  function characterSymbol(value) {
+    switch (value) {
+      case " ":
+        return "Space";
+      case "\n":
+        return "Newline";
+      case "\t":
+        return "Tab";
+      case "\r":
+        return "CR";
+      default:
+        return value;
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
+
+  function formatNumber(value) {
+    const number = Number.parseInt(value || "0", 10);
+    return new Intl.NumberFormat().format(Number.isNaN(number) ? 0 : number);
   }
 
   document.addEventListener("DOMContentLoaded", init);

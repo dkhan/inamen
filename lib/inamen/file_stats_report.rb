@@ -6,7 +6,7 @@ module Inamen
   # Whole-file token breakdown for the 7^7 (823,543) feature and related discovery scans.
   module FileStatsReport
     Row = Struct.new(:key, :label, :count, keyword_init: true)
-    Result = Struct.new(:rows, :total, :character_count, :seven_power, keyword_init: true)
+    Result = Struct.new(:rows, :total, :character_count, :seven_power, :explorer, keyword_init: true)
 
     BREAKDOWN = [
       [:verse_text_words, "Words in verse text"],

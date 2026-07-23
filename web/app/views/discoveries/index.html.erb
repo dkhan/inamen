@@ -162,13 +162,11 @@
         <%= render "verse_details_dialog" %>
       <% end %>
     <% elsif file_stats_mode && @file_stats %>
-      <p class="hint">
-        Whole-file counts
-      </p>
-      <table class="features-table discovery-table discovery-file-stats">
+      <%= render "file_stats_explorer", file_stats: @file_stats %>
+      <table class="features-table discovery-table discovery-file-stats legacy-file-stats">
         <thead>
           <tr>
-            <th>Category</th>
+            <th>Legacy whole-file feature</th>
             <th class="num">Count</th>
           </tr>
         </thead>

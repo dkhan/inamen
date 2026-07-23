@@ -12,10 +12,15 @@ Rails.application.routes.draw do
       post :scan
       get :verses
       get :dictionary
+      get :file_stats_characters
     end
   end
 
-  resources :numbers, only: %i[index show], param: :id
+  resources :numbers, only: %i[index show], param: :id do
+    member do
+      get :preview
+    end
+  end
 
   get "scripture", to: "scriptures#show", as: :scripture
   get "scripture/:book/chapters/:chapter", to: "scriptures#chapter", as: :scripture_chapter

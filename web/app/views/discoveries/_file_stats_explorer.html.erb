@@ -1,0 +1,89 @@
+<% file_stats = local_assigns.fetch(:file_stats) %>
+<% explorer = file_stats.explorer %>
+<% root = explorer.root %>
+
+<section class="file-stats-section">
+  <h2>Structure</h2>
+  <div class="file-stats-tree-header">
+    <span></span>
+    <span>Words</span>
+    <span>Numbers</span>
+    <span>Total words & numbers</span>
+    <span>Letters</span>
+    <span>Digits</span>
+    <span>Other chars</span>
+    <span>Characters</span>
+  </div>
+  <ul class="search-within-tree file-stats-tree" role="tree" aria-label="File structure statistics">
+    <%= render "discoveries/file_stats_node", explorer: explorer, node: root, depth: 0 %>
+  </ul>
+</section>
+
+<section class="file-stats-section">
+  <h2>Characters</h2>
+  <div class="file-stats-selected-summary" id="file-stats-selected-summary"
+       data-breakdown-url="<%= file_stats_characters_discoveries_path(edition: current_edition_id) %>"
+       data-default-node-id="<%= root.node_id %>"
+       data-default-label="<%= root.label %>"
+       data-default-letters="<%= root.letter_count %>"
+       data-default-digits="<%= root.digit_count %>"
+       data-default-other="<%= root.other_count %>"
+       data-default-total="<%= root.character_count %>">
+    <h3 id="file-stats-selected-title"><%= root.label %></h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Letters</th>
+          <th>Digits</th>
+          <th>Other chars</th>
+          <th>Total chars</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num" data-file-stats-selected="letters"><%= number_research_link(root.letter_count) %></td>
+          <td class="num" data-file-stats-selected="digits"><%= number_research_link(root.digit_count) %></td>
+          <td class="num" data-file-stats-selected="other"><%= number_research_link(root.other_count) %></td>
+          <td class="num" data-file-stats-selected="total"><%= number_research_link(root.character_count) %></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ul class="search-within-tree file-stats-character-tree" id="file-stats-character-tree" role="tree" aria-label="Character statistics">
+    <% characters_by_category = explorer.characters_for(root.node_id).group_by(&:category) %>
+    <% explorer.categories_for(root.node_id).group_by(&:category).sort.each do |category, rows| %>
+      <% total = rows.find { |row| row.subcategory == "total" }&.count || rows.sum(&:count) %>
+      <li class="search-within-node search-within-branch" role="treeitem" aria-expanded="false"
+          data-branch-id="file-stats-character:<%= category %>">
+        <div class="search-within-row file-stats-tree-row">
+          <button type="button" class="search-within-toggle" aria-label="Toggle <%= category %>">▸</button>
+          <span class="file-stats-node-label"><%= file_stats_category_label(category) %></span>
+          <span class="file-stats-node-count"><%= number_research_link(total) %></span>
+        </div>
+        <ul class="search-within-children" role="group">
+          <% rows.reject { |row| row.subcategory == "total" }.sort_by { |row| row.subcategory.to_s }.each do |row| %>
+            <li class="search-within-node" role="treeitem">
+              <div class="search-within-row file-stats-tree-row">
+                <span class="search-within-toggle" aria-hidden="true"></span>
+                <span class="file-stats-node-label"><%= file_stats_category_label(row.subcategory) %></span>
+                <span class="file-stats-node-count"><%= number_research_link(row.count) %></span>
+              </div>
+            </li>
+          <% end %>
+          <% characters_by_category.fetch(category, []).each do |char| %>
+            <li class="search-within-node" role="treeitem">
+              <div class="search-within-row file-stats-tree-row">
+                <span class="search-within-toggle" aria-hidden="true"></span>
+                <span class="file-stats-node-label file-stats-character-label">
+                  <span class="file-stats-character-symbol"><%= file_stats_character_symbol(char) %></span>
+                  <span><%= char.name %></span>
+                </span>
+                <span class="file-stats-node-count"><%= number_research_link(char.count) %></span>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </li>
+    <% end %>
+  </ul>
+</section>

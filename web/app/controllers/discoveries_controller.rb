@@ -32,6 +32,30 @@ class DiscoveriesController < ApplicationController
     }
   end
 
+  def file_stats_characters
+    node_id = params[:node_id].to_s
+    if node_id.blank?
+      render json: { error: "Missing node_id" }, status: :unprocessable_entity
+      return
+    end
+
+    breakdown = @edition.file_stats.explorer.character_breakdown_for(node_id)
+    render json: {
+      categories: breakdown.fetch(:categories).map do |row|
+        { category: row.category, subcategory: row.subcategory, count: row.count }
+      end,
+      characters: breakdown.fetch(:characters).map do |row|
+        {
+          category: row.category,
+          char: row.char,
+          codepoint: row.codepoint,
+          name: row.name,
+          count: row.count
+        }
+      end
+    }
+  end
+
   def verses
     unless DiscoveryScan.counts_cached?(@edition, @scan_params)
       head :no_content

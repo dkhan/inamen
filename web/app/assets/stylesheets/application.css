@@ -178,6 +178,170 @@ body {
   padding-left: 0.25rem;
 }
 
+.file-stats-section {
+  margin-bottom: 2rem;
+}
+
+.file-stats-section h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.file-stats-tree,
+.file-stats-character-tree {
+  max-height: none;
+  overflow: visible;
+}
+
+.file-stats-tree .search-within-children {
+  padding-left: 0;
+}
+
+.file-stats-tree-header,
+.file-stats-tree-row {
+  display: grid;
+  grid-template-columns:
+    1.1rem
+    minmax(18rem, 1fr)
+    5.7rem
+    4.7rem
+    7.8rem
+    6.5rem
+    4.7rem
+    6.9rem
+    7.1rem;
+  column-gap: 0.35rem;
+  align-items: center;
+}
+
+.file-stats-character-tree .file-stats-tree-row {
+  grid-template-columns: 1.25rem minmax(14rem, 1fr) minmax(5.5rem, 7rem);
+}
+
+.file-stats-tree-header {
+  padding: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.file-stats-tree-header span {
+  overflow-wrap: anywhere;
+}
+
+.file-stats-tree-header span:first-child {
+  grid-column: 1 / span 2;
+  text-align: left;
+}
+
+.file-stats-node-label {
+  min-width: 0;
+}
+
+.file-stats-tree .file-stats-node-label {
+  padding-left: calc(var(--file-stats-depth, 0) * 1.35rem);
+}
+
+.file-stats-node-label code {
+  display: inline-block;
+  min-width: 1.5rem;
+}
+
+.file-stats-node-count {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.file-stats-node-count a,
+.file-stats-selected-summary .num a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.file-stats-node-count a:hover,
+.file-stats-selected-summary .num a:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.file-stats-loading-row {
+  color: var(--muted);
+}
+
+.file-stats-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(169, 181, 199, 0.3);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: file-stats-spin 0.8s linear infinite;
+}
+
+@keyframes file-stats-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.file-stats-character-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.file-stats-character-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.8rem;
+  max-width: 8rem;
+  min-height: 1.55rem;
+  padding: 0 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: rgba(110, 181, 255, 0.08);
+  color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-stats-selectable {
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.file-stats-selectable:hover,
+.file-stats-selectable.is-selected {
+  background: rgba(110, 181, 255, 0.1);
+}
+
+.file-stats-selected-summary {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: rgba(15, 20, 25, 0.35);
+}
+
+.file-stats-selected-summary h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.file-stats-selected-summary table {
+  margin: 0;
+}
+
+.legacy-file-stats {
+  margin-top: 1.5rem;
+}
+
 @media (max-width: 48rem) {
   .discovery-layout {
     grid-template-columns: 1fr;
@@ -556,6 +720,66 @@ body {
 
 .number-link:hover {
   text-decoration: underline;
+}
+
+.number-preview {
+  position: absolute;
+  z-index: 60;
+  padding: 0.75rem 0.85rem;
+  color: var(--text);
+  background: color-mix(in srgb, var(--panel) 96%, black);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  box-shadow: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.35);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.number-preview[hidden] {
+  display: none;
+}
+
+.number-preview-title {
+  margin-bottom: 0.45rem;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.number-preview-facts {
+  margin: 0 0 0.45rem;
+}
+
+.number-preview-facts dt,
+.number-preview-heading {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.number-preview-facts dd {
+  margin: 0.1rem 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.number-preview-section + .number-preview-section {
+  margin-top: 0.45rem;
+}
+
+.number-preview ul {
+  margin: 0.12rem 0 0;
+  padding-left: 1rem;
+}
+
+.number-preview li + li {
+  margin-top: 0.12rem;
+}
+
+.number-preview-muted {
+  color: var(--muted);
 }
 
 .number-example-list {

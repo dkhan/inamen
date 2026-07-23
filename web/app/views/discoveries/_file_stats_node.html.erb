@@ -1,0 +1,38 @@
+<% explorer = local_assigns.fetch(:explorer) %>
+<% node = local_assigns.fetch(:node) %>
+<% depth = local_assigns.fetch(:depth, 0) %>
+<% children = explorer.children_of(node.node_id) %>
+<% expanded = depth < 2 %>
+<li class="search-within-node<%= " search-within-branch" if children.any? %><%= " is-expanded" if children.any? && expanded %>"
+    role="treeitem"
+    <% if children.any? %>aria-expanded="<%= expanded %>" data-branch-id="file-stats:<%= node.node_id %>"<% end %>>
+  <div class="search-within-row file-stats-tree-row file-stats-selectable"
+       style="--file-stats-depth: <%= depth %>"
+       data-file-stats-node-label="<%= node.label %>"
+       data-file-stats-node-id="<%= node.node_id %>"
+       data-file-stats-letters="<%= node.letter_count %>"
+       data-file-stats-digits="<%= node.digit_count %>"
+       data-file-stats-other="<%= node.other_count %>"
+       data-file-stats-total="<%= node.character_count %>">
+    <% if children.any? %>
+      <button type="button" class="search-within-toggle" aria-label="Toggle <%= node.label %>"><%= expanded ? "▾" : "▸" %></button>
+    <% else %>
+      <span class="search-within-toggle" aria-hidden="true"></span>
+    <% end %>
+    <span class="file-stats-node-label"><%= node.label %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.word_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.number_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.word_count + node.number_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.letter_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.digit_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.other_count) %></span>
+    <span class="file-stats-node-count"><%= number_research_link(node.character_count) %></span>
+  </div>
+  <% if children.any? %>
+    <ul class="search-within-children" role="group">
+      <% children.each do |child| %>
+        <%= render "discoveries/file_stats_node", explorer: explorer, node: child, depth: depth + 1 %>
+      <% end %>
+    </ul>
+  <% end %>
+</li>

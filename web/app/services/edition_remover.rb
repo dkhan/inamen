@@ -11,6 +11,7 @@ class EditionRemover
     :edition_id,
     :source_path,
     :deleted_artifacts,
+    :deleted_artifact_dirs,
     :deleted_generated_texts,
     :deleted_feature_editions,
     keyword_init: true
@@ -45,6 +46,7 @@ class EditionRemover
     source_path = edition.source_path
     generated_texts = generated_text_paths_for(edition)
     artifacts = artifact_paths_for(edition.short_name)
+    artifact_dirs = artifact_dirs_for(edition.short_name)
 
     deleted_feature_editions = 0
     Edition.transaction do
@@ -53,12 +55,14 @@ class EditionRemover
     end
 
     deleted_artifacts = delete_files(artifacts)
+    deleted_artifact_dirs = delete_dirs(artifact_dirs)
     deleted_generated_texts = delete_files(generated_texts)
 
     Result.new(
       edition_id: @edition_id,
       source_path: source_path,
       deleted_artifacts: deleted_artifacts,
+      deleted_artifact_dirs: deleted_artifact_dirs,
       deleted_generated_texts: deleted_generated_texts,
       deleted_feature_editions: deleted_feature_editions
     )
@@ -72,6 +76,10 @@ class EditionRemover
     ARTIFACT_ROOTS.flat_map do |root|
       Dir.glob(Pathname(root).join("#{edition_id}-*").to_s)
     end.uniq
+  end
+
+  def artifact_dirs_for(edition_id)
+    [Inamen::FileStatsExplorer.cache_dir(edition_id)]
   end
 
   def generated_text_paths_for(edition)
@@ -94,6 +102,15 @@ class EditionRemover
       next unless File.file?(path)
 
       FileUtils.rm_f(path)
+      deleted << path unless File.exist?(path)
+    end
+  end
+
+  def delete_dirs(paths)
+    paths.each_with_object([]) do |path, deleted|
+      next unless File.directory?(path)
+
+      FileUtils.rm_rf(path)
       deleted << path unless File.exist?(path)
     end
   end

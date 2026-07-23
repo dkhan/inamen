@@ -63,6 +63,10 @@ namespace :editions do
     puts "Deleted feature edition rows: #{result.deleted_feature_editions}"
     puts "Deleted generated artifacts: #{result.deleted_artifacts.length}"
     result.deleted_artifacts.each { |path| puts path }
+    if result.deleted_artifact_dirs.any?
+      puts "Deleted generated artifact directories: #{result.deleted_artifact_dirs.length}"
+      result.deleted_artifact_dirs.each { |path| puts path }
+    end
 
     if result.deleted_generated_texts.any?
       puts "Deleted generated text copies: #{result.deleted_generated_texts.length}"

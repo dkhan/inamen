@@ -24,5 +24,6 @@ Gem::Specification.new do |spec|
   spec.executables = ["inamen"]
   spec.require_paths = ["lib"]
 
+  spec.add_dependency "csv"
   spec.add_dependency "sqlite3", "~> 2.9"
 end
