@@ -154,6 +154,10 @@
     observer.observe(document.body, { childList: true, subtree: true });
   }
 
+  window.InamenNumberPreview = {
+    bind
+  };
+
   document.addEventListener("DOMContentLoaded", bind);
   document.addEventListener("DOMContentLoaded", observeNumberLinks, { once: true });
   document.addEventListener("turbo:load", bind);

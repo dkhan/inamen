@@ -204,10 +204,11 @@
       row.addEventListener("click", (event) => {
         if (event.target.closest("a, button")) return;
         title.textContent = row.dataset.fileStatsNodeLabel || summary.dataset.defaultLabel || "Selection";
-        fields.letters.textContent = formatNumber(row.dataset.fileStatsLetters);
-        fields.digits.textContent = formatNumber(row.dataset.fileStatsDigits);
-        fields.other.textContent = formatNumber(row.dataset.fileStatsOther);
-        fields.total.textContent = formatNumber(row.dataset.fileStatsTotal);
+        fields.letters.innerHTML = numberLink(row.dataset.fileStatsLetters);
+        fields.digits.innerHTML = numberLink(row.dataset.fileStatsDigits);
+        fields.other.innerHTML = numberLink(row.dataset.fileStatsOther);
+        fields.total.innerHTML = numberLink(row.dataset.fileStatsTotal);
+        bindNumberPreview();
         updateCharacterBreakdown(summary, characterTree, row.dataset.fileStatsNodeId, breakdownCache);
         root.querySelectorAll(".file-stats-selectable.is-selected").forEach((selected) => {
           selected.classList.remove("is-selected");
@@ -227,6 +228,7 @@
       if (!cache.has(nodeId)) cache.set(nodeId, data);
       tree.innerHTML = renderCharacterTree(data);
       initGenericToggles(tree);
+      bindNumberPreview();
     } catch (_error) {
       tree.innerHTML = '<li class="search-within-node"><div class="search-within-row file-stats-tree-row"><span></span><span class="file-stats-node-label">Character breakdown unavailable</span><span></span></div></li>';
     } finally {
@@ -360,7 +362,11 @@
     if (Number.isNaN(number)) return formatted;
 
     const classes = number % 7 === 0 ? "number-link number-link-seven" : "number-link";
-    return `<a class="${classes}" href="/numbers/${number}">${formatted}</a>`;
+    return `<a class="${classes}" href="/numbers/${number}" data-number-preview-url="/numbers/${number}/preview">${formatted}</a>`;
+  }
+
+  function bindNumberPreview() {
+    window.InamenNumberPreview?.bind?.();
   }
 
   function characterSymbol(value) {
