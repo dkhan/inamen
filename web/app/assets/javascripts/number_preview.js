@@ -122,6 +122,7 @@
 
   function bind() {
     numberLinks().forEach((link) => {
+      highlightSevenLink(link);
       if (link.dataset.numberPreviewBound) return;
 
       link.dataset.numberPreviewBound = "true";
@@ -132,6 +133,28 @@
     });
   }
 
+  function highlightSevenLink(link) {
+    const number = numberForLink(link);
+    if (number > 0 && number % 7 === 0) {
+      link.classList.add("number-link-seven");
+    }
+  }
+
+  function numberForLink(link) {
+    const href = link.getAttribute("href") || "";
+    const match = href.match(/\/numbers\/([0-9]+)/);
+    if (match) return Number.parseInt(match[1], 10);
+
+    const text = link.textContent.replace(/[^0-9]/g, "");
+    return Number.parseInt(text || "0", 10);
+  }
+
+  function observeNumberLinks() {
+    const observer = new MutationObserver(() => bind());
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   document.addEventListener("DOMContentLoaded", bind);
+  document.addEventListener("DOMContentLoaded", observeNumberLinks, { once: true });
   document.addEventListener("turbo:load", bind);
 })();

@@ -265,6 +265,7 @@
       const charRows = characters[category] || [];
       const subtotalRows = rows
         .filter((row) => row.subcategory && row.subcategory !== "total")
+        .filter((row) => category !== "whitespace" || !charRows.some((char) => whitespaceSubcategoryForCharacter(char.char) === row.subcategory))
         .sort((a, b) => subcategorySortKey(a.subcategory).localeCompare(subcategorySortKey(b.subcategory)));
       const subtotalChildren = subtotalRows.map((row) => `
         <li class="search-within-node" role="treeitem">
@@ -358,7 +359,8 @@
     const formatted = formatNumber(value);
     if (Number.isNaN(number)) return formatted;
 
-    return `<a href="/numbers/${number}">${formatted}</a>`;
+    const classes = number % 7 === 0 ? "number-link number-link-seven" : "number-link";
+    return `<a class="${classes}" href="/numbers/${number}">${formatted}</a>`;
   }
 
   function characterSymbol(value) {
@@ -373,6 +375,21 @@
         return "CR";
       default:
         return value;
+    }
+  }
+
+  function whitespaceSubcategoryForCharacter(value) {
+    switch (value) {
+      case " ":
+        return "space";
+      case "\n":
+        return "newline";
+      case "\t":
+        return "tab";
+      case "\r":
+        return "carriage_return";
+      default:
+        return null;
     }
   }
 

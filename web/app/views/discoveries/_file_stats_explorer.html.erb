@@ -61,7 +61,8 @@
           <span class="file-stats-node-count"><%= number_research_link(total) %></span>
         </div>
         <ul class="search-within-children" role="group">
-          <% rows.reject { |row| row.subcategory == "total" }.sort_by { |row| row.subcategory.to_s }.each do |row| %>
+          <% whitespace_subcategories = characters_by_category.fetch(category, []).filter_map { |char| { " " => "space", "\n" => "newline", "\t" => "tab", "\r" => "carriage_return" }[char.char] } %>
+          <% rows.reject { |row| row.subcategory == "total" || (category == "whitespace" && whitespace_subcategories.include?(row.subcategory)) }.sort_by { |row| row.subcategory.to_s }.each do |row| %>
             <li class="search-within-node" role="treeitem">
               <div class="search-within-row file-stats-tree-row">
                 <span class="search-within-toggle" aria-hidden="true"></span>

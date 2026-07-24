@@ -12,10 +12,13 @@ module ApplicationHelper
     value = number.to_i
     return label || number if value <= 0
 
+    classes = [class_name]
+    classes << "number-link-seven" if (value % 7).zero?
+
     link_to(
       label || number_with_delimiter(value),
       number_path(value),
-      class: class_name,
+      class: classes.join(" "),
       data: { number_preview_url: preview_number_path(value) }
     )
   end

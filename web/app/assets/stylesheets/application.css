@@ -266,6 +266,16 @@ body {
   text-decoration: none;
 }
 
+.number-link.number-link-seven,
+.number-link.number-link-seven:hover,
+.file-stats-node-count a.number-link-seven,
+.file-stats-node-count a.number-link-seven:hover,
+.file-stats-selected-summary .num a.number-link-seven,
+.file-stats-selected-summary .num a.number-link-seven:hover {
+  color: #39ff6a;
+  text-decoration: none;
+}
+
 .file-stats-loading-row {
   color: var(--muted);
 }
@@ -720,6 +730,14 @@ body {
 
 .number-link:hover {
   text-decoration: underline;
+}
+
+.number-link-seven {
+  color: #39ff6a;
+}
+
+.number-link-seven:hover {
+  color: #39ff6a;
 }
 
 .number-preview {
