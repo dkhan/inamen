@@ -13,7 +13,7 @@ end
 module Inamen
     # CSV-backed hierarchical statistics for an edition's source file and verse corpus.
     module FileStatsExplorer
-    CACHE_VERSION = "8"
+    CACHE_VERSION = "9"
 
     Node = Struct.new(
       :node_id, :parent_id, :level, :label, :testament, :book, :chapter, :verse,
@@ -162,6 +162,17 @@ module Inamen
         update_verse_state!(state, event)
 
         line_text = physical_lines.fetch(event.lineno - 1, event.raw.to_s)
+        title_assignments = split_book_title_assignments(
+          edition_id, nodes_by_id, root_id, source_id, event, book, labels, state, physical_lines, line_text
+        )
+        if title_assignments
+          title_assignments.each do |target_id, text|
+            add_text_to_node!(nodes_by_id.fetch(target_id), text, char_counts[target_id])
+            last_leaf_id = target_id
+          end
+          next
+        end
+
         target_id = node_for_event!(edition_id, nodes_by_id, root_id, source_id, event, book, state, physical_lines)
         add_text_to_node!(nodes_by_id.fetch(target_id), line_text, char_counts[target_id])
         last_leaf_id = target_id
@@ -330,6 +341,39 @@ module Inamen
 
         ensure_node(nodes_by_id, node_id(edition_id, "verse", book, chapter, verse), chapter_id, "verse", "Verse #{verse}", BibleBooks.testament_for(book), book, chapter, verse).node_id
       end
+    end
+
+    def split_book_title_assignments(edition_id, nodes_by_id, root_id, source_id, event, book, labels, state, physical_lines, line_text)
+      stripped = event.stripped
+      return nil if bible_name_line?(stripped) || version_line?(stripped)
+      return nil if nt_header_line?(stripped, KjvLine.strip(physical_lines[event.lineno]))
+      return nil unless LineClassifier.classify(stripped) == :book_title
+
+      upcoming_book = upcoming_canonical_book(labels, event.lineno - 1, book)
+      return nil unless upcoming_book
+
+      target_id = book_title_node!(edition_id, nodes_by_id, root_id, upcoming_book)
+
+      if BibleBooks.testament_for(book).nil?
+        return [[target_id, line_text]]
+      end
+
+      return nil unless stripped == "THE GOSPEL ACCORDING TO"
+
+      connector_target = node_for_event!(edition_id, nodes_by_id, root_id, source_id, event, book, state, physical_lines)
+      newline = line_text.end_with?("\n") ? "\n" : ""
+      [[connector_target, "THE TO#{newline}"], [target_id, "GOSPEL ACCORDING#{newline}"]]
+    end
+
+    def upcoming_canonical_book(labels, index, current_book)
+      labels[(index + 1)..]&.find do |label|
+        label != current_book && BibleBooks.testament_for(label)
+      end
+    end
+
+    def book_title_node!(edition_id, nodes_by_id, root_id, book)
+      book_id = ensure_book_path!(edition_id, nodes_by_id, root_id, book)
+      ensure_node(nodes_by_id, node_id(edition_id, "book_title", book), book_id, "book_part", "Book title", BibleBooks.testament_for(book), book, nil, nil).node_id
     end
 
     def source_part_node!(edition_id, nodes_by_id, source_id, key, label)
