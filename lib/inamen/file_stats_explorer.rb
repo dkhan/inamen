@@ -13,7 +13,7 @@ end
 module Inamen
     # CSV-backed hierarchical statistics for an edition's source file and verse corpus.
     module FileStatsExplorer
-    CACHE_VERSION = "9"
+    CACHE_VERSION = "10"
 
     Node = Struct.new(
       :node_id, :parent_id, :level, :label, :testament, :book, :chapter, :verse,
@@ -358,6 +358,7 @@ module Inamen
         return [[target_id, line_text]]
       end
 
+      return [[target_id, line_text]] if stripped == "THE GOSPEL ACCORDING TO" && !preceded_by_nt_header?(physical_lines, event.lineno)
       return nil unless stripped == "THE GOSPEL ACCORDING TO"
 
       connector_target = node_for_event!(edition_id, nodes_by_id, root_id, source_id, event, book, state, physical_lines)
@@ -374,6 +375,13 @@ module Inamen
     def book_title_node!(edition_id, nodes_by_id, root_id, book)
       book_id = ensure_book_path!(edition_id, nodes_by_id, root_id, book)
       ensure_node(nodes_by_id, node_id(edition_id, "book_title", book), book_id, "book_part", "Book title", BibleBooks.testament_for(book), book, nil, nil).node_id
+    end
+
+    def preceded_by_nt_header?(physical_lines, lineno)
+      start_index = [lineno - 8, 0].max
+      physical_lines[start_index...(lineno - 1)].any? do |line|
+        nt_header_line?(KjvLine.strip(line), nil)
+      end
     end
 
     def source_part_node!(edition_id, nodes_by_id, source_id, key, label)

@@ -216,6 +216,13 @@ body {
 
 .file-stats-character-tree .file-stats-tree-row {
   grid-template-columns: 1.25rem minmax(14rem, 1fr) minmax(5.5rem, 7rem);
+  min-height: 2.25rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.file-stats-character-tree > .search-within-node:first-child > .file-stats-tree-row {
+  border-top: 1px solid var(--border);
 }
 
 .file-stats-tree-header {
