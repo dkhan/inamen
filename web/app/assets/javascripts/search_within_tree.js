@@ -59,6 +59,7 @@
     parentBranches(root).forEach((branch) => {
       const id = branchId(branch);
       if (!id || !Object.prototype.hasOwnProperty.call(state, id)) return;
+      if (id.startsWith("file-stats:") && state[id] && branch.dataset.fileStatsChildrenLoaded === "false") return;
       setBranchExpanded(branch, state[id]);
     });
   }
@@ -176,10 +177,13 @@
     root.querySelectorAll(".search-within-branch .search-within-toggle").forEach((button) => {
       if (button.dataset.genericToggleReady === "true") return;
       button.dataset.genericToggleReady = "true";
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const branch = button.closest(".search-within-branch");
         if (!branch || branch.closest("#search-within-panel")) return;
         const expanded = branch.getAttribute("aria-expanded") === "true";
+        if (!expanded && branch.dataset.branchId?.startsWith("file-stats:")) {
+          await loadFileStatsChildren(branch);
+        }
         setBranchExpanded(branch, !expanded);
       });
     });
@@ -192,6 +196,7 @@
     summary.dataset.fileStatsSelectionReady = "true";
     const title = root.getElementById("file-stats-selected-title");
     const characterTree = root.getElementById("file-stats-character-tree");
+    const structureTree = root.getElementById("file-stats-structure-tree");
     const breakdownCache = new Map();
     const fields = {
       letters: summary.querySelector('[data-file-stats-selected="letters"]'),
@@ -200,23 +205,115 @@
       total: summary.querySelector('[data-file-stats-selected="total"]')
     };
 
-    root.querySelectorAll(".file-stats-selectable").forEach((row) => {
-      row.addEventListener("click", (event) => {
-        if (event.target.closest("a, button")) return;
-        title.textContent = row.dataset.fileStatsNodeLabel || summary.dataset.defaultLabel || "Selection";
-        fields.letters.innerHTML = numberLink(row.dataset.fileStatsLetters);
-        fields.digits.innerHTML = numberLink(row.dataset.fileStatsDigits);
-        fields.other.innerHTML = numberLink(row.dataset.fileStatsOther);
-        fields.total.innerHTML = numberLink(row.dataset.fileStatsTotal);
-        bindNumberPreview();
-        updateCharacterBreakdown(summary, characterTree, row.dataset.fileStatsNodeId, breakdownCache);
-        root.querySelectorAll(".file-stats-selectable.is-selected").forEach((selected) => {
-          selected.classList.remove("is-selected");
-        });
-        row.classList.add("is-selected");
-        summary.scrollIntoView({ behavior: "smooth", block: "start" });
+    structureTree?.addEventListener("click", (event) => {
+      const row = event.target.closest(".file-stats-selectable");
+      if (!row || event.target.closest("a, button")) return;
+
+      title.textContent = row.dataset.fileStatsNodeLabel || summary.dataset.defaultLabel || "Selection";
+      fields.letters.innerHTML = numberLink(row.dataset.fileStatsLetters);
+      fields.digits.innerHTML = numberLink(row.dataset.fileStatsDigits);
+      fields.other.innerHTML = numberLink(row.dataset.fileStatsOther);
+      fields.total.innerHTML = numberLink(row.dataset.fileStatsTotal);
+      bindNumberPreview();
+      updateCharacterBreakdown(summary, characterTree, row.dataset.fileStatsNodeId, breakdownCache);
+      root.querySelectorAll(".file-stats-selectable.is-selected").forEach((selected) => {
+        selected.classList.remove("is-selected");
       });
+      row.classList.add("is-selected");
+      summary.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  }
+
+  async function loadFileStatsChildren(branch) {
+    if (branch.dataset.fileStatsChildrenLoaded === "true") return;
+
+    const tree = branch.closest("#file-stats-structure-tree");
+    const list = branch.querySelector(":scope > .search-within-children");
+    const nodeId = branch.dataset.fileStatsNodeId;
+    if (!tree || !list || !nodeId) return;
+
+    list.innerHTML = `
+      <li class="search-within-node">
+        <div class="search-within-row file-stats-tree-row file-stats-loading-row">
+          <span class="file-stats-spinner" aria-hidden="true"></span>
+          <span class="file-stats-node-label">Loading structure</span>
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </li>
+    `;
+
+    try {
+      const data = await fetchFileStatsChildren(tree.dataset.childrenUrl, nodeId);
+      const depth = Number.parseInt(branch.dataset.fileStatsDepth || "0", 10) + 1;
+      list.innerHTML = renderFileStatsNodes(data.nodes || [], depth);
+      branch.dataset.fileStatsChildrenLoaded = "true";
+      initGenericToggles(list);
+      bindNumberPreview();
+    } catch (_error) {
+      list.innerHTML = `
+        <li class="search-within-node">
+          <div class="search-within-row file-stats-tree-row">
+            <span></span>
+            <span class="file-stats-node-label">Structure unavailable</span>
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </li>
+      `;
+    }
+  }
+
+  async function fetchFileStatsChildren(baseUrl, nodeId) {
+    const url = new URL(baseUrl, window.location.origin);
+    url.searchParams.set("node_id", nodeId);
+    const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+    if (!response.ok) throw new Error("Structure request failed");
+
+    return response.json();
+  }
+
+  function renderFileStatsNodes(nodes, depth) {
+    return nodes.map((node) => renderFileStatsNode(node, depth)).join("");
+  }
+
+  function renderFileStatsNode(node, depth) {
+    const hasChildren = Boolean(node.has_children);
+    const totalWordsAndNumbers = node.total_words_and_numbers ?? (
+      Number.parseInt(node.word_count || "0", 10) +
+      Number.parseInt(node.number_count || "0", 10) +
+      Number.parseInt(node.division_count || "0", 10)
+    );
+    const branchAttrs = hasChildren
+      ? ` aria-expanded="false" data-branch-id="file-stats:${escapeHtml(node.node_id)}" data-file-stats-node-id="${escapeHtml(node.node_id)}" data-file-stats-depth="${depth}" data-file-stats-children-loaded="false"`
+      : "";
+    const toggle = hasChildren
+      ? `<button type="button" class="search-within-toggle" aria-label="Toggle ${escapeHtml(node.label)}">▸</button>`
+      : '<span class="search-within-toggle" aria-hidden="true"></span>';
+    const children = hasChildren ? '<ul class="search-within-children" role="group"></ul>' : "";
+
+    return `
+      <li class="search-within-node${hasChildren ? " search-within-branch" : ""}" role="treeitem"${branchAttrs}>
+        <div class="search-within-row file-stats-tree-row file-stats-selectable"
+             style="--file-stats-depth: ${depth}"
+             data-file-stats-node-label="${escapeHtml(node.label)}"
+             data-file-stats-node-id="${escapeHtml(node.node_id)}"
+             data-file-stats-letters="${escapeHtml(node.letter_count)}"
+             data-file-stats-digits="${escapeHtml(node.digit_count)}"
+             data-file-stats-other="${escapeHtml(node.other_count)}"
+             data-file-stats-total="${escapeHtml(node.character_count)}">
+          ${toggle}
+          <span class="file-stats-node-label">${escapeHtml(node.label)}</span>
+          <span class="file-stats-node-count">${numberLink(node.word_count)}</span>
+          <span class="file-stats-node-count">${numberLink(node.number_count)}</span>
+          <span class="file-stats-node-count">${numberLink(node.division_count)}</span>
+          <span class="file-stats-node-count">${numberLink(totalWordsAndNumbers)}</span>
+          <span class="file-stats-node-count">${numberLink(node.letter_count)}</span>
+          <span class="file-stats-node-count">${numberLink(node.digit_count)}</span>
+          <span class="file-stats-node-count">${numberLink(node.other_count)}</span>
+          <span class="file-stats-node-count">${numberLink(node.character_count)}</span>
+        </div>
+        ${children}
+      </li>
+    `;
   }
 
   async function updateCharacterBreakdown(summary, tree, nodeId, cache) {
@@ -359,7 +456,7 @@
   function numberLink(value) {
     const number = Number.parseInt(value || "0", 10);
     const formatted = formatNumber(value);
-    if (Number.isNaN(number)) return formatted;
+    if (Number.isNaN(number) || number <= 0) return formatted;
 
     const classes = number % 7 === 0 ? "number-link number-link-seven" : "number-link";
     return `<a class="${classes}" href="/numbers/${number}" data-number-preview-url="/numbers/${number}/preview">${formatted}</a>`;

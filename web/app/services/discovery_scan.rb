@@ -367,7 +367,6 @@ class DiscoveryScan
                                        limit: Inamen::VerseMatchQuery::DISPLAY_LIMIT)
     return verse_result unless verse_result
 
-    align_verse_summary_with_counts!(verse_result, rows) if rows
     Inamen::VerseMatchQuery.prepare_display!(edition, verse_result, offset: offset, limit: limit)
     verse_result
   end
@@ -393,15 +392,7 @@ class DiscoveryScan
     if verse_result.nil? && edition.corpus_ready?
       verse_result = run_verses(edition, p, force: force, validate: validate)
     end
-    align_verse_summary_with_counts!(verse_result, rows)
     verse_result&.summary
-  end
-
-  def self.align_verse_summary_with_counts!(verse_result, rows)
-    return verse_result unless verse_result&.summary
-
-    verse_result.summary.occurrences = word_count_table_total(rows)
-    verse_result
   end
 
   def self.cached?(edition, params)
@@ -532,9 +523,11 @@ class DiscoveryScan
     ["discovery_verses/v33", *shared_cache_components(params, edition)]
   end
 
+  VERSES_DISPLAY_CACHE_VERSION = "discovery_verses_html/v6"
+
   def self.verses_display_cache_key_for(edition, params, offset:, limit:, partial:)
     [
-      "discovery_verses_html/v4",
+      VERSES_DISPLAY_CACHE_VERSION,
       partial.to_s,
       offset.to_i,
       limit.to_i,

@@ -10,6 +10,11 @@ module Inamen
       NUN SAMECH AIN PE TZADDI KOPH RESH SCHIN TAU
       א ב ג ד ה ו ז ח ט י כ ל מ נ ס ע פ צ ק ר ש ת
     ].freeze
+    LATIN_STANZA_LABELS = %w[
+      ALEPH BETH GIMEL DALETH HE VAU ZAIN CHETH TETH JOD CAPH LAMED MEM
+      NUN SAMECH AIN PE TZADDI KOPH RESH SCHIN TAU
+    ].freeze
+    HEBREW_STANZA_LABEL = /\A\p{Hebrew}\s+[A-Z]+\.?\z/
 
     # To the chief Musician; A Psalm and Song; A Psalm of; Maschil; Michtam; Shiggaion;
     # A Prayer of; A Song of degrees; A Song of … (degrees must precede generic Song of).
@@ -43,8 +48,29 @@ module Inamen
     /ix
 
     def self.stanza_label?(stripped_line)
-      STANZA_LABELS.include?(stripped_line.to_s.strip)
+      stanza_word_count(stripped_line).positive? || stanza_division_count(stripped_line).positive?
     end
+
+    def self.stanza_word_count(stripped_line)
+      line = stripped_line.to_s.strip
+      return 1 if latin_stanza_label?(line)
+      return 1 if line.match?(HEBREW_STANZA_LABEL) && latin_stanza_label?(line.split(/\s+/, 2).last.to_s)
+
+      0
+    end
+
+    def self.stanza_division_count(stripped_line)
+      line = stripped_line.to_s.strip
+      return 0 if stanza_word_count(line).positive?
+      return 1 if STANZA_LABELS.include?(line)
+
+      0
+    end
+
+    def self.latin_stanza_label?(line)
+      LATIN_STANZA_LABELS.include?(line.to_s.delete_suffix("."))
+    end
+    private_class_method :latin_stanza_label?
 
     def self.match?(stripped_line)
       line = stripped_line.to_s.strip

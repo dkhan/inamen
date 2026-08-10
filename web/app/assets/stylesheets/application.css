@@ -202,14 +202,15 @@ body {
   display: grid;
   grid-template-columns:
     1.1rem
-    minmax(18rem, 1fr)
-    5.7rem
-    4.7rem
-    7.8rem
+    minmax(14rem, 1fr)
+    5.2rem
+    4.4rem
+    5.4rem
+    7.4rem
+    6.2rem
+    4.4rem
     6.5rem
-    4.7rem
-    6.9rem
-    7.1rem;
+    6.7rem;
   column-gap: 0.35rem;
   align-items: center;
 }

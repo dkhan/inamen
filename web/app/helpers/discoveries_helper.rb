@@ -223,8 +223,8 @@ module DiscoveriesHelper
     query.merge(search_selection: selection_query)
   end
 
-  def discovery_word_count_total(rows)
-    DiscoveryScan.word_count_table_total(rows)
+  def discovery_word_count_total(rows, summary: nil)
+    summary&.occurrences || DiscoveryScan.word_count_table_total(rows)
   end
 
   def discovery_word_count_spellings_label(spellings, limit: 8)

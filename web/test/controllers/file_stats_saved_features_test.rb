@@ -39,6 +39,26 @@ class FileStatsSavedFeaturesTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "file stats saved features refresh stale verification rows" do
+    feature = create_file_stats_feature(unit: "tokens", expected: 823_543, from_feature: "combined_total")
+    feature.feature_editions.create!(
+      edition_id: EDITION_ID,
+      actual: 823_508,
+      status: FeatureEdition::STATUS_MISS,
+      processing_state: :verified,
+      verified_at: 1.hour.ago
+    )
+    stats = FileStats.new(total: 823_543, character_count: 4_233_726)
+
+    DiscoveryScan.stub(:run_file_stats, stats) do
+      row = SavedFeatureCatalog.row_for(feature, EditionContext.new(EDITION_ID))
+
+      assert_equal 823_543, row.count
+      assert row.match
+      assert_equal 823_543, feature.feature_editions.find_by!(edition_id: EDITION_ID).actual
+    end
+  end
+
   test "file stats saved feature status opens Discover file stats" do
     feature = create_file_stats_feature(unit: "characters", expected: 4_233_726,
                                         from_feature: "file_character_total")

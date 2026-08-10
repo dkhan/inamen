@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       post :scan
       get :verses
       get :dictionary
+      get :file_stats_children
       get :file_stats_characters
     end
   end

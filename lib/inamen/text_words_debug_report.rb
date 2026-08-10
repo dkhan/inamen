@@ -6,6 +6,7 @@ module Inamen
     GROUP_LABELS = {
       book_titles_cover: "book titles / cover",
       colophon: "colophons",
+      psalm_119: "Psalm 119 stanza words",
       other: "other"
     }.freeze
 
@@ -13,13 +14,15 @@ module Inamen
       case classification
       when :book_title then :book_titles_cover
       when :colophon then :colophon
+      when :psalm_119_division then :psalm_119
       else :other
       end
     end
 
     def self.text_word_line_event?(event)
       (event.kind == KjvParseEvent::KIND_NUMBERED_LINE ||
-        event.kind == KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING) &&
+        event.kind == KjvParseEvent::KIND_VERSE_AFTER_PSALM_HEADING ||
+        event.kind == KjvParseEvent::KIND_PSALM_119_DIVISION) &&
         (event.totals_delta[:text_words] || 0).positive?
     end
     private_class_method :text_word_line_event?
@@ -62,7 +65,7 @@ module Inamen
       end
 
       out.puts "--- Subtotals (by LineClassifier bucket) ---"
-      %i[book_titles_cover colophon other].each do |key|
+      %i[book_titles_cover colophon psalm_119 other].each do |key|
         t = buckets[key]
         label = GROUP_LABELS[key]
         out.puts "#{label}: #{t} tokens"

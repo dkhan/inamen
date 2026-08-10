@@ -87,8 +87,30 @@ RSpec.describe Inamen::FileStatsExplorer do
       children = result.children_of(node.node_id)
       expect(node.word_count).to eq(children.sum(&:word_count))
       expect(node.number_count).to eq(children.sum(&:number_count))
+      expect(node.division_count).to eq(children.sum(&:division_count))
       expect(node.character_count).to eq(children.sum(&:character_count))
     end
+  end
+
+  it "counts Latin Psalm 119 stanza labels as words" do
+    kjv_edition = "explorer_kjv_psalm_119"
+    kjv_source = File.read(Inamen::KjvFixture::KJV_PATH, encoding: "UTF-8")
+    result = described_class.resolve(
+      kjv_edition,
+      checksum: "kjv-psalm-119",
+      chapter_index: Inamen::VerseIndex.build_chapter_index(Inamen::KjvFixture.lines),
+      lines: Inamen::KjvFixture.lines,
+      source_text: kjv_source,
+      force: true
+    )
+
+    psalm_119 = result.nodes.find { |node| node.book == "Psalms" && node.chapter == 119 && node.label == "Hebrew letters" }
+
+    expect(psalm_119.word_count).to eq(22)
+    expect(psalm_119.division_count).to eq(0)
+    expect(result.root.word_count + result.root.number_count + result.root.division_count).to eq(823_543)
+  ensure
+    FileUtils.rm_rf(described_class.cache_dir(kjv_edition)) if kjv_edition
   end
 
   it "classifies character categories and individual characters" do

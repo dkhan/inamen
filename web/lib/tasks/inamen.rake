@@ -15,6 +15,9 @@ namespace :inamen do
       Inamen::FileStatsPublisher.build_all_prebuilt!(editions, force: force).each do |built_path|
         puts built_path
       end
+      FileStatsStore.populate_all!(editions, force: force).each do |snapshot|
+        puts "file_stats_db:#{snapshot.edition_short_name}"
+      end
       Inamen::WordStreamPublisher.build_all_prebuilt!(editions, force: force).each do |built_path|
         puts built_path
       end
@@ -33,6 +36,28 @@ namespace :inamen do
       force = ENV["FORCE"] == "1"
       Inamen::VerseIndexPublisher.build_all_prebuilt!(Edition.ordered.to_a, force: force).each do |built_path|
         puts built_path
+      end
+    end
+  end
+
+  namespace :file_stats do
+    desc "Populate DB-backed file stats for all editions (set FORCE=1 to rebuild, FULL=1 to prefill every character breakdown)"
+    task populate: :environment do
+      force = ENV["FORCE"] == "1"
+      full = ENV["FULL"] == "1"
+      editions =
+        if ENV["EDITION"].present?
+          [Edition.find_by!(short_name: ENV["EDITION"])]
+        else
+          Edition.ordered
+        end
+
+      editions.each do |edition|
+        next if !force && FileStatsStore.current_snapshot_for(edition)
+
+        print "#{edition.short_name}..."
+        snapshot = FileStatsStore.populate!(edition, full: full)
+        puts "#{snapshot.edition_short_name}: #{snapshot.total} tokens, #{snapshot.character_count} characters"
       end
     end
   end

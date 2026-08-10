@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_16_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_000000) do
   create_table "editions", force: :cascade do |t|
     t.integer "byte_size", null: false
     t.string "corpus_type", default: "bible", null: false
@@ -41,6 +41,71 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_000000) do
     t.index ["feature_id"], name: "index_feature_editions_on_feature_id"
   end
 
+  create_table "file_stat_categories", force: :cascade do |t|
+    t.string "category", null: false
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "file_stat_snapshot_id", null: false
+    t.string "node_id", null: false
+    t.string "subcategory", null: false
+    t.datetime "updated_at", null: false
+    t.index ["file_stat_snapshot_id", "node_id"], name: "idx_on_file_stat_snapshot_id_node_id_259ba83dd2"
+    t.index ["file_stat_snapshot_id"], name: "index_file_stat_categories_on_file_stat_snapshot_id"
+  end
+
+  create_table "file_stat_characters", force: :cascade do |t|
+    t.string "category", null: false
+    t.string "char", null: false
+    t.string "codepoint", null: false
+    t.integer "count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "file_stat_snapshot_id", null: false
+    t.string "name", null: false
+    t.string "node_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["file_stat_snapshot_id", "node_id"], name: "idx_on_file_stat_snapshot_id_node_id_0cb319f7ff"
+    t.index ["file_stat_snapshot_id"], name: "index_file_stat_characters_on_file_stat_snapshot_id"
+  end
+
+  create_table "file_stat_nodes", force: :cascade do |t|
+    t.string "book"
+    t.integer "chapter"
+    t.integer "character_count", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.integer "digit_count", default: 0, null: false
+    t.integer "division_count", default: 0, null: false
+    t.integer "file_stat_snapshot_id", null: false
+    t.string "label", null: false
+    t.integer "letter_count", default: 0, null: false
+    t.string "level", null: false
+    t.string "node_id", null: false
+    t.integer "number_count", default: 0, null: false
+    t.integer "other_count", default: 0, null: false
+    t.string "parent_id"
+    t.string "testament"
+    t.datetime "updated_at", null: false
+    t.integer "verse"
+    t.integer "word_count", default: 0, null: false
+    t.index ["file_stat_snapshot_id", "node_id"], name: "index_file_stat_nodes_on_file_stat_snapshot_id_and_node_id", unique: true
+    t.index ["file_stat_snapshot_id", "parent_id"], name: "index_file_stat_nodes_on_file_stat_snapshot_id_and_parent_id"
+    t.index ["file_stat_snapshot_id"], name: "index_file_stat_nodes_on_file_stat_snapshot_id"
+  end
+
+  create_table "file_stat_snapshots", force: :cascade do |t|
+    t.integer "character_count", null: false
+    t.datetime "created_at", null: false
+    t.integer "edition_id", null: false
+    t.string "edition_short_name", null: false
+    t.string "explorer_cache_version", null: false
+    t.string "publisher_revision", null: false
+    t.json "rows", default: [], null: false
+    t.integer "seven_power", null: false
+    t.string "source_checksum", null: false
+    t.integer "total", null: false
+    t.datetime "updated_at", null: false
+    t.index ["edition_id"], name: "index_file_stat_snapshots_on_edition_id", unique: true
+  end
+
   create_table "saved_features", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description", default: "Saved from Discover", null: false
@@ -65,4 +130,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_16_000000) do
   end
 
   add_foreign_key "feature_editions", "saved_features", column: "feature_id", on_delete: :cascade
+  add_foreign_key "file_stat_categories", "file_stat_snapshots", on_delete: :cascade
+  add_foreign_key "file_stat_characters", "file_stat_snapshots", on_delete: :cascade
+  add_foreign_key "file_stat_nodes", "file_stat_snapshots", on_delete: :cascade
+  add_foreign_key "file_stat_snapshots", "editions", on_delete: :cascade
 end

@@ -8,13 +8,16 @@
     <span></span>
     <span>Words</span>
     <span>Numbers</span>
+    <span>Other divisions</span>
     <span>Total words & numbers</span>
     <span>Letters</span>
     <span>Digits</span>
     <span>Other chars</span>
     <span>Characters</span>
   </div>
-  <ul class="search-within-tree file-stats-tree" role="tree" aria-label="File structure statistics">
+  <ul class="search-within-tree file-stats-tree" id="file-stats-structure-tree"
+      role="tree" aria-label="File structure statistics"
+      data-children-url="<%= file_stats_children_discoveries_path(edition: current_edition_id) %>">
     <%= render "discoveries/file_stats_node", explorer: explorer, node: root, depth: 0 %>
   </ul>
 </section>

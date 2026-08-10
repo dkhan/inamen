@@ -47,13 +47,14 @@ module Inamen
       end
 
       if PsalmHeading.stanza_label?(s)
-        tok = Tokenizer.tokenize(s).size
+        word_count = PsalmHeading.stanza_word_count(s)
+        division_count = PsalmHeading.stanza_division_count(s)
         state.expecting_implicit_psalm_verse_1 = true
         state.prev_nonempty_stripped = s
         return build_event(
           KjvParseEvent::KIND_PSALM_119_DIVISION,
           lines, i, line, s,
-          totals_delta: { psalm_119_division_words: tok }
+          totals_delta: { text_words: word_count, psalm_119_division_words: division_count }
         )
       end
 

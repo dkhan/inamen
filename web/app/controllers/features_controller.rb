@@ -152,8 +152,8 @@ class FeaturesController < ApplicationController
       verse_result = read_or_run_verses(scan_params)
       verse_result && DiscoveryScan.verse_count_total(verse_result)
     else
-      rows = read_or_run_counts(scan_params)
-      rows && DiscoveryScan.word_count_table_total(rows)
+      verse_result = read_or_run_verses(scan_params)
+      verse_result&.summary&.occurrences
     end
   rescue ArgumentError, TypeError
     nil

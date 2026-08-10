@@ -234,7 +234,7 @@ RSpec.describe Inamen::CountingService do
       expect(c[:verse_text_words]).to eq(v1_n + v2_n)
     end
 
-    it "counts Psalm 119 stanza labels in psalm_119_division_words, not psalm_heading_words" do
+    it "counts Latin Psalm 119 stanza labels as words, not psalm headings" do
       v1 = "BLESSED are the undefiled in the way, who walk in the law of the LORD."
       v2 = "2 Blessed are they that keep his testimonies, and that seek him with the whole heart."
       lines = ["PSALM 119", "ALEPH.", v1, v2]
@@ -245,7 +245,8 @@ RSpec.describe Inamen::CountingService do
       v2_n = Inamen::Tokenizer.tokenize(v2_body).size
 
       c = described_class.total_for_lines(lines)
-      expect(c[:psalm_119_division_words]).to eq(stanza_n)
+      expect(c[:text_words]).to eq(stanza_n)
+      expect(c[:psalm_119_division_words]).to eq(0)
       expect(c[:psalm_heading_words]).to eq(0)
       expect(c[:verse_text_words]).to eq(v1_n + v2_n)
       expect(c[:implicit_psalm_verse_1]).to eq(1)
@@ -264,6 +265,18 @@ RSpec.describe Inamen::CountingService do
       expect(c[:verse_text_words]).to eq(
         Inamen::Tokenizer.tokenize(v1).size + Inamen::Tokenizer.tokenize(v2.sub(/\A[0-9]+\s+/, "")).size
       )
+    end
+
+    it "counts combined Hebrew and Latin Psalm 119 labels as one word" do
+      v1 = "BLESSED are the undefiled in the way, who walk in the law of the LORD."
+      lines = ["PSALM 119", "א ALEPH", v1]
+
+      c = described_class.total_for_lines(lines)
+
+      expect(c[:psalm_119_division_words]).to eq(0)
+      expect(c[:text_words]).to eq(1)
+      expect(c[:implicit_psalm_verse_1]).to eq(1)
+      expect(c[:verse_text_words]).to eq(Inamen::Tokenizer.tokenize(v1).size)
     end
 
     it "counts CHAPTER N lines with implicit verse 1 (Concord-style)" do

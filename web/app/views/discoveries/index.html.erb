@@ -60,7 +60,7 @@
           <div class="discovery-phrase-toolbar-actions" aria-label="Search phrase tools">
             <% if @status == :ready %>
               <%= link_to "Save feature",
-                  feature_save_path(actual_count: discovery_word_count_total(@rows), edition: @edition.edition_id),
+                  feature_save_path(actual_count: discovery_word_count_total(@rows, summary: @word_summary), edition: @edition.edition_id),
                   class: "discovery-phrase-action" %>
             <% end %>
             <button type="button" class="discovery-phrase-action" id="clear-search-phrases">Clear all</button>
@@ -145,7 +145,7 @@
           <tfoot>
             <tr class="row-total">
               <td colspan="2"><strong>Total</strong></td>
-              <td class="num"><strong><%= number_research_link(discovery_word_count_total(@rows)) %></strong></td>
+              <td class="num"><strong><%= number_research_link(discovery_word_count_total(@rows, summary: @word_summary)) %></strong></td>
               <td></td>
             </tr>
           </tfoot>

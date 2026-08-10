@@ -12,6 +12,7 @@ module Inamen
       [:verse_text_words, "Words in verse text"],
       [:psalm_heading_words, "Words in psalm headings"],
       [:colophon_words, "Words in colophons"],
+      [:psalm_119_words, "Psalm 119 stanza words"],
       [:total_chapters, "Chapter headers"],
       [:total_verses, "Verse numbers"],
       [:psalm_119_inscriptions, "Other divisions (Psalm 119)"],

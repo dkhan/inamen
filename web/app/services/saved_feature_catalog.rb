@@ -57,7 +57,7 @@ class SavedFeatureCatalog
       record = FeatureEdition.find_or_initialize_by(
         feature_id: saved_feature.id, edition_id: edition.edition_id
       )
-      return record if !force && record.persisted? && record.processing_verified?
+      return record if !force && !saved_feature.file_stats? && record.persisted? && record.processing_verified?
 
       actual = compute_actual(saved_feature, edition, force: force)
       record.actual = actual
@@ -98,7 +98,7 @@ class SavedFeatureCatalog
       if saved_feature.verses?
         DiscoveryScan.verse_count_total(DiscoveryScan.run_verses(edition, scan_params, force: force))
       else
-        DiscoveryScan.word_count_table_total(DiscoveryScan.run_counts(edition, scan_params, force: force))
+        DiscoveryScan.run_verses(edition, scan_params, force: force).summary.occurrences
       end
     end
   end

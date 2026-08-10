@@ -118,13 +118,21 @@ class EditionImporter
         corpus_path: corpus,
         force: @force
       ),
-      file_stats: Inamen::FileStatsPublisher.build_prebuilt!(
-        edition.edition_id,
-        text_path: edition.path,
-        lines: lines,
-        source_lines: edition.source_lines,
-        force: @force
-      )
+      file_stats: build_file_stats!(edition, lines)
     }
   end
+
+  def build_file_stats!(edition, lines)
+    path = Inamen::FileStatsPublisher.build_prebuilt!(
+      edition.edition_id,
+      text_path: edition.path,
+      lines: lines,
+      source_lines: edition.source_lines,
+      force: @force
+    )
+    result = Inamen::FileStatsPublisher.load_prebuilt!(path)
+    FileStatsStore.populate!(edition, result: result)
+    path
+  end
+
 end

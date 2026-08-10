@@ -3,6 +3,8 @@
 class Edition < ApplicationRecord
   TYPES = %w[bible].freeze
 
+  has_one :file_stat_snapshot, dependent: :destroy
+
   validates :short_name, presence: true, uniqueness: true,
                          format: { with: /\A[a-z0-9][a-z0-9_-]*\z/ }
   validates :name, :source_path, :source_filename, :source_checksum, :byte_size, :imported_at, presence: true

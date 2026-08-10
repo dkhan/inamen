@@ -13,11 +13,11 @@ end
 module Inamen
     # CSV-backed hierarchical statistics for an edition's source file and verse corpus.
     module FileStatsExplorer
-    CACHE_VERSION = "10"
+    CACHE_VERSION = "12"
 
     Node = Struct.new(
       :node_id, :parent_id, :level, :label, :testament, :book, :chapter, :verse,
-      :word_count, :number_count, :character_count, :letter_count, :digit_count, :other_count,
+      :word_count, :number_count, :division_count, :character_count, :letter_count, :digit_count, :other_count,
       keyword_init: true
     )
     Category = Struct.new(:node_id, :category, :subcategory, :count, keyword_init: true)
@@ -48,7 +48,7 @@ module Inamen
 
     NODE_HEADERS = %w[
       node_id parent_id level label testament book chapter verse
-      word_count number_count character_count letter_count digit_count other_count
+      word_count number_count division_count character_count letter_count digit_count other_count
     ].freeze
     CATEGORY_HEADERS = %w[node_id category subcategory count].freeze
     CHARACTER_HEADERS = %w[node_id category char codepoint name count].freeze
@@ -174,7 +174,17 @@ module Inamen
         end
 
         target_id = node_for_event!(edition_id, nodes_by_id, root_id, source_id, event, book, state, physical_lines)
-        add_text_to_node!(nodes_by_id.fetch(target_id), line_text, char_counts[target_id])
+        if event.kind == KjvParseEvent::KIND_PSALM_119_DIVISION
+          add_stanza_text_to_node!(
+            nodes_by_id.fetch(target_id),
+            line_text,
+            char_counts[target_id],
+            event.totals_delta.fetch(:text_words, 0),
+            event.totals_delta.fetch(:psalm_119_division_words, 0)
+          )
+        else
+          add_text_to_node!(nodes_by_id.fetch(target_id), line_text, char_counts[target_id])
+        end
         last_leaf_id = target_id
       end
 
@@ -423,6 +433,18 @@ module Inamen
       stats = stats_for_text(text)
       node.word_count += stats.fetch(:word_count)
       node.number_count += stats.fetch(:number_count)
+      node.division_count += stats.fetch(:division_count)
+      node.character_count += stats.fetch(:character_count)
+      node.letter_count += stats.fetch(:letter_count)
+      node.digit_count += stats.fetch(:digit_count)
+      node.other_count += stats.fetch(:other_count)
+      count_characters(text).each { |char, count| char_count_bucket[char] += count }
+    end
+
+    def add_stanza_text_to_node!(node, text, char_count_bucket, word_count, division_count)
+      stats = stats_for_text(text)
+      node.word_count += word_count
+      node.division_count += division_count
       node.character_count += stats.fetch(:character_count)
       node.letter_count += stats.fetch(:letter_count)
       node.digit_count += stats.fetch(:digit_count)
@@ -455,6 +477,7 @@ module Inamen
         verse: verse,
         word_count: 0,
         number_count: 0,
+        division_count: 0,
         character_count: 0,
         letter_count: 0,
         digit_count: 0,
@@ -471,6 +494,7 @@ module Inamen
       {
         word_count: tokens.count { |token| !token.match?(/\A[0-9]+\z/) },
         number_count: tokens.count { |token| token.match?(/\A[0-9]+\z/) },
+        division_count: 0,
         character_count: text.to_s.length,
         letter_count: text.to_s.each_char.count { |char| letter?(char) },
         digit_count: text.to_s.each_char.count { |char| char.match?(/\p{Nd}/) },
@@ -482,6 +506,7 @@ module Inamen
       {
         word_count: node.word_count,
         number_count: node.number_count,
+        division_count: node.division_count,
         character_count: node.character_count,
         letter_count: node.letter_count,
         digit_count: node.digit_count,
@@ -492,6 +517,7 @@ module Inamen
     def assign_stats!(node, stats)
       node.word_count = stats.fetch(:word_count)
       node.number_count = stats.fetch(:number_count)
+      node.division_count = stats.fetch(:division_count)
       node.character_count = stats.fetch(:character_count)
       node.letter_count = stats.fetch(:letter_count)
       node.digit_count = stats.fetch(:digit_count)
@@ -501,6 +527,7 @@ module Inamen
     def aggregate_node!(parent, child)
       parent.word_count += child.word_count
       parent.number_count += child.number_count
+      parent.division_count += child.division_count
       parent.character_count += child.character_count
       parent.letter_count += child.letter_count
       parent.digit_count += child.digit_count
@@ -854,6 +881,7 @@ module Inamen
           verse: blank_to_nil(row["verse"])&.to_i,
           word_count: row["word_count"].to_i,
           number_count: row["number_count"].to_i,
+          division_count: row["division_count"].to_i,
           character_count: row["character_count"].to_i,
           letter_count: row["letter_count"].to_i,
           digit_count: row["digit_count"].to_i,

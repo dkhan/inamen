@@ -6,10 +6,10 @@ RSpec.describe Inamen::CountingService, "#total_for_lines" do
 
     totals = described_class.total_for_lines(lines)
 
-    expect(totals[:text_words]).to eq(567)
+    expect(totals[:text_words]).to eq(589)
     expect(totals[:verse_text_words]).to eq(789_629)
     expect(totals[:psalm_heading_words]).to eq(1034)
-    expect(totals[:psalm_119_division_words]).to eq(22)
+    expect(totals[:psalm_119_division_words]).to eq(0)
     expect(totals[:chapter_numbers]).to eq(1189)
     expect(totals[:verse_numbers]).to eq(31_102)
 

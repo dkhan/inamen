@@ -35,7 +35,8 @@ module Inamen
       {
         cover_title_words: 0,
         book_title_words: source_title_words,
-        colophon_words: buckets[:colophon]
+        colophon_words: buckets[:colophon],
+        psalm_119_words: buckets[:psalm_119]
       }
     end
 
@@ -51,6 +52,7 @@ module Inamen
         verse_text_words: counts[:verse_text_words],
         psalm_heading_words: counts[:psalm_heading_words],
         colophon_words: tw[:colophon_words],
+        psalm_119_words: tw[:psalm_119_words],
         cover_title_words: tw[:cover_title_words],
         book_title_words: tw[:book_title_words],
         total_chapters: counts[:chapter_numbers],
@@ -100,6 +102,7 @@ module Inamen
         [s[:verse_text_words], "WORDS IN VERSE TEXT"],
         [s[:psalm_heading_words], "WORDS IN PSALM HEADINGS"],
         [s[:colophon_words], "WORDS IN COLOPHONS"],
+        [s[:psalm_119_words], "PSALM 119 STANZA WORDS"],
         [s[:cover_title_words], "WORDS IN COVER TITLE"],
         [s[:book_title_words], "WORDS IN BOOK TITLES"],
         [s[:total_chapters], "TOTAL CHAPTERS"],

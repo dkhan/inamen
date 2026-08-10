@@ -56,6 +56,33 @@ class DiscoveriesController < ApplicationController
     }
   end
 
+  def file_stats_children
+    node_id = params[:node_id].to_s
+    if node_id.blank?
+      render json: { error: "Missing node_id" }, status: :unprocessable_entity
+      return
+    end
+
+    explorer = @edition.file_stats.explorer
+    render json: {
+      nodes: explorer.children_of(node_id).map do |node|
+        {
+          node_id: node.node_id,
+          label: node.label,
+          word_count: node.word_count,
+          number_count: node.number_count,
+          division_count: node.division_count,
+          total_words_and_numbers: node.word_count + node.number_count + node.division_count,
+          character_count: node.character_count,
+          letter_count: node.letter_count,
+          digit_count: node.digit_count,
+          other_count: node.other_count,
+          has_children: explorer.has_children?(node.node_id)
+        }
+      end
+    }
+  end
+
   def verses
     unless DiscoveryScan.counts_cached?(@edition, @scan_params)
       head :no_content

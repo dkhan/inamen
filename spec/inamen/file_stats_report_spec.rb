@@ -16,9 +16,10 @@ RSpec.describe Inamen::FileStatsReport do
       expect(by_key[:verse_text_words]).to eq(789_629)
       expect(by_key[:psalm_heading_words]).to eq(1034)
       expect(by_key[:colophon_words]).to eq(186)
+      expect(by_key[:psalm_119_words]).to eq(22)
       expect(by_key[:total_chapters]).to eq(1189)
       expect(by_key[:total_verses]).to eq(31_102)
-      expect(by_key[:psalm_119_inscriptions]).to eq(22)
+      expect(by_key[:psalm_119_inscriptions]).to eq(0)
       expect(by_key[:cover_and_titles]).to eq(381)
     end
 
