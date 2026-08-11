@@ -26,7 +26,7 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
-  def feature_params(unit:, description: nil, feature_type: "bible", edition_id: EDITION_ID, language: nil)
+  def feature_params(unit:, description: nil, feature_type: "bible", edition_id: EDITION_ID, language: nil, expected: nil)
     saved_feature = {
       name: "Peter (#{unit})",
       original_edition_id: edition_id,
@@ -34,9 +34,7 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
       scope_label: "All texts",
       unit: unit,
       mode: "word_count",
-      # Intentionally wrong value: the server must overwrite it from the cached
-      # search results for the selected measure.
-      expected_count: "999",
+      expected_count: (expected || (unit == "verses" ? 153 : 158)).to_s,
       search_selection_json: { "submitted" => "1" }.to_json,
       search_phrases_json: { "0" => { "phrase" => "peter" } }.to_json
     }
@@ -78,9 +76,9 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
     counts = CGI.unescapeHTML(@response.body)
     assert_includes counts, "\"occurrences\":158"
     assert_includes counts, "\"verses\":153"
-    # Actual/Expected are read-only.
+    # Actual is read-only; Expected defaults from the scan but can be edited.
     assert_select "input[name=?][readonly]", "saved_feature[actual]"
-    assert_select "input[name=?][readonly]", "saved_feature[expected_count]"
+    assert_select "input[name=?][readonly]", "saved_feature[expected_count]", false
     # Feature type is a required selectable field.
     assert_select "select[name=?]", "saved_feature[feature_type]"
   end
@@ -111,9 +109,22 @@ class FeaturesControllerTest < ActionDispatch::IntegrationTest
 
     feature = SavedFeature.order(:id).last
     assert_equal "verses", feature.unit
-    # 153 (verses), not 158 (occurrences), even though the form posted 999.
+    # 153 (verses), not 158 (occurrences).
     assert_equal 153, feature.expected_count
     assert_equal 153, feature.feature_editions.find_by(edition_id: EDITION_ID).actual
+  end
+
+  test "create preserves an edited expected count while storing computed actual" do
+    DiscoveryScan.stub(:read_counts_cached, word_rows(158)) do
+      post features_path, params: feature_params(unit: "occurrences", expected: 777)
+    end
+
+    feature = SavedFeature.order(:id).last
+    record = feature.feature_editions.find_by(edition_id: EDITION_ID)
+
+    assert_equal 777, feature.expected_count
+    assert_equal 158, record.actual
+    assert record.status_miss?
   end
 
   test "create saves the description entered in the dialog" do

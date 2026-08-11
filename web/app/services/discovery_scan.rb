@@ -523,7 +523,7 @@ class DiscoveryScan
     ["discovery_verses/v33", *shared_cache_components(params, edition)]
   end
 
-  VERSES_DISPLAY_CACHE_VERSION = "discovery_verses_html/v6"
+  VERSES_DISPLAY_CACHE_VERSION = "discovery_verses_html/v7"
 
   def self.verses_display_cache_key_for(edition, params, offset:, limit:, partial:)
     [

@@ -52,8 +52,8 @@ class FeaturesController < ApplicationController
       @saved_feature.scope_label = SavedFeature.scope_label_for(@saved_feature.search_selection)
     end
 
-    # Set the expected value from the selected measure, recomputed from the cached
-    # search results so the stored number is authoritative (e.g. verses => 153).
+    # Set the actual value from the selected measure. Expected remains user-editable,
+    # defaulting to the scan count when the form is first opened.
     actual = apply_measure_count!(@saved_feature)
 
     if @saved_feature.save
@@ -152,14 +152,14 @@ class FeaturesController < ApplicationController
       verse_result = read_or_run_verses(scan_params)
       verse_result && DiscoveryScan.verse_count_total(verse_result)
     else
-      verse_result = read_or_run_verses(scan_params)
-      verse_result&.summary&.occurrences
+      rows = read_or_run_counts(scan_params)
+      DiscoveryScan.word_count_table_total(rows)
     end
   rescue ArgumentError, TypeError
     nil
   end
 
-  # Sets the feature's expected value from the selected measure and returns the
+  # Sets the feature's actual value from the selected measure and returns the
   # computed actual for the original edition (persisted as a FeatureEdition).
   def apply_measure_count!(saved_feature)
     return nil unless SavedFeature::UNITS.include?(saved_feature.unit)
@@ -167,7 +167,7 @@ class FeaturesController < ApplicationController
     count = measure_count(saved_feature.to_scan_params, saved_feature.unit)
     return nil if count.nil?
 
-    saved_feature.expected_count = count
+    saved_feature.expected_count = count if saved_feature.expected_count.blank?
     saved_feature.actual = count
     count
   end

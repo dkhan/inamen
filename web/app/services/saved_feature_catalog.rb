@@ -98,7 +98,7 @@ class SavedFeatureCatalog
       if saved_feature.verses?
         DiscoveryScan.verse_count_total(DiscoveryScan.run_verses(edition, scan_params, force: force))
       else
-        DiscoveryScan.run_verses(edition, scan_params, force: force).summary.occurrences
+        DiscoveryScan.word_count_table_total(DiscoveryScan.run_counts(edition, scan_params, force: force))
       end
     end
   end

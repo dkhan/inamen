@@ -17,7 +17,7 @@
     <div class="discovery-verse-more">
       <button type="button"
           class="button button-secondary discovery-verse-show-more"
-          data-more-url="<%= discovery_verses_more_url(edition, @scan_params, offset: discovery_verse_results_display_limit) %>"
+          data-more-url="<%= discovery_verses_more_url(edition, @scan_params, offset: discovery_verse_results_display_limit, limit: remaining) %>"
           data-offset="<%= discovery_verse_results_display_limit %>"
           data-remaining="<%= remaining %>">
         <%= discovery_verse_show_more_label(remaining) %>

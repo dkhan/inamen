@@ -17,10 +17,9 @@
     const expectedField = document.querySelector("[data-feature-expected-field]");
     const unitLabels = document.querySelectorAll("[data-feature-unit-label]");
 
-    // Actual and Expected are read-only and always reflect the currently selected
-    // measure's total. Switching the measure updates them from the already-loaded
-    // search results, without re-running the search, so only the last-selected
-    // values are submitted.
+    // Actual reflects the currently selected measure's total. Expected defaults
+    // to the same number, but stays editable so a feature can intentionally save
+    // a different target value.
     function apply() {
       const unit = select.value;
       const count = Object.prototype.hasOwnProperty.call(counts, unit) ? counts[unit] : 0;

@@ -6,7 +6,7 @@ require "fileutils"
 module Inamen
   # Builds and resolves precomputed whole-file stats (7^7 breakdown + character count).
   module FileStatsPublisher
-    FILE_STATS_REVISION = "11"
+    FILE_STATS_REVISION = "13"
 
     module_function
 

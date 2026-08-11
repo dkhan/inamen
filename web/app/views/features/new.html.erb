@@ -73,7 +73,7 @@
       <div>
         <dt>Expected</dt>
         <dd>
-          <%= form.number_field :expected_count, readonly: true, required: true,
+          <%= form.number_field :expected_count, required: true, min: 0,
               class: "form-input input-narrow", data: { feature_expected_field: true } %>
           <span data-feature-unit-label><%= @saved_feature.unit %></span>
         </dd>

@@ -34,6 +34,36 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     Inamen::VerseMatchQuery::Result.new(summary: summary, verses: [], hits: [])
   end
 
+  def word_rows(count, exclusions: [])
+    rows = [
+      DiscoveryScan::WordCountRow.new(
+        pattern: "peter",
+        case_sensitive: false,
+        count: count,
+        wildcard: false,
+        scope: nil,
+        spellings: { "peter" => count },
+        exclude: false,
+        overlap: false
+      )
+    ]
+
+    exclusions.each do |pattern, exclusion_count|
+      rows << DiscoveryScan::WordCountRow.new(
+        pattern: pattern,
+        case_sensitive: false,
+        count: exclusion_count,
+        wildcard: false,
+        scope: nil,
+        spellings: { pattern => exclusion_count },
+        exclude: true,
+        overlap: false
+      )
+    end
+
+    rows
+  end
+
   def with_stubs(pairs, &block)
     list = pairs.to_a
     return block.call if list.empty?
@@ -45,7 +75,7 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
   test "occurrences feature is verified and persisted for an edition" do
     feature = saved_feature(unit: "occurrences", expected: 158)
 
-    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(158)) do
       SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
     end
 
@@ -70,7 +100,7 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
   test "a mismatch is recorded as MISS" do
     feature = saved_feature(unit: "occurrences", expected: 999)
 
-    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+    record = with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(158)) do
       SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
     end
 
@@ -82,7 +112,7 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
   test "cached results are reused without recomputing" do
     feature = saved_feature(unit: "occurrences", expected: 158)
 
-    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(158)) do
       SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
     end
 
@@ -106,7 +136,7 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     )
     duplicate = FeatureEdition.new(feature_id: feature.id, edition_id: "kjv_normalized")
 
-    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(158)) do
       FeatureEdition.stub(:find_or_initialize_by, duplicate) do
         record = SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"), force: true)
         assert_equal existing, record
@@ -117,7 +147,7 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
   test "verifying against a different edition adds a separate record, no duplicates" do
     feature = saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
 
-    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: verse_result(153)) do
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(158)) do
       SavedFeatureCatalog.verified_edition(feature, edition("kjv_normalized"))
       SavedFeatureCatalog.verified_edition(feature, edition("concord"))
       SavedFeatureCatalog.verified_edition(feature, edition("concord")) # again → no dupe
@@ -146,12 +176,8 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
 
   test "verification never changes the feature's expected value or original edition" do
     feature = saved_feature(unit: "occurrences", expected: 158, original: "kjv_normalized")
-    summary = Inamen::VerseMatchQuery::Summary.new(
-      occurrences: 42, verses: 10, chapters: 5, books: 2, scope_label: "All texts"
-    )
-    result = Inamen::VerseMatchQuery::Result.new(summary: summary, verses: [], hits: [])
 
-    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_verses: result) do
+    with_stubs(enabled_search_terms?: true, valid_search_terms?: true, run_counts: word_rows(42)) do
       SavedFeatureCatalog.verified_edition(feature, edition("concord"))
     end
 
@@ -159,5 +185,21 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     assert_equal 158, feature.expected_count
     assert_equal "kjv_normalized", feature.original_edition_id
     assert_equal 42, feature.feature_editions.find_by(edition_id: "concord").actual
+  end
+
+  test "occurrences feature uses adjusted word-count rows instead of verse summary occurrences" do
+    feature = saved_feature(unit: "occurrences", expected: 155)
+
+    with_stubs(
+      enabled_search_terms?: true,
+      valid_search_terms?: true,
+      run_counts: word_rows(158, exclusions: [["excluded phrase", 3]]),
+      run_verses: verse_result(153)
+    ) do
+      record = SavedFeatureCatalog.verified_edition(feature, edition("concord"))
+
+      assert_equal 155, record.actual
+      assert record.status_match?
+    end
   end
 end

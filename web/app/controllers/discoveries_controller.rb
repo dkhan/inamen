@@ -95,7 +95,7 @@ class DiscoveriesController < ApplicationController
 
     if DiscoveryScan.verses_cached?(@edition, @scan_params)
       offset = [params[:offset].to_i, 0].max
-      limit = Inamen::VerseMatchQuery::DISPLAY_LIMIT
+      limit = verse_results_limit
       if params[:offset].present?
         render_cached_verses_partial(
           partial: "verse_result_rows",
@@ -371,6 +371,13 @@ class DiscoveriesController < ApplicationController
     end
 
     render html: html.html_safe, layout: false
+  end
+
+  def verse_results_limit
+    requested = params[:limit].to_i
+    return requested if requested.positive?
+
+    Inamen::VerseMatchQuery::DISPLAY_LIMIT
   end
 
   def invalid_word_count_phrases?

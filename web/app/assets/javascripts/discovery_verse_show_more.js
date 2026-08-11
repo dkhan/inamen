@@ -8,7 +8,7 @@
     button.disabled = false;
     button.dataset.offset = String(offset);
     button.dataset.remaining = String(remaining);
-    button.textContent = `Show more (${remaining.toLocaleString()})`;
+    button.textContent = "Show all";
 
     const url = new URL(button.dataset.moreUrl, window.location.origin);
     url.searchParams.set("offset", String(offset));
@@ -42,7 +42,7 @@
       updateButton(button, nextRemaining, nextOffset);
     } catch (_error) {
       button.disabled = false;
-      button.textContent = `Show more (${remaining.toLocaleString()})`;
+      button.textContent = "Show all";
     }
   }
 

@@ -13,7 +13,7 @@ end
 module Inamen
     # CSV-backed hierarchical statistics for an edition's source file and verse corpus.
     module FileStatsExplorer
-    CACHE_VERSION = "12"
+    CACHE_VERSION = "14"
 
     Node = Struct.new(
       :node_id, :parent_id, :level, :label, :testament, :book, :chapter, :verse,
@@ -368,12 +368,17 @@ module Inamen
         return [[target_id, line_text]]
       end
 
-      return [[target_id, line_text]] if stripped == "THE GOSPEL ACCORDING TO" && !preceded_by_nt_header?(physical_lines, event.lineno)
-      return nil unless stripped == "THE GOSPEL ACCORDING TO"
+      if stripped == "THE GOSPEL ACCORDING TO"
+        if upcoming_book == "John"
+          category_id = nodes_by_id.fetch(nodes_by_id.fetch(target_id).parent_id).parent_id
+          newline = line_text.end_with?("\n") ? "\n" : ""
+          return [[category_id, "THE "], [target_id, "GOSPEL ACCORDING TO#{newline}"]]
+        end
 
-      connector_target = node_for_event!(edition_id, nodes_by_id, root_id, source_id, event, book, state, physical_lines)
-      newline = line_text.end_with?("\n") ? "\n" : ""
-      [[connector_target, "THE TO#{newline}"], [target_id, "GOSPEL ACCORDING#{newline}"]]
+        return [[target_id, line_text]]
+      end
+
+      nil
     end
 
     def upcoming_canonical_book(labels, index, current_book)

@@ -175,8 +175,10 @@ module DiscoveriesHelper
     query
   end
 
-  def discovery_verses_more_url(edition, scan_params, offset:)
-    verses_discoveries_path(discovery_verses_query(edition, scan_params).merge(offset: offset))
+  def discovery_verses_more_url(edition, scan_params, offset:, limit: nil)
+    query = discovery_verses_query(edition, scan_params).merge(offset: offset)
+    query[:limit] = limit if limit.to_i.positive?
+    verses_discoveries_path(query)
   end
 
   def discovery_search_phrases_param_hash(scan_params)
@@ -224,7 +226,7 @@ module DiscoveriesHelper
   end
 
   def discovery_word_count_total(rows, summary: nil)
-    summary&.occurrences || DiscoveryScan.word_count_table_total(rows)
+    DiscoveryScan.word_count_table_total(rows)
   end
 
   def discovery_word_count_spellings_label(spellings, limit: 8)
@@ -259,7 +261,7 @@ module DiscoveriesHelper
 
   def discovery_word_match_summary(rows, scan_params, summary: nil)
     scope_label = format_discovery_scope_label(summary&.scope_label || scan_params.search_selection.label)
-    occurrences = summary&.occurrences || discovery_word_count_total(rows)
+    occurrences = discovery_word_count_total(rows)
 
     parts = ["Found ", number_research_link(occurrences), " word match(es)"]
     if summary
@@ -318,7 +320,7 @@ module DiscoveriesHelper
   end
 
   def discovery_verse_show_more_label(remaining_count)
-    "Show more (#{number_with_delimiter(remaining_count)})"
+    "Show all"
   end
 
   def discovery_verse_results_display_limit

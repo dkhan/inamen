@@ -82,14 +82,14 @@ end
 # KJV-PCE.txt, Schyler, Cameo: 195 characters
 # "23 For mine Angel shall go before thee, and bring thee in unto the Amorites, and the Hittites, and the Perizzites, and the Canaanites, and the Hivites, and the Jebusites: and I will cut them off."
 
-# KJV-CONCORD.txt, KJV_OXFORD.txt, Concord, Allan, Thomas Nelson, Holman: 191 characters
+# KJV-CONCORD.txt, KJV_OXFORD.txt, CONCORD_NORMALIZED.txt, Concord, Allan, Thomas Nelson, Holman: 191 characters
 # "23 For mine Angel shall go before thee, and bring thee in unto the Amorites, and the Hittites, and the Perizzites, and the Canaanites, the Hivites, and the Jebusites: and I will cut them off."
 
 # Missing from KJV-CONCORD.txt: 4 character(s)
 # ================================================================================
 # Line 26441 (Mark 2:1)
 
-# KJV-PCE.txt, Schyler, Cameo: 97 characters
+# KJV-PCE.txt, Schyler, Cameo, CONCORD_NORMALIZED.txt: 97 characters
 # "AND again he entered into Capernaum, after some days; and it was noised that he was in the house."
 
 # KJV-CONCORD.txt, KJV_OXFORD.txt, Concord, Allan, Thomas Nelson, Holman: 96 characters
@@ -99,7 +99,7 @@ end
 # ================================================================================
 # Line 31180 (1 Corinthians 15:27)
 
-# KJV-PCE.txt, Schyler, Cameo: 166 characters
+# KJV-PCE.txt, Schyler, Cameo, CONCORD_NORMALIZED.txt: 166 characters
 # "27 For he hath put all things under his feet. But when he saith, all things are put under him, it is manifest that he is excepted, which did put all things under him."
 
 # KJV-CONCORD.txt, KJV_OXFORD.txt, Concord, Allan, Thomas Nelson, Holman: 165 characters
@@ -113,13 +113,19 @@ end
 # CAMBRIDGE vs OXFORD
 
 # Jeremiah 34:16
-# CAMBRIDGE: KJV-PCE.txt, KJV-CONCORD.txt, Concord
+# CAMBRIDGE: KJV-PCE.txt, KJV-CONCORD.txt, Concord, Cameo, Holman
 # 16 ... , whom ye
 # OXFORD: Allan, Thomas Nelson 
 # 16 ... , whom he
 
 # Joshua 19:2
-# CAMBRIDGE: KJV-PCE.txt, KJV-CONCORD.txt, Concord, Cameo, Thomas Nelson  
+# CAMBRIDGE: KJV-PCE.txt, KJV-CONCORD.txt, Concord, Cameo, Thomas Nelson, Holman, CONCORD_NORMALIZED.txt
 # 2 And they had in their inheritance Beer-sheba, or Sheba, and Moladah,
 # OXFORD: KJV-OXFORD.txt, Allan
 # 2 And they had in their inheritance Beersheba, and Sheba, and Moladah,
+
+# Nahum 3:16
+# CAMBRIDGE: KJV-PCE.txt, Holman, CONCORD_NORMALIZED.txt
+# 16 ... and flieth away
+# OXFORD: KJV-OXFORD.txt, Allan, Thomas Nelson
+# 16 ... and fleeth away
