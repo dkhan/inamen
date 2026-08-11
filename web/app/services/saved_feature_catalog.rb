@@ -44,6 +44,12 @@ class SavedFeatureCatalog
       EditionContext.all_ids.map do |edition_id|
         edition = EditionContext.new(edition_id)
         next unless saved_feature.language == edition.language
+        if saved_feature.file_stats?
+          record = FeatureEdition.find_by(feature_id: saved_feature.id, edition_id: edition.edition_id)
+          snapshot = FileStatsStore.current_snapshot_for(edition.edition)
+          next record if !force && record&.processing_verified? && snapshot
+          next unless snapshot
+        end
 
         verified_edition(saved_feature, edition, force: force)
       end.compact
@@ -57,7 +63,7 @@ class SavedFeatureCatalog
       record = FeatureEdition.find_or_initialize_by(
         feature_id: saved_feature.id, edition_id: edition.edition_id
       )
-      return record if !force && !saved_feature.file_stats? && record.persisted? && record.processing_verified?
+      return record if !force && reusable_verified_record?(saved_feature, edition, record)
 
       actual = compute_actual(saved_feature, edition, force: force)
       record.actual = actual
@@ -80,6 +86,13 @@ class SavedFeatureCatalog
     end
 
     private
+
+    def reusable_verified_record?(saved_feature, edition, record)
+      return false unless record.persisted? && record.processing_verified?
+      return true unless saved_feature.file_stats?
+
+      FileStatsStore.current_snapshot_for(edition.edition).present?
+    end
 
     # Generic occurrence/verse count for a feature's search run against an
     # edition. Reuses the same counting path as Discover — no special cases.

@@ -304,7 +304,6 @@
           <span class="file-stats-node-label">${escapeHtml(node.label)}</span>
           <span class="file-stats-node-count">${numberLink(node.word_count)}</span>
           <span class="file-stats-node-count">${numberLink(node.number_count)}</span>
-          <span class="file-stats-node-count">${numberLink(node.division_count)}</span>
           <span class="file-stats-node-count">${numberLink(totalWordsAndNumbers)}</span>
           <span class="file-stats-node-count">${numberLink(node.letter_count)}</span>
           <span class="file-stats-node-count">${numberLink(node.digit_count)}</span>

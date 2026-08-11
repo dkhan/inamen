@@ -27,6 +27,21 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
     )
   end
 
+  def file_stats_feature(unit: "characters", expected: 4_233_726, language: "en")
+    SavedFeature.create!(
+      name: "File characters",
+      original_edition_id: "kjv_normalized",
+      language: language,
+      scope_label: "whole file",
+      unit: unit,
+      mode: "file_stats",
+      expected_count: expected,
+      search_selection: {},
+      search_phrases: {},
+      from_feature: "file_character_total"
+    )
+  end
+
   def verse_result(verses)
     summary = Inamen::VerseMatchQuery::Summary.new(
       occurrences: 158, verses: verses, chapters: 40, books: 20, scope_label: "All texts"
@@ -200,6 +215,23 @@ class SavedFeatureCatalogTest < ActiveSupport::TestCase
 
       assert_equal 155, record.actual
       assert record.status_match?
+    end
+  end
+
+  test "file stats all-edition results do not populate missing snapshots" do
+    feature = file_stats_feature
+    context = edition("missing_file_stats")
+    edition_record = Edition.new(short_name: "missing_file_stats", metadata: { "language" => "en" })
+    context.define_singleton_method(:edition) { edition_record }
+
+    EditionContext.stub(:all_ids, ["missing_file_stats"]) do
+      EditionContext.stub(:new, ->(_edition_id) { context }) do
+        FileStatsStore.stub(:current_snapshot_for, nil) do
+          DiscoveryScan.stub(:run_file_stats, ->(*) { raise "should not populate file stats" }) do
+            assert_empty SavedFeatureCatalog.results_for_all_editions(feature)
+          end
+        end
+      end
     end
   end
 end
